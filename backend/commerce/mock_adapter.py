@@ -31,10 +31,10 @@ class MockCommerceAdapter(CommerceInterface):
         pack_size = p.get("pack_size", "1 unit")
         
         providers = [
+            {"id": "amazon", "name": "Amazon", "prime": True},
             {"id": "blinkit", "name": "Blinkit"},
             {"id": "zepto", "name": "Zepto"},
             {"id": "swiggy", "name": "Swiggy Instamart"},
-            {"id": "zomato", "name": "Zomato"},
             {"id": "bigbasket", "name": "BigBasket"},
             {"id": "flipkart", "name": "Flipkart"}
         ]
@@ -94,6 +94,8 @@ class MockCommerceAdapter(CommerceInterface):
         order = {
             "id": order_id,
             "status": "CONFIRMED",
+            "retailer": "Amazon",
+            "source": "AMAZON_MOCK",
             "items": self.carts[cart_id],
             "total": sum(i["price"] for i in self.carts[cart_id])
         }

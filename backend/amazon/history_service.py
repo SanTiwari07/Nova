@@ -1,0 +1,339 @@
+﻿import os
+from datetime import datetime, timedelta
+from typing import Dict, Any, List, Optional
+
+
+class MockAmazonHistoryProvider:
+    """
+    Simulates Amazon purchase history for a demo household.
+    Source: AMAZON_MOCK
+    """
+
+    def __init__(self):
+        self._history = self._build_history()
+
+    def _build_history(self) -> List[Dict[str, Any]]:
+        today = datetime.now()
+        return [
+            {
+                "asin": "B07TQHXVB5",
+                "product_id": "prod_000001",
+                "name": "Aashirvaad Whole Wheat Atta",
+                "brand": "Aashirvaad",
+                "pack_size": "5 kg",
+                "category": "Atta",
+                "purchase_count": 9,
+                "typical_interval_days": 28,
+                "typical_quantity": 1,
+                "avg_price": 298,
+                "lowest_price": 265,
+                "last_price": 289,
+                "current_price": 289,
+                "last_purchase_date": (today - timedelta(days=22)).strftime("%Y-%m-%d"),
+                "next_expected_date": (today + timedelta(days=6)).strftime("%Y-%m-%d"),
+                "days_until_needed": 6,
+                "confidence": 0.93,
+                "preferred_brand": "Aashirvaad",
+                "source": "AMAZON_MOCK",
+            },
+            {
+                "asin": "B07TQHXVB6",
+                "product_id": "prod_000109",
+                "name": "Amul Taaza Milk",
+                "brand": "Amul",
+                "pack_size": "1 L",
+                "category": "Milk",
+                "purchase_count": 31,
+                "typical_interval_days": 2,
+                "typical_quantity": 2,
+                "avg_price": 68,
+                "lowest_price": 62,
+                "last_price": 68,
+                "current_price": 68,
+                "last_purchase_date": (today - timedelta(days=1)).strftime("%Y-%m-%d"),
+                "next_expected_date": (today + timedelta(days=1)).strftime("%Y-%m-%d"),
+                "days_until_needed": 1,
+                "confidence": 0.97,
+                "preferred_brand": "Amul",
+                "source": "AMAZON_MOCK",
+            },
+            {
+                "asin": "B08XYZABC1",
+                "product_id": "prod_000010",
+                "name": "India Gate Basmati Rice",
+                "brand": "India Gate",
+                "pack_size": "5 kg",
+                "category": "Rice",
+                "purchase_count": 7,
+                "typical_interval_days": 45,
+                "typical_quantity": 1,
+                "avg_price": 485,
+                "lowest_price": 440,
+                "last_price": 499,
+                "current_price": 469,
+                "last_purchase_date": (today - timedelta(days=38)).strftime("%Y-%m-%d"),
+                "next_expected_date": (today + timedelta(days=7)).strftime("%Y-%m-%d"),
+                "days_until_needed": 7,
+                "confidence": 0.85,
+                "preferred_brand": "India Gate",
+                "source": "AMAZON_MOCK",
+            },
+            {
+                "asin": "B07SALT001",
+                "product_id": "prod_000050",
+                "name": "Tata Salt",
+                "brand": "Tata",
+                "pack_size": "1 kg",
+                "category": "Salt",
+                "purchase_count": 11,
+                "typical_interval_days": 25,
+                "typical_quantity": 2,
+                "avg_price": 29,
+                "lowest_price": 24,
+                "last_price": 28,
+                "current_price": 25,
+                "last_purchase_date": (today - timedelta(days=19)).strftime("%Y-%m-%d"),
+                "next_expected_date": (today + timedelta(days=6)).strftime("%Y-%m-%d"),
+                "days_until_needed": 6,
+                "confidence": 0.94,
+                "preferred_brand": "Tata",
+                "source": "AMAZON_MOCK",
+            },
+            {
+                "asin": "B07OIL0030",
+                "product_id": "prod_000030",
+                "name": "Fortune Sunflower Oil",
+                "brand": "Fortune",
+                "pack_size": "5 L",
+                "category": "Oil",
+                "purchase_count": 6,
+                "typical_interval_days": 60,
+                "typical_quantity": 1,
+                "avg_price": 699,
+                "lowest_price": 649,
+                "last_price": 749,
+                "current_price": 762,
+                "last_purchase_date": (today - timedelta(days=14)).strftime("%Y-%m-%d"),
+                "next_expected_date": (today + timedelta(days=46)).strftime("%Y-%m-%d"),
+                "days_until_needed": 46,
+                "confidence": 0.88,
+                "preferred_brand": "Fortune",
+                "source": "AMAZON_MOCK",
+            },
+            {
+                "asin": "B07DAL001",
+                "product_id": "prod_000060",
+                "name": "Tata Sampann Toor Dal",
+                "brand": "Tata Sampann",
+                "pack_size": "1 kg",
+                "category": "Dal",
+                "purchase_count": 8,
+                "typical_interval_days": 35,
+                "typical_quantity": 2,
+                "avg_price": 145,
+                "lowest_price": 128,
+                "last_price": 148,
+                "current_price": 142,
+                "last_purchase_date": (today - timedelta(days=28)).strftime("%Y-%m-%d"),
+                "next_expected_date": (today + timedelta(days=7)).strftime("%Y-%m-%d"),
+                "days_until_needed": 7,
+                "confidence": 0.87,
+                "preferred_brand": "Tata Sampann",
+                "source": "AMAZON_MOCK",
+            },
+            {
+                "asin": "B07TEA001",
+                "product_id": "prod_000080",
+                "name": "Tata Chai Classic Tea",
+                "brand": "Tata Tea",
+                "pack_size": "500 g",
+                "category": "Tea",
+                "purchase_count": 10,
+                "typical_interval_days": 30,
+                "typical_quantity": 1,
+                "avg_price": 220,
+                "lowest_price": 199,
+                "last_price": 215,
+                "current_price": 209,
+                "last_purchase_date": (today - timedelta(days=24)).strftime("%Y-%m-%d"),
+                "next_expected_date": (today + timedelta(days=6)).strftime("%Y-%m-%d"),
+                "days_until_needed": 6,
+                "confidence": 0.91,
+                "preferred_brand": "Tata Tea",
+                "source": "AMAZON_MOCK",
+            },
+            {
+                "asin": "B07DET001",
+                "product_id": "prod_000090",
+                "name": "Surf Excel Detergent",
+                "brand": "Surf Excel",
+                "pack_size": "3 kg",
+                "category": "Detergent",
+                "purchase_count": 7,
+                "typical_interval_days": 45,
+                "typical_quantity": 1,
+                "avg_price": 380,
+                "lowest_price": 349,
+                "last_price": 399,
+                "current_price": 435,
+                "last_purchase_date": (today - timedelta(days=30)).strftime("%Y-%m-%d"),
+                "next_expected_date": (today + timedelta(days=15)).strftime("%Y-%m-%d"),
+                "days_until_needed": 15,
+                "confidence": 0.84,
+                "preferred_brand": "Surf Excel",
+                "source": "AMAZON_MOCK",
+            },
+            {
+                "asin": "B07SUGAR01",
+                "product_id": "prod_000070",
+                "name": "Uttam Sugar",
+                "brand": "Uttam",
+                "pack_size": "5 kg",
+                "category": "Sugar",
+                "purchase_count": 5,
+                "typical_interval_days": 60,
+                "typical_quantity": 1,
+                "avg_price": 245,
+                "lowest_price": 225,
+                "last_price": 250,
+                "current_price": 248,
+                "last_purchase_date": (today - timedelta(days=50)).strftime("%Y-%m-%d"),
+                "next_expected_date": (today + timedelta(days=10)).strftime("%Y-%m-%d"),
+                "days_until_needed": 10,
+                "confidence": 0.78,
+                "preferred_brand": "Uttam",
+                "source": "AMAZON_MOCK",
+            },
+            {
+                "asin": "B07SOAPS01",
+                "product_id": "prod_000100",
+                "name": "Dettol Original Soap",
+                "brand": "Dettol",
+                "pack_size": "Pack of 4",
+                "category": "Soap",
+                "purchase_count": 9,
+                "typical_interval_days": 35,
+                "typical_quantity": 1,
+                "avg_price": 149,
+                "lowest_price": 129,
+                "last_price": 148,
+                "current_price": 139,
+                "last_purchase_date": (today - timedelta(days=29)).strftime("%Y-%m-%d"),
+                "next_expected_date": (today + timedelta(days=6)).strftime("%Y-%m-%d"),
+                "days_until_needed": 6,
+                "confidence": 0.92,
+                "preferred_brand": "Dettol",
+                "source": "AMAZON_MOCK",
+            },
+            {
+                "asin": "B07TOIL001",
+                "product_id": "prod_000110",
+                "name": "Harpic Power Plus",
+                "brand": "Harpic",
+                "pack_size": "750 ml",
+                "category": "Cleaning",
+                "purchase_count": 6,
+                "typical_interval_days": 40,
+                "typical_quantity": 1,
+                "avg_price": 119,
+                "lowest_price": 99,
+                "last_price": 115,
+                "current_price": 109,
+                "last_purchase_date": (today - timedelta(days=33)).strftime("%Y-%m-%d"),
+                "next_expected_date": (today + timedelta(days=7)).strftime("%Y-%m-%d"),
+                "days_until_needed": 7,
+                "confidence": 0.82,
+                "preferred_brand": "Harpic",
+                "source": "AMAZON_MOCK",
+            },
+            {
+                "asin": "B07SHAMP01",
+                "product_id": "prod_000120",
+                "name": "Head & Shoulders Shampoo",
+                "brand": "Head & Shoulders",
+                "pack_size": "340 ml",
+                "category": "Hair Care",
+                "purchase_count": 8,
+                "typical_interval_days": 40,
+                "typical_quantity": 1,
+                "avg_price": 299,
+                "lowest_price": 265,
+                "last_price": 285,
+                "current_price": 279,
+                "last_purchase_date": (today - timedelta(days=35)).strftime("%Y-%m-%d"),
+                "next_expected_date": (today + timedelta(days=5)).strftime("%Y-%m-%d"),
+                "days_until_needed": 5,
+                "confidence": 0.89,
+                "preferred_brand": "Head & Shoulders",
+                "source": "AMAZON_MOCK",
+            },
+        ]
+
+    def get_recurring_products(self) -> List[Dict[str, Any]]:
+        return self._history
+
+    def get_last_purchase(self, product_id: str) -> Optional[Dict[str, Any]]:
+        for item in self._history:
+            if item["product_id"] == product_id:
+                return item
+        return None
+
+    def get_historical_price(self, product_id: str) -> Optional[float]:
+        item = self.get_last_purchase(product_id)
+        return item["avg_price"] if item else None
+
+    def get_typical_quantity(self, product_id: str) -> int:
+        item = self.get_last_purchase(product_id)
+        return item["typical_quantity"] if item else 1
+
+    def get_average_purchase_interval(self, product_id: str) -> Optional[int]:
+        item = self.get_last_purchase(product_id)
+        return item["typical_interval_days"] if item else None
+
+    def get_recent_orders(self, limit: int = 5) -> List[Dict[str, Any]]:
+        today = datetime.now()
+        orders = [
+            {
+                "order_id": "AMZ-2026-001",
+                "order_date": (today - timedelta(days=3)).strftime("%Y-%m-%d"),
+                "status": "DELIVERED",
+                "total": 876,
+                "source": "AMAZON_MOCK",
+                "retailer": "Amazon",
+                "items": [
+                    {"product_id": "prod_000001", "name": "Aashirvaad Atta 5kg", "price": 289, "quantity": 1},
+                    {"product_id": "prod_000060", "name": "Tata Sampann Toor Dal 1kg", "price": 142, "quantity": 2},
+                    {"product_id": "prod_000050", "name": "Tata Salt 1kg", "price": 25, "quantity": 2},
+                    {"product_id": "prod_000100", "name": "Dettol Soap Pack of 4", "price": 139, "quantity": 1},
+                    {"product_id": "prod_000110", "name": "Harpic Toilet Cleaner", "price": 109, "quantity": 1},
+                ],
+                "nova_analysis": {
+                    "recurring_items": 5,
+                    "early_purchases": 1,
+                    "below_avg_price_items": 2,
+                    "not_yet_needed_items": 0,
+                    "summary": "5 recurring household items. 2 items purchased at below-average prices. Atta was bought 1 week earlier than usual."
+                }
+            },
+            {
+                "order_id": "AMZ-2026-002",
+                "order_date": (today - timedelta(days=14)).strftime("%Y-%m-%d"),
+                "status": "DELIVERED",
+                "total": 1363,
+                "source": "AMAZON_MOCK",
+                "retailer": "Amazon",
+                "items": [
+                    {"product_id": "prod_000030", "name": "Fortune Sunflower Oil 5L", "price": 749, "quantity": 1},
+                    {"product_id": "prod_000080", "name": "Tata Chai Classic Tea 500g", "price": 215, "quantity": 1},
+                    {"product_id": "prod_000090", "name": "Surf Excel Detergent 3kg", "price": 399, "quantity": 1},
+                ],
+                "nova_analysis": {
+                    "recurring_items": 3,
+                    "early_purchases": 0,
+                    "below_avg_price_items": 1,
+                    "not_yet_needed_items": 0,
+                    "summary": "3 recurring household items. Tea was purchased at a below-average price. Detergent was slightly above average."
+                }
+            },
+        ]
+        return orders[:limit]

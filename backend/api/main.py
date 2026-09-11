@@ -1,7 +1,9 @@
-from fastapi import FastAPI, Query
+# pyrefly: ignore [missing-import]
+from fastapi import FastAPI, Query, HTTPException
+# pyrefly: ignore [missing-import]
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import os
 
 from ai.ai_service import AIService
@@ -16,6 +18,13 @@ from agent.nova_agent import NovaAgent
 
 from catalog.product_repository import ProductRepository
 from catalog.asset_repository import AssetRepository
+
+# Amazon-first services
+from amazon.history_service import MockAmazonHistoryProvider
+from amazon.price_service import PriceService
+from autopilot.monthly_service import MonthlyAutopilotService
+from reminders.reminder_service import ReminderEngine
+from savings.savings_engine import SavingsEngine
 
 app = FastAPI(title="NOVA API")
 
@@ -37,11 +46,23 @@ session_service = UserSessionService()
 product_repo = ProductRepository()
 asset_repo = AssetRepository()
 
+# Amazon-first services
+history_service = MockAmazonHistoryProvider()
+price_service = PriceService()
+reminder_engine = ReminderEngine()
+savings_engine = SavingsEngine()
+
 decision_engine = DecisionEngine(
     budget_service=budget_service,
     policy_service=policy_service,
     inventory_service=inventory_service,
     session_service=session_service
+)
+
+autopilot_service = MonthlyAutopilotService(
+    budget_service=budget_service,
+    policy_service=policy_service,
+    inventory_service=inventory_service,
 )
 
 nova_agent = NovaAgent(
@@ -96,6 +117,7 @@ async def reset_demo():
     policy_service.reset()
     inventory_service.reset()
     audit_service.reset()
+    reminder_engine.reset()
     commerce_adapter.carts = {}
     commerce_adapter.orders = {}
     return {"status": "ok"}
@@ -247,3 +269,170 @@ async def checkout():
         # Rollback
         commerce_adapter.carts[cart_id] = cart_items
         return {"error": str(e)}, 500
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AMAZON-FIRST ROUTES
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.get("/api/purchase-history")
+async def get_purchase_history():
+    """Recurring household product intelligence from Amazon purchase history."""
+    return {
+        "products": history_service.get_recurring_products(),
+        "source": "AMAZON_MOCK",
+        "label": "Demo data",
+    }
+
+@app.get("/api/price-watch")
+async def get_price_watch():
+    """Price intelligence for watched household products."""
+    return {
+        "items": price_service.get_price_watch_items(),
+        "source": "AMAZON_MOCK",
+        "label": "Demo data",
+    }
+
+@app.get("/api/savings")
+async def get_savings():
+    """Savings opportunities for current household shopping plan."""
+    return savings_engine.get_savings_opportunities()
+
+@app.get("/api/reminders")
+async def get_reminders(status: Optional[str] = "ACTIVE"):
+    """Household reminders by status."""
+    return {
+        "reminders": reminder_engine.get_reminders(status=status),
+        "count": len(reminder_engine.get_reminders(status=status)),
+    }
+
+class ReminderActionRequest(BaseModel):
+    action: str  # snooze | complete | dismiss
+    snooze_hours: Optional[int] = 24
+
+@app.post("/api/reminders/{reminder_id}/action")
+async def reminder_action(reminder_id: str, req: ReminderActionRequest):
+    """Snooze, complete, or dismiss a reminder."""
+    if req.action == "snooze":
+        result = reminder_engine.snooze(reminder_id, hours=req.snooze_hours)
+    elif req.action == "complete":
+        result = reminder_engine.complete(reminder_id)
+    elif req.action == "dismiss":
+        result = reminder_engine.dismiss(reminder_id)
+    else:
+        raise HTTPException(status_code=400, detail=f"Unknown action: {req.action}")
+    if not result:
+        raise HTTPException(status_code=404, detail="Reminder not found")
+    return result
+
+@app.post("/api/autopilot/monthly-plan")
+async def generate_monthly_plan():
+    """Generate the monthly household Amazon shopping plan."""
+    plan = await autopilot_service.generate_monthly_plan()
+    return plan
+
+class ApproveRequest(BaseModel):
+    product_id: str
+    approved: bool
+    quantity: Optional[int] = None
+
+@app.post("/api/autopilot/approve")
+async def approve_autopilot_item(req: ApproveRequest):
+    """Approve or reject an individual autopilot item."""
+    if req.approved:
+        # In a real integration: add to Amazon cart
+        # For demo: record approval in audit
+        audit_service.log_decision(
+            req.product_id,
+            "APPROVED_BY_USER",
+            [f"User approved product {req.product_id}"]
+        )
+        return {"status": "APPROVED", "product_id": req.product_id, "label": "Ready for Amazon Cart"}
+    else:
+        audit_service.log_decision(
+            req.product_id,
+            "REJECTED_BY_USER",
+            [f"User rejected product {req.product_id}"]
+        )
+        return {"status": "REJECTED", "product_id": req.product_id}
+
+@app.get("/api/nova-cart")
+async def get_nova_cart():
+    """NOVA's intelligent household cart — the planned purchase set."""
+    recurring = history_service.get_recurring_products()
+    budget_remaining = await budget_service.get_remaining_budget()
+    auto_limit = await budget_service.get_auto_buy_limit()
+
+    nova_cart_items = []
+    for product in recurring:
+        days_until = product.get("days_until_needed", 30)
+        if days_until > 10:
+            continue  # Not needed yet
+
+        current_price = product.get("current_price", 0)
+        avg_price = product.get("avg_price", current_price)
+        price_pct_above = ((current_price - avg_price) / avg_price * 100) if avg_price else 0
+        requires_approval = current_price > auto_limit or product.get("confidence", 1.0) < 0.75
+
+        nova_cart_items.append({
+            **product,
+            "quantity": product.get("typical_quantity", 1),
+            "estimated_cost": current_price * product.get("typical_quantity", 1),
+            "requires_approval": requires_approval,
+            "price_pct_vs_avg": round(price_pct_above, 1),
+            "decision": "ASK" if requires_approval else "AUTO",
+            "reason": f"Usually purchased every {product.get('typical_interval_days', 28)} days. Expected in {days_until} days.",
+        })
+
+    total = sum(i["estimated_cost"] for i in nova_cart_items)
+
+    return {
+        "items": nova_cart_items,
+        "total_estimated": total,
+        "budget_remaining": budget_remaining,
+        "auto_limit": auto_limit,
+        "item_count": len(nova_cart_items),
+        "approval_required_count": len([i for i in nova_cart_items if i["requires_approval"]]),
+        "source": "AMAZON_MOCK",
+        "label": "Demo data",
+    }
+
+class NovaCartItemRequest(BaseModel):
+    product_id: str
+    quantity: Optional[int] = 1
+
+@app.post("/api/nova-cart/items")
+async def add_nova_cart_item(req: NovaCartItemRequest):
+    """Add an item to the NOVA household cart."""
+    product = product_repo.get_by_id(req.product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return {"status": "added", "product_id": req.product_id, "quantity": req.quantity, "label": "Added to NOVA Cart"}
+
+@app.delete("/api/nova-cart/items/{product_id}")
+async def remove_nova_cart_item(product_id: str):
+    """Remove an item from the NOVA household cart."""
+    return {"status": "removed", "product_id": product_id}
+
+@app.get("/api/household-status")
+async def get_household_status():
+    """Aggregated household status for the home page hero."""
+    recurring = history_service.get_recurring_products()
+    budget_remaining = await budget_service.get_remaining_budget()
+    savings = savings_engine.get_savings_opportunities()
+    active_reminders = reminder_engine.get_reminders(status="ACTIVE")
+
+    due_soon = [p for p in recurring if p.get("days_until_needed", 30) <= 7]
+    total_estimated = sum(p.get("current_price", 0) * p.get("typical_quantity", 1) for p in recurring if p.get("days_until_needed", 30) <= 20)
+
+    return {
+        "greeting_context": "Good evening",
+        "status_headline": "Your household is almost ready for September.",
+        "tracked_items": len(recurring),
+        "items_due_soon": len(due_soon),
+        "estimated_monthly_spend": round(total_estimated),
+        "potential_savings": savings["total_potential_saving"],
+        "budget_remaining": budget_remaining,
+        "active_reminders": len(active_reminders),
+        "attention_items": len([r for r in active_reminders if r["priority"] == "HIGH"]),
+        "source": "AMAZON_MOCK",
+    }

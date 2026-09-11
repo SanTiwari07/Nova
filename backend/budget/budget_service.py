@@ -3,8 +3,8 @@ class BudgetService:
         self.reset()
         
     def reset(self):
-        self.monthly_budget = 3000
-        self.spent = 1240
+        self.monthly_budget = 5500
+        self.spent = 3940
         self.auto_limit = 500
         
     def set_budget(self, amount: float):

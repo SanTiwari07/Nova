@@ -46,8 +46,15 @@ class DecisionEngine:
             reasons.append(f"Insufficient remaining budget (₹{budget_remaining}).")
             return "ASK", reasons
         reasons.append("Price was within budget and auto-buy limits.")
-            
-        # 5. Confidence check
+
+        # 5. Price Signal & Timing check (WAIT evaluation)
+        if context.get("price_signal") == "WAIT" or (context.get("days_remaining", 0) > 7 and context.get("price_pct_above", 0) > 8):
+            pct = context.get("price_pct_above", 10)
+            days = context.get("days_remaining", 14)
+            reasons.append(f"Price is elevated ({pct:.0f}% above historical average) and household has {days} days of supply remaining.")
+            reasons.append("NOVA recommends waiting for expected price drop or deal.")
+            return "WAIT", reasons
+
         confidence = context.get("confidence", "HIGH")
         if confidence == "LOW":
             reasons.append("NOVA had low confidence in predicting this need.")

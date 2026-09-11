@@ -8,7 +8,7 @@ class InventoryService:
         # Mock pantry state for the demo
         # Seeded state matching the exact demo scenarios
         self.pantry = {
-            "prod_000109": { # We assume this is some Milk (Amul Taaza Milk 1L)
+            "prod_000109": {
                 "name": "Amul Taaza Milk 1L",
                 "quantity": 0.3,
                 "unit": "L",
@@ -16,22 +16,94 @@ class InventoryService:
                 "status": "LOW",
                 "category": "Milk"
             },
-            "prod_000030": { # We assume this is some Oil
+            "prod_000030": {
                 "name": "Fortune Sunflower Oil 5L",
                 "quantity": 2.1,
                 "unit": "L",
-                "daily_consumption": 0.14,
+                "daily_consumption": 0.07,
                 "status": "HEALTHY",
                 "category": "Oil"
             },
             "prod_000010": {
                 "name": "India Gate Basmati Rice 5kg",
-                "quantity": 3.8,
+                "quantity": 1.8,
                 "unit": "kg",
-                "daily_consumption": 0.3,
-                "status": "HEALTHY",
+                "daily_consumption": 0.25,
+                "status": "LOW",
                 "category": "Rice"
-            }
+            },
+            "prod_000001": {
+                "name": "Aashirvaad Whole Wheat Atta 5kg",
+                "quantity": 1.2,
+                "unit": "kg",
+                "daily_consumption": 0.2,
+                "status": "LOW",
+                "category": "Atta"
+            },
+            "prod_000050": {
+                "name": "Tata Salt 1kg",
+                "quantity": 0.4,
+                "unit": "kg",
+                "daily_consumption": 0.02,
+                "status": "LOW",
+                "category": "Salt"
+            },
+            "prod_000060": {
+                "name": "Tata Sampann Toor Dal 1kg",
+                "quantity": 0.5,
+                "unit": "kg",
+                "daily_consumption": 0.07,
+                "status": "LOW",
+                "category": "Dal"
+            },
+            "prod_000080": {
+                "name": "Tata Chai Classic Tea 500g",
+                "quantity": 0.15,
+                "unit": "kg",
+                "daily_consumption": 0.025,
+                "status": "LOW",
+                "category": "Tea"
+            },
+            "prod_000090": {
+                "name": "Surf Excel Detergent 3kg",
+                "quantity": 1.2,
+                "unit": "kg",
+                "daily_consumption": 0.08,
+                "status": "HEALTHY",
+                "category": "Detergent"
+            },
+            "prod_000070": {
+                "name": "Uttam Sugar 5kg",
+                "quantity": 1.8,
+                "unit": "kg",
+                "daily_consumption": 0.1,
+                "status": "HEALTHY",
+                "category": "Sugar"
+            },
+            "prod_000100": {
+                "name": "Dettol Original Soap",
+                "quantity": 1.0,
+                "unit": "pack",
+                "daily_consumption": 0.03,
+                "status": "LOW",
+                "category": "Soap"
+            },
+            "prod_000110": {
+                "name": "Harpic Power Plus 750ml",
+                "quantity": 0.4,
+                "unit": "bottle",
+                "daily_consumption": 0.025,
+                "status": "LOW",
+                "category": "Cleaning"
+            },
+            "prod_000120": {
+                "name": "Head & Shoulders Shampoo 340ml",
+                "quantity": 0.1,
+                "unit": "bottle",
+                "daily_consumption": 0.025,
+                "status": "LOW",
+                "category": "Hair Care"
+            },
         }
         
     def get_all(self) -> List[Dict[str, Any]]:
