@@ -1,0 +1,3 @@
+"""
+NOVA Intent Module
+"""

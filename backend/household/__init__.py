@@ -1,0 +1,3 @@
+"""
+NOVA Household Module
+"""
