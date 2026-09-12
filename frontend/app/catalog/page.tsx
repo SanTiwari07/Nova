@@ -46,25 +46,34 @@ export interface Product {
 
 const CATEGORY_TABS = [
   { label: "All Items", key: "all" },
-  { label: "Milk & Dairy", key: "milk" },
-  { label: "Instant Noodles", key: "noodles" },
-  { label: "Cleaning & Toiletries", key: "cleaning" },
-  { label: "Cooking Oils", key: "oil" },
-  { label: "Atta & Rice", key: "grains" },
-  { label: "Tea & Staples", key: "staples" },
+  { label: "Milk & Dairy", key: "milk-and-dairy" },
+  { label: "Atta & Rice", key: "atta-and-rice" },
+  { label: "Cooking Oils", key: "cooking-oils" },
+  { label: "Dal & Pulses", key: "dal-and-pulses" },
+  { label: "Tea & Staples", key: "tea-and-staples" },
+  { label: "Instant Noodles", key: "instant-noodles" },
+  { label: "Snacks & Biscuits", key: "snacks-and-biscuits" },
+  { label: "Beverages", key: "beverages" },
+  { label: "Cleaning & Toiletries", key: "cleaning-and-toiletries" },
+  { label: "Personal Care", key: "personal-care" },
 ];
 
-// Flexible category normalizer for incoming URL params (e.g. ?category=Rice -> grains)
+// Flexible category normalizer for incoming URL params (e.g. ?category=Rice -> atta-and-rice)
 function normalizeCategoryKey(param: string | null): string {
   if (!param) return "all";
   const p = param.toLowerCase().trim();
   if (p === "all" || p === "all items") return "all";
-  if (p.includes("milk") || p.includes("dairy")) return "milk";
-  if (p.includes("noodle") || p.includes("maggi")) return "noodles";
-  if (p.includes("clean") || p.includes("detergent") || p.includes("toilet") || p.includes("household")) return "cleaning";
-  if (p.includes("oil")) return "oil";
-  if (p.includes("atta") || p.includes("rice") || p.includes("grain") || p.includes("flour") || p.includes("dal")) return "grains";
-  if (p.includes("tea") || p.includes("staple") || p.includes("coffee") || p.includes("spice")) return "staples";
+  if (p.includes("milk") || p.includes("dairy")) return "milk-and-dairy";
+  if (p.includes("atta") || p.includes("flour") || p.includes("rice") || p.includes("grain")) return "atta-and-rice";
+  // Check cleaning and toiletries BEFORE oil because 'toiletries' contains 'oil'
+  if (p.includes("clean") || p.includes("toilet") || p.includes("detergent") || p.includes("dishwash") || p.includes("laundry") || p.includes("harpic")) return "cleaning-and-toiletries";
+  if (p.includes("personal") || p.includes("soap") || p.includes("shampoo") || p.includes("tooth")) return "personal-care";
+  if ((p.includes("oil") && !p.includes("toilet")) || p.includes("ghee")) return "cooking-oils";
+  if (p.includes("dal") || p.includes("pulse") || p.includes("lentil")) return "dal-and-pulses";
+  if (p.includes("tea") || p.includes("coffee") || p.includes("chai") || p.includes("staple") || p.includes("salt") || p.includes("sugar")) return "tea-and-staples";
+  if (p.includes("noodle") || p.includes("maggi") || p.includes("pasta")) return "instant-noodles";
+  if (p.includes("biscuit") || p.includes("snack") || p.includes("cookie") || p.includes("namkeen") || p.includes("chocolate")) return "snacks-and-biscuits";
+  if (p.includes("drink") || p.includes("beverage") || p.includes("juice") || p.includes("soda") || p.includes("pepsi") || p.includes("coke")) return "beverages";
   return "all";
 }
 
@@ -208,20 +217,28 @@ function CatalogContent() {
       let matchesCategory = false;
       if (activeCategory === "all") {
         matchesCategory = true;
-      } else if (activeCategory === "milk") {
-        matchesCategory = cat.includes("milk") || cat.includes("dairy") || name.includes("milk") || tags.includes("milk");
-      } else if (activeCategory === "noodles") {
-        matchesCategory = cat.includes("noodle") || name.includes("maggi") || name.includes("noodle") || tags.includes("noodles");
-      } else if (activeCategory === "cleaning") {
-        matchesCategory = cat.includes("clean") || cat.includes("toilet") || name.includes("detergent") || name.includes("soap") || name.includes("harpic") || tags.includes("cleaning");
-      } else if (activeCategory === "oil") {
-        matchesCategory = cat.includes("oil") || name.includes("oil") || tags.includes("oil");
-      } else if (activeCategory === "grains") {
-        matchesCategory = cat.includes("atta") || cat.includes("rice") || cat.includes("dal") || cat.includes("pulses") || name.includes("atta") || name.includes("rice") || tags.includes("grains") || tags.includes("dal");
-      } else if (activeCategory === "staples") {
-        matchesCategory = cat.includes("tea") || cat.includes("staple") || cat.includes("coffee") || name.includes("tea") || name.includes("salt") || name.includes("sugar") || tags.includes("tea");
+      } else if (activeCategory === "milk-and-dairy") {
+        matchesCategory = cat === "milk & dairy" || cat.includes("dairy");
+      } else if (activeCategory === "atta-and-rice") {
+        matchesCategory = cat === "atta & rice" || cat.includes("atta") || cat.includes("flour");
+      } else if (activeCategory === "cooking-oils") {
+        matchesCategory = cat === "cooking oils" || (cat.includes("oil") && !cat.includes("toilet"));
+      } else if (activeCategory === "dal-and-pulses") {
+        matchesCategory = cat === "dal & pulses" || cat.includes("pulse");
+      } else if (activeCategory === "tea-and-staples") {
+        matchesCategory = cat === "tea & staples" || cat === "tea & coffee" || cat.includes("staple");
+      } else if (activeCategory === "instant-noodles") {
+        matchesCategory = cat === "instant noodles" || cat.includes("noodle");
+      } else if (activeCategory === "snacks-and-biscuits") {
+        matchesCategory = cat === "snacks & biscuits" || cat.includes("biscuit");
+      } else if (activeCategory === "beverages") {
+        matchesCategory = cat === "beverages" || cat.includes("beverage");
+      } else if (activeCategory === "cleaning-and-toiletries") {
+        matchesCategory = cat === "cleaning & toiletries" || cat.includes("clean") || cat.includes("detergent") || cat.includes("toilet");
+      } else if (activeCategory === "personal-care") {
+        matchesCategory = cat === "personal care";
       } else {
-        matchesCategory = cat.includes(activeCategory) || name.includes(activeCategory);
+        matchesCategory = cat.includes(activeCategory);
       }
 
       if (!matchesCategory) return false;

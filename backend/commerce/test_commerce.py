@@ -157,3 +157,81 @@ def test_checkout_total_calculation(adapter):
         assert len(order["items"]) == 2
 
     asyncio.run(_run())
+
+
+# ── TAXONOMY INTEGRITY & ANTI-CONTAMINATION TESTS ─────────────────────────────
+
+def test_anti_contamination_classification():
+    from backend.catalog.taxonomy import classify_product
+
+    # 1. Milk must NEVER be classified as Cleaning
+    milk_res = classify_product("Amul Taaza Toned Milk 1L", "Amul")
+    assert milk_res["category"] == "Milk & Dairy"
+    assert milk_res["category"] != "Cleaning & Toiletries"
+
+    # 2. Tea must NEVER be classified as Snacks
+    tea_res = classify_product("Tata Tea Gold 500g", "Tata Tea")
+    assert tea_res["category"] in ["Tea & Staples", "Tea & Coffee"]
+    assert tea_res["category"] != "Snacks & Biscuits"
+
+    # 3. Detergent must NEVER be classified as Dairy or Food
+    clean_res = classify_product("Surf Excel Matic Front Load 2kg", "Surf Excel")
+    assert clean_res["category"] == "Cleaning & Toiletries"
+    assert clean_res["category"] not in ["Milk & Dairy", "Atta & Rice", "Snacks & Biscuits"]
+
+    # 4. Cold Drinks must NEVER be classified as Cleaning (word boundary test against 'rin')
+    drink_res = classify_product("Pepsi Cold Drink 750ml", "Pepsi")
+    assert drink_res["category"] == "Beverages"
+    assert drink_res["category"] != "Cleaning & Toiletries"
+
+    # 5. Dishwash must be Cleaning
+    vim_res = classify_product("Vim Lemon Dishwash Gel 500ml", "Vim")
+    assert vim_res["category"] == "Cleaning & Toiletries"
+
+    # 6. Cooking Oil must be Cooking Oils
+    oil_res = classify_product("Fortune Sunlite Refined Sunflower Oil 1L", "Fortune")
+    assert oil_res["category"] == "Cooking Oils"
+
+    # 7. Noodles must be Instant Noodles
+    noodle_res = classify_product("Maggi 2-Minute Noodles 280g", "Nestle")
+    assert noodle_res["category"] == "Instant Noodles"
+
+    # 8. Coffee & Chicory must be Tea & Staples, NEVER Snacks
+    coffee_res = classify_product("Koffelo Extrabold Chicory Mixture 100g", "Koffelo")
+    assert coffee_res["category"] == "Tea & Staples"
+    assert coffee_res["category"] != "Snacks & Biscuits"
+
+
+def test_section_filtering_strictness(adapter):
+    from backend.catalog.taxonomy import is_product_allowed_in_section
+
+    sim = adapter._get_simulated_catalog()
+    assert len(sim) >= 60
+
+    # Test Household section: strictly Cleaning & Toiletries / Personal Care
+    household_products = [p for p in sim if is_product_allowed_in_section(p, "household")]
+    assert len(household_products) > 0
+    for p in household_products:
+        assert p["category"] in ["Cleaning & Toiletries", "Personal Care"]
+        assert p["category"] not in ["Milk & Dairy", "Tea & Staples", "Atta & Rice", "Cooking Oils", "Instant Noodles"]
+
+    # Test Snacks section: strictly Snacks & Biscuits, Instant Noodles, Beverages
+    snack_products = [p for p in sim if is_product_allowed_in_section(p, "snacks")]
+    assert len(snack_products) > 0
+    for p in snack_products:
+        assert p["category"] in ["Snacks & Biscuits", "Instant Noodles", "Beverages"]
+        assert p["category"] not in ["Cleaning & Toiletries", "Milk & Dairy", "Cooking Oils", "Atta & Rice"]
+
+    # Test Groceries section: strictly Atta & Rice, Cooking Oils, Dal & Pulses, Tea & Staples
+    grocery_products = [p for p in sim if is_product_allowed_in_section(p, "groceries")]
+    assert len(grocery_products) > 0
+    for p in grocery_products:
+        assert p["category"] in ["Atta & Rice", "Cooking Oils", "Dal & Pulses", "Tea & Staples"]
+        assert p["category"] not in ["Cleaning & Toiletries", "Beverages"]
+
+
+def test_product_id_uniqueness(adapter):
+    sim = adapter._get_simulated_catalog()
+    ids = [p["id"] for p in sim]
+    assert len(ids) == len(set(ids)), "All simulated catalog product IDs must be unique"
+

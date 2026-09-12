@@ -9,52 +9,19 @@ from .interface import CommerceInterface
 from .swiggy_oauth import oauth_manager
 from images.image_resolver import image_resolver
 
+from catalog.taxonomy import classify_product, CANONICAL_CATEGORIES
+
 SWIGGY_MCP_URL = os.environ.get("SWIGGY_MCP_URL", "https://mcp.swiggy.com/im")
 COMMERCE_MODE = os.environ.get("COMMERCE_MODE", "live").lower()
 
 
 def infer_product_category(name: str, brand: Optional[str] = None, existing_cat: Optional[str] = None) -> Tuple[str, List[str]]:
     """
-    Infers the standard UI category and search/shelf tags from product title and brand.
+    Infers the standard UI category and search/shelf tags using canonical deterministic taxonomy.
     Returns: (category, tags)
     """
-    text = (str(brand or "") + " " + str(name or "") + " " + str(existing_cat or "")).lower()
-
-    # 1. Milk & Dairy
-    if any(k in text for k in ["milk", "curd", "dahi", "paneer", "butter", "cheese", "ghee", "yogurt", "cream", "taaza", "nandini", "dairy", "chaas", "lassi", "cow milk"]):
-        return "Milk & Dairy", ["milk", "dairy", "usual", "staple"]
-
-    # 2. Instant Noodles & Pasta
-    if any(k in text for k in ["noodle", "noodles", "maggi", "pasta", "ramen", "macaroni", "yippee", "chow"]):
-        return "Instant Noodles", ["noodles", "snacks", "instant_food"]
-
-    # 3. Atta & Rice (Grains)
-    if any(k in text for k in ["atta", "rice", "basmati", "flour", "wheat", "maida", "sooji", "suji", "rava", "besan", "poha", "kolam", "sona masoori", "grain"]):
-        return "Atta & Rice", ["grains", "atta", "rice", "staple", "usual"]
-
-    # 4. Cooking Oils
-    if any(k in text for k in ["oil", "sunflower", "mustard", "olive", "groundnut", "refined", "soyabean", "tel"]) and not any(k in text for k in ["hair", "shampoo"]):
-        return "Cooking Oils", ["oil", "cooking_oil", "staple", "usual"]
-
-    # 5. Dal & Pulses
-    if any(k in text for k in ["dal", "pulses", "chana", "toor", "arhar", "moong", "urad", "rajma", "masoor", "lentil", "kabuli", "kala chana"]):
-        return "Dal & Pulses", ["dal", "pulses", "staple", "usual", "grains"]
-
-    # 6. Cleaning & Toiletries
-    if any(k in text for k in ["detergent", "surf", "ariel", "rin", "tide", "soap", "wash", "cleaner", "harpic", "vim", "dishwash", "shampoo", "toothpaste", "colgate", "lizol", "toilet", "handwash", "dettol"]):
-        return "Cleaning & Toiletries", ["cleaning", "household", "toiletries"]
-
-    # 7. Tea & Staples
-    if any(k in text for k in ["tea", "chai", "coffee", "sugar", "salt", "spices", "masala", "turmeric", "haldi", "chilli", "mirch", "jeera", "cumin", "pepper"]):
-        return "Tea & Staples", ["tea", "staples", "spices", "usual"]
-
-    # 8. Snacks & Beverages
-    if any(k in text for k in ["biscuit", "biscuits", "cookie", "cookies", "chips", "namkeen", "snack", "chocolate", "cadbury", "beverage", "drink", "juice"]):
-        return "Snacks & Beverages", ["snacks", "beverages"]
-
-    if existing_cat and existing_cat.lower() not in ["grocery", "groceries", "default", ""]:
-        return existing_cat, ["general"]
-    return "Tea & Staples", ["staples"]
+    info = classify_product(name, brand, existing_cat)
+    return info["category"], info["keywords"]
 
 
 class SwiggyInstamartAdapter(CommerceInterface):
@@ -352,8 +319,12 @@ class SwiggyInstamartAdapter(CommerceInterface):
             else:
                 unit = pack_size
 
-        # Category inference & tags
-        cat_name, tags = infer_product_category(name, brand, product.get("category"))
+        # Category inference & tags via deterministic taxonomy
+        cls_info = classify_product(name, brand, product.get("category"))
+        cat_name = cls_info["category"]
+        sub_name = cls_info["subcategory"]
+        sec_name = cls_info["section"]
+        tags = cls_info["keywords"]
 
         normalized = {
             "id": spin_id,
@@ -381,6 +352,8 @@ class SwiggyInstamartAdapter(CommerceInterface):
             "retailer": "swiggy_instamart" if not is_demo else "demo_catalog",
             "retailerName": "Swiggy Instamart" if not is_demo else "NOVA Demo Catalog (Simulated)",
             "category": cat_name,
+            "subcategory": sub_name,
+            "section": sec_name,
             "tags": tags,
             "is_demo": is_demo,
             "rawData": {
@@ -478,15 +451,23 @@ class SwiggyInstamartAdapter(CommerceInterface):
                 print(f"[Commerce] Returning cached live catalog ({len(self._catalog_cache)} items)")
                 return self._catalog_cache
 
-            core_queries = ["milk", "atta", "oil", "tea", "maggi", "detergent", "dal"]
+            core_queries = [
+                "milk", "curd", "atta", "basmati rice", "sunflower oil", "toor dal",
+                "tea", "coffee", "maggi noodles", "biscuits", "namkeen", "cold drink",
+                "surf excel detergent", "vim dishwash", "harpic cleaner"
+            ]
             tasks = [self._search_mcp_single_query(q) for q in core_queries]
             batch_results = await asyncio.gather(*tasks, return_exceptions=True)
 
+            # Interleave results across queries round-robin so all categories are fairly represented from item 0
             combined: List[Dict[str, Any]] = []
             seen_ids = set()
-            for res in batch_results:
-                if isinstance(res, list):
-                    for item in res:
+            valid_lists = [res for res in batch_results if isinstance(res, list)]
+            max_len = max((len(l) for l in valid_lists), default=0)
+            for idx in range(max_len):
+                for res_list in valid_lists:
+                    if idx < len(res_list):
+                        item = res_list[idx]
                         item_id = item.get("id") or item.get("variantId")
                         if item_id and item_id not in seen_ids:
                             seen_ids.add(item_id)
@@ -716,7 +697,11 @@ class SwiggyInstamartAdapter(CommerceInterface):
                 with open(catalog_file, "r", encoding="utf-8") as f:
                     raw_items = json.load(f)
                 for item in raw_items:
-                    cat_name, tags = infer_product_category(item.get("name", ""), item.get("brand", ""), item.get("category", ""))
+                    cls_info = classify_product(item.get("name", ""), item.get("brand", ""), item.get("category", ""))
+                    cat_name = cls_info["category"]
+                    sub_name = cls_info["subcategory"]
+                    sec_name = cls_info["section"]
+                    tags = cls_info["keywords"]
                     prod_id = item.get("id")
                     img = item.get("imageUrl") or item.get("image")
                     items.append({
@@ -742,6 +727,8 @@ class SwiggyInstamartAdapter(CommerceInterface):
                         "retailer": "demo_catalog",
                         "retailerName": "NOVA Demo Catalog (Simulated)",
                         "category": cat_name,
+                        "subcategory": sub_name,
+                        "section": sec_name,
                         "tags": tags,
                         "is_demo": True,
                     })

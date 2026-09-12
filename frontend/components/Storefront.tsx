@@ -87,22 +87,23 @@ const HERO_SLIDES = [
 ];
 
 const GROCERY_CATEGORIES = [
-  { name: "Atta & Flour", key: "atta", href: "/catalog?category=Atta" },
-  { name: "Basmati Rice", key: "rice", href: "/catalog?category=Rice" },
-  { name: "Dals & Pulses", key: "dal", href: "/catalog?category=Dal" },
-  { name: "Cooking Oils", key: "oil", href: "/catalog?category=Oil" },
-  { name: "Tea & Chai", key: "tea", href: "/catalog?category=Tea" },
-  { name: "Coffee", key: "coffee", href: "/catalog?category=Coffee" },
-  { name: "Breakfast", key: "breakfast", href: "/catalog?category=Breakfast" },
-  { name: "Snacks", key: "snacks", href: "/catalog?category=Snacks" },
-  { name: "Noodles & Pasta", key: "noodles", href: "/catalog?category=Snacks" },
-  { name: "Biscuits", key: "biscuits", href: "/catalog?category=Snacks" },
+  { name: "Atta & Flour", key: "atta", href: "/catalog?category=Atta%20%26%20Rice" },
+  { name: "Basmati Rice", key: "rice", href: "/catalog?category=Atta%20%26%20Rice" },
+  { name: "Dals & Pulses", key: "dal", href: "/catalog?category=Dal%20%26%20Pulses" },
+  { name: "Cooking Oils", key: "oil", href: "/catalog?category=Cooking%20Oils" },
+  { name: "Milk & Dairy", key: "milk", href: "/catalog?category=Milk%20%26%20Dairy" },
+  { name: "Tea & Chai", key: "tea", href: "/catalog?category=Tea%20%26%20Staples" },
+  { name: "Coffee", key: "coffee", href: "/catalog?category=Tea%20%26%20Staples" },
+  { name: "Instant Noodles", key: "noodles", href: "/catalog?category=Instant%20Noodles" },
+  { name: "Biscuits", key: "biscuits", href: "/catalog?category=Snacks%20%26%20Biscuits" },
   { name: "Cold Drinks", key: "drinks", href: "/catalog?category=Beverages" },
-  { name: "Chocolates", key: "chocolates", href: "/catalog?category=Snacks" },
+  { name: "Chocolates", key: "chocolates", href: "/catalog?category=Snacks%20%26%20Biscuits" },
+  { name: "Cleaning", key: "cleaning", href: "/catalog?category=Cleaning%20%26%20Toiletries" },
 ];
 
 export default function Storefront() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [sections, setSections] = useState<Record<string, Product[]> | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [budget, setBudget] = useState<{ monthly: number; spent: number; remaining: number; auto_limit: number } | null>(null);
@@ -117,12 +118,14 @@ export default function Storefront() {
   useEffect(() => {
     async function loadInitialData() {
       try {
-        const [prodRes, budRes, statRes] = await Promise.all([
-          fetch("/api/products?limit=150").then((r) => r.json()).catch(() => []),
+        const [prodRes, secRes, budRes, statRes] = await Promise.all([
+          fetch("/api/products?limit=250").then((r) => r.json()).catch(() => []),
+          fetch("/api/products/sections").then((r) => r.json()).catch(() => null),
           fetch("/api/budget").then((r) => r.json()).catch(() => null),
           fetch("/api/household-status").then((r) => r.json()).catch(() => null),
         ]);
         setProducts(Array.isArray(prodRes) ? prodRes : []);
+        setSections(secRes && typeof secRes === "object" ? secRes : null);
         setBudget(budRes);
         setStatus(statRes);
       } catch (err) {
@@ -142,81 +145,73 @@ export default function Storefront() {
     return () => clearInterval(timer);
   }, []);
 
-  // Category matching helper
-  const matchCategory = (cat: string | undefined, targets: string[]) => {
-    if (!cat) return false;
-    const lower = cat.toLowerCase();
-    return targets.some((t) => lower.includes(t.toLowerCase()) || t.toLowerCase().includes(lower));
-  };
-
-  // Filter specific product sets for shelves
-  // Deals of the day: Select diverse products across distinct categories
+  // Filter specific product sets for shelves strictly by canonical category.
+  // Never cross-contaminate shelves with unrelated categories.
+  // Never fallback to arbitrary slices.
   const deals = useMemo(() => {
+    if (sections?.deals?.length) return sections.deals;
     if (!products.length) return [];
-    const dealTagged = products.filter((p) => p.tags?.includes("deal"));
-    const seenCategories = new Set<string>();
-    const selected: typeof products = [];
-    
-    // First pass: 1 distinct product per category
-    for (const p of dealTagged) {
-      if (p.category && !seenCategories.has(p.category)) {
-        seenCategories.add(p.category);
+    const seenCats = new Set<string>();
+    const selected: Product[] = [];
+    for (const p of products) {
+      if (p.category && !seenCats.has(p.category)) {
+        seenCats.add(p.category);
         selected.push(p);
       }
     }
-    
-    // Second pass: fill up to 10 with other deal products or remaining products without duplicate IDs
-    for (const p of (dealTagged.length ? dealTagged : products)) {
+    for (const p of products) {
       if (selected.length >= 10) break;
-      if (!selected.some((item) => item.id === p.id)) {
+      if (!selected.some((x) => x.id === p.id)) {
         selected.push(p);
       }
     }
-    
     return selected.map((p) => ({
       ...p,
       tags: p.tags ? Array.from(new Set([...p.tags, "deal"])) : ["deal"],
     }));
-  }, [products]);
+  }, [sections, products]);
 
   const usuals = useMemo(() => {
+    if (sections?.usuals?.length) return sections.usuals;
     if (!products.length) return [];
-    const matched = products.filter((p) =>
-      matchCategory(p.category, ["tea", "coffee", "oil", "milk", "dairy", "atta", "staples", "rice", "salt"])
-    );
-    const pool = matched.length >= 4 ? matched : products;
-    return pool.slice(0, 10).map((p) => ({
-      ...p,
-      tags: p.tags ? Array.from(new Set([...p.tags, "usual"])) : ["usual"],
-    }));
-  }, [products]);
+    return products
+      .filter((p) =>
+        ["Milk & Dairy", "Tea & Staples", "Tea & Coffee", "Atta & Rice", "Cooking Oils"].includes(p.category || "")
+      )
+      .slice(0, 10)
+      .map((p) => ({
+        ...p,
+        tags: p.tags ? Array.from(new Set([...p.tags, "usual"])) : ["usual"],
+      }));
+  }, [sections, products]);
 
   const groceries = useMemo(() => {
+    if (sections?.groceries?.length) return sections.groceries;
     if (!products.length) return [];
-    const matched = products.filter((p) =>
-      matchCategory(p.category, ["rice", "atta", "dal", "oil", "salt", "sugar", "spices", "ghee", "staples"])
-    );
-    const pool = matched.length >= 4 ? matched : products;
-    return pool.slice(0, 10);
-  }, [products]);
+    return products
+      .filter((p) =>
+        ["Atta & Rice", "Cooking Oils", "Dal & Pulses", "Tea & Staples"].includes(p.category || "")
+      )
+      .slice(0, 10);
+  }, [sections, products]);
 
   const household = useMemo(() => {
+    if (sections?.household?.length) return sections.household;
     if (!products.length) return [];
-    const matched = products.filter((p) =>
-      matchCategory(p.category, ["detergent", "dishwash", "cleaning", "toiletries", "laundry", "soap", "toothpaste", "personal care"])
-    );
-    const pool = matched.length >= 4 ? matched : products.slice(10, 20);
-    return pool.slice(0, 10);
-  }, [products]);
+    // Strict cleaning & toiletries / personal care only. Zero food/milk/tea.
+    return products
+      .filter((p) => p.category === "Cleaning & Toiletries" || p.category === "Personal Care")
+      .slice(0, 10);
+  }, [sections, products]);
 
   const snacks = useMemo(() => {
+    if (sections?.snacks?.length) return sections.snacks;
     if (!products.length) return [];
-    const matched = products.filter((p) =>
-      matchCategory(p.category, ["noodles", "instant noodles", "biscuits", "snacks", "beverages", "cold drinks", "tea", "coffee"])
-    );
-    const pool = matched.length >= 4 ? matched : products.slice(5, 15);
-    return pool.slice(0, 10);
-  }, [products]);
+    // Strict snacks, biscuits, instant noodles, beverages only. Zero cleaning/tea/oils.
+    return products
+      .filter((p) => p.category === "Snacks & Biscuits" || p.category === "Instant Noodles" || p.category === "Beverages")
+      .slice(0, 10);
+  }, [sections, products]);
 
   // Scenario 3 trigger
   const handleRunCommand = async (cmdText: string) => {
@@ -314,10 +309,10 @@ export default function Storefront() {
                 </h2>
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   {[
-                    { name: "Atta & Flour", href: "/catalog?category=Atta", icon: Package, color: "bg-amber-50 text-amber-700 border-amber-100" },
-                    { name: "Basmati Rice", href: "/catalog?category=Rice", icon: Utensils, color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-                    { name: "Cooking Oils", href: "/catalog?category=Oil", icon: Droplet, color: "bg-yellow-50 text-yellow-700 border-yellow-100" },
-                    { name: "Dals & Pulses", href: "/catalog?category=Dal", icon: Layers, color: "bg-orange-50 text-orange-700 border-orange-100" },
+                    { name: "Atta & Flour", href: "/catalog?category=Atta%20%26%20Rice", icon: Package, color: "bg-amber-50 text-amber-700 border-amber-100" },
+                    { name: "Basmati Rice", href: "/catalog?category=Atta%20%26%20Rice", icon: Utensils, color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+                    { name: "Cooking Oils", href: "/catalog?category=Cooking%20Oils", icon: Droplet, color: "bg-yellow-50 text-yellow-700 border-yellow-100" },
+                    { name: "Dals & Pulses", href: "/catalog?category=Dal%20%26%20Pulses", icon: Layers, color: "bg-orange-50 text-orange-700 border-orange-100" },
                   ].map((item) => {
                     const Icon = item.icon;
                     return (
@@ -338,7 +333,7 @@ export default function Storefront() {
                 </div>
               </div>
               <Link
-                href="/catalog?category=Rice"
+                href="/catalog?category=Atta%20%26%20Rice"
                 className="text-xs font-semibold text-[#007185] hover:text-[#C7511F] hover:underline"
               >
                 See all groceries &rarr;
@@ -356,28 +351,28 @@ export default function Storefront() {
                 </div>
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   {[
-                    { name: "Amul Milk 1L", tag: "Due Tomorrow", color: "bg-red-50 text-red-700", icon: Milk, boxColor: "bg-blue-50 text-blue-700 border-blue-100" },
-                    { name: "Tata Tea 500g", tag: "Due in 5d", color: "bg-orange-50 text-orange-700", icon: Coffee, boxColor: "bg-amber-50 text-amber-700 border-amber-100" },
-                    { name: "Cooking Oil 1L", tag: "Stock Good", color: "bg-green-50 text-green-700", icon: Sun, boxColor: "bg-yellow-50 text-yellow-700 border-yellow-100" },
-                    { name: "Surf Excel 1kg", tag: "Due in 8d", color: "bg-blue-50 text-blue-700", icon: Sparkles, boxColor: "bg-cyan-50 text-cyan-700 border-cyan-100" },
+                    { name: "Amul Milk 1L", tag: "Due Tomorrow", color: "bg-red-50 text-red-700", icon: Milk, boxColor: "bg-blue-50 text-blue-700 border-blue-100", productId: "prod_000109" },
+                    { name: "Tata Tea 500g", tag: "Due in 5d", color: "bg-orange-50 text-orange-700", icon: Coffee, boxColor: "bg-amber-50 text-amber-700 border-amber-100", productId: "prod_000080" },
+                    { name: "Cooking Oil 1L", tag: "Stock Good", color: "bg-green-50 text-green-700", icon: Sun, boxColor: "bg-yellow-50 text-yellow-700 border-yellow-100", productId: "prod_000031" },
+                    { name: "Surf Excel 1kg", tag: "Due in 8d", color: "bg-blue-50 text-blue-700", icon: Sparkles, boxColor: "bg-cyan-50 text-cyan-700 border-cyan-100", productId: "prod_000091" },
                   ].map((item) => {
                     const Icon = item.icon;
                     return (
-                      <div
+                      <Link
                         key={item.name}
-                        onClick={() => setActiveScenario(item.name.includes("Milk") ? 1 : item.name.includes("Oil") ? 2 : 1)}
+                        href={`/catalog/${item.productId}`}
                         className="group flex flex-col items-center text-center p-2 rounded-lg border border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50 cursor-pointer transition-all"
                       >
                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-1.5 border ${item.boxColor} group-hover:scale-105 transition-transform`}>
                           <Icon className="w-6 h-6" />
                         </div>
-                        <span className="text-[11px] font-semibold text-neutral-800 truncate w-full">
+                        <span className="text-[11px] font-semibold text-neutral-800 truncate w-full group-hover:text-[#C7511F]">
                           {item.name}
                         </span>
                         <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full mt-1 ${item.color}`}>
                           {item.tag}
                         </span>
-                      </div>
+                      </Link>
                     );
                   })}
                 </div>
@@ -398,9 +393,9 @@ export default function Storefront() {
                 </h2>
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   {[
-                    { name: "Biscuits", href: "/catalog?category=Snacks", icon: Cookie, color: "bg-amber-50 text-amber-700 border-amber-100" },
-                    { name: "Noodles", href: "/catalog?category=Snacks", icon: Utensils, color: "bg-orange-50 text-orange-700 border-orange-100" },
-                    { name: "Chocolates", href: "/catalog?category=Snacks", icon: Package, color: "bg-rose-50 text-rose-700 border-rose-100" },
+                    { name: "Biscuits", href: "/catalog?category=Snacks%20%26%20Biscuits", icon: Cookie, color: "bg-amber-50 text-amber-700 border-amber-100" },
+                    { name: "Noodles", href: "/catalog?category=Instant%20Noodles", icon: Utensils, color: "bg-orange-50 text-orange-700 border-orange-100" },
+                    { name: "Chocolates", href: "/catalog?category=Snacks%20%26%20Biscuits", icon: Package, color: "bg-rose-50 text-rose-700 border-rose-100" },
                     { name: "Cold Drinks", href: "/catalog?category=Beverages", icon: CupSoda, color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
                   ].map((item) => {
                     const Icon = item.icon;
@@ -422,7 +417,7 @@ export default function Storefront() {
                 </div>
               </div>
               <Link
-                href="/catalog?category=Snacks"
+                href="/catalog?category=Snacks%20%26%20Biscuits"
                 className="text-xs font-semibold text-[#007185] hover:text-[#C7511F] hover:underline"
               >
                 See all snacks &amp; drinks &rarr;
@@ -591,7 +586,7 @@ export default function Storefront() {
             <ProductShelf
               title="Frequently Purchased by Your Household"
               products={usuals}
-              viewAllLink="/catalog"
+              viewAllLink="/catalog?category=Milk%20%26%20Dairy"
             />
           </div>
         </div>
@@ -604,7 +599,7 @@ export default function Storefront() {
             <ProductShelf
               title="Kitchen &amp; Cooking Staples"
               products={groceries}
-              viewAllLink="/catalog?category=Rice"
+              viewAllLink="/catalog?category=Atta%20%26%20Rice"
             />
           </div>
         </div>
@@ -617,7 +612,7 @@ export default function Storefront() {
             <ProductShelf
               title="Household Cleaning &amp; Laundry"
               products={household}
-              viewAllLink="/catalog?category=Detergent"
+              viewAllLink="/catalog?category=Cleaning%20%26%20Toiletries"
             />
           </div>
         </div>
@@ -630,7 +625,7 @@ export default function Storefront() {
             <ProductShelf
               title="Snacks, Biscuits &amp; Beverages"
               products={snacks}
-              viewAllLink="/catalog?category=Snacks"
+              viewAllLink="/catalog?category=Snacks%20%26%20Biscuits"
             />
           </div>
         </div>
@@ -778,7 +773,7 @@ export default function Storefront() {
                     Close
                   </button>
                   <Link
-                    href="/catalog/p_amul_milk_1l"
+                    href="/catalog/prod_000109"
                     className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-xs font-semibold rounded text-neutral-900"
                   >
                     View Product Details &rarr;

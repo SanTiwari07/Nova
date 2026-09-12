@@ -345,7 +345,12 @@ export default function AutopilotPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-semibold text-neutral-900">{item.name}</p>
+                          <Link
+                            href={`/catalog/${item.product_id}`}
+                            className="text-sm font-semibold text-neutral-900 hover:text-[#C7511F] hover:underline"
+                          >
+                            {item.name}
+                          </Link>
                           <span className="text-[10px] text-neutral-400">{item.pack_size}</span>
                           <span
                             className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${

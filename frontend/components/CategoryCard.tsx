@@ -25,7 +25,7 @@ export default function CategoryCard({ name, categoryKey, image, href }: Categor
         </svg>
       );
     }
-    if (key.includes("oil") || key.includes("ghee")) {
+    if ((key.includes("oil") && !key.includes("toilet")) || key.includes("ghee")) {
       return (
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />

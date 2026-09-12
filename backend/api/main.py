@@ -236,12 +236,14 @@ async def get_orders():
 async def get_activity():
     return audit_service.get_recent()
 
+from catalog.taxonomy import CANONICAL_CATEGORIES, SECTION_DEFINITIONS, is_product_allowed_in_section, classify_product
+
 @app.get("/api/products")
 async def get_products(
     q: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
     skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=250)
+    limit: int = Query(250, ge=1, le=500)
 ):
     query_val = q or ""
     items = await commerce_adapter.search_products(query=query_val, category=category)
@@ -252,7 +254,7 @@ async def search_products(
     q: str = Query(""),
     category: Optional[str] = Query(None),
     skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=250)
+    limit: int = Query(250, ge=1, le=500)
 ):
     items = await commerce_adapter.search_products(query=q, category=category)
     return items[skip:skip+limit]
@@ -272,14 +274,69 @@ async def get_commerce_status():
 
 @app.get("/api/products/categories")
 async def get_categories():
-    return [
-        "Milk & Dairy",
-        "Instant Noodles",
-        "Cleaning & Toiletries",
-        "Cooking Oils",
-        "Atta & Rice",
-        "Tea & Staples"
-    ]
+    return list(CANONICAL_CATEGORIES.keys())
+
+@app.get("/api/taxonomy")
+async def get_taxonomy():
+    return {
+        "categories": CANONICAL_CATEGORIES,
+        "sections": SECTION_DEFINITIONS,
+    }
+
+@app.get("/api/products/sections")
+async def get_sections_products():
+    all_products = await commerce_adapter.search_products("")
+    sections_result: Dict[str, List[Dict[str, Any]]] = {}
+    seen_ids = set()
+
+    for sec_id in ["deals", "usuals", "groceries", "household", "snacks"]:
+        sec_cfg = SECTION_DEFINITIONS.get(sec_id, {})
+        allowed = sec_cfg.get("allowed_categories", [])
+        disallowed = sec_cfg.get("disallowed_categories", [])
+
+        # Filter strictly by category
+        matched = []
+        if sec_id == "deals":
+            category_seen = set()
+            for p in all_products:
+                cat = p.get("category")
+                if cat and cat not in category_seen:
+                    category_seen.add(cat)
+                    matched.append(p)
+            for p in all_products:
+                if len(matched) >= 10:
+                    break
+                p_id = p.get("id") or p.get("productId")
+                if not any((x.get("id") or x.get("productId")) == p_id for x in matched):
+                    matched.append(p)
+        else:
+            for p in all_products:
+                p_cat = p.get("category", "")
+                if disallowed and p_cat in disallowed:
+                    continue
+                if allowed and p_cat not in allowed:
+                    continue
+                matched.append(p)
+
+        # Prioritize unseen products for cross-shelf variety
+        unseen = [p for p in matched if (p.get("id") or p.get("productId")) not in seen_ids]
+        selected = unseen[:10]
+        if len(selected) < 4:
+            selected_ids = {p.get("id") or p.get("productId") for p in selected}
+            for p in matched:
+                if len(selected) >= 10:
+                    break
+                p_id = p.get("id") or p.get("productId")
+                if p_id not in selected_ids:
+                    selected.append(p)
+                    selected_ids.add(p_id)
+
+        for p in selected:
+            seen_ids.add(p.get("id") or p.get("productId"))
+
+        sections_result[sec_id] = selected
+
+    return sections_result
 
 @app.get("/api/products/{product_id}")
 async def get_product(product_id: str):
