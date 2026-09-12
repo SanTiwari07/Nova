@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { CheckCircle2, AlertTriangle, Sparkles } from "lucide-react";
 
 export default function BudgetPage() {
   const [budget, setBudget] = useState<any>(null);
@@ -128,9 +129,15 @@ export default function BudgetPage() {
             </div>
           </div>
           <div className="mt-4 flex items-center gap-2">
-            <span className={`text-sm font-bold ${projectedStatus === "WITHIN" ? "text-green-700" : "text-red-700"}`}>
-              {projectedStatus === "WITHIN" ? "✓ Within budget" : "⚠ Over budget"}
-            </span>
+            {projectedStatus === "WITHIN" ? (
+              <span className="flex items-center gap-1.5 text-sm font-bold text-green-700">
+                <CheckCircle2 className="w-4 h-4" /> Within budget
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5 text-sm font-bold text-red-700">
+                <AlertTriangle className="w-4 h-4" /> Over budget
+              </span>
+            )}
             {projectedStatus === "WITHIN" && (
               <span className="text-sm text-green-600">— ₹{(monthly - projectedTotal).toLocaleString("en-IN")} to spare</span>
             )}
@@ -148,7 +155,7 @@ export default function BudgetPage() {
             <div className="space-y-2">
               {(savings.opportunities || []).map((opp: any) => (
                 <div key={opp.id} className="flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-100">
-                  <span className="text-green-500 text-sm">💚</span>
+                  <Sparkles className="w-4 h-4 text-green-600 shrink-0" />
                   <p className="text-xs text-neutral-700 flex-1">{opp.reason}</p>
                   <span className="text-xs font-bold text-green-700 shrink-0">Save ₹{opp.potential_saving}</span>
                 </div>

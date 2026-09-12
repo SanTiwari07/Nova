@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ProductImage from './ProductImage';
+import { CheckCircle2, ShieldCheck, AlertCircle } from 'lucide-react';
 
 interface Decision {
   id: string;
@@ -17,10 +18,10 @@ export default function DecisionCard({ decision }: { decision: Decision }) {
 
   const getTheme = () => {
     switch(decision.type) {
-      case 'BUY': return { border: 'border-green-200', bg: 'bg-green-50', text: 'text-green-800', badge: 'bg-green-100', icon: '✓ AUTOPURCHASE RECOMMENDED' };
-      case 'DO_NOT_BUY': return { border: 'border-neutral-200', bg: 'bg-white', text: 'text-neutral-700', badge: 'bg-neutral-100', icon: '✓ NO PURCHASE REQUIRED' };
-      case 'ASK_USER': return { border: 'border-orange-200', bg: 'bg-orange-50', text: 'text-orange-800', badge: 'bg-orange-100', icon: '! NEEDS YOUR DECISION' };
-      default: return { border: 'border-neutral-200', bg: 'bg-white', text: 'text-neutral-800', badge: 'bg-neutral-100', icon: '' };
+      case 'BUY': return { border: 'border-green-200', bg: 'bg-green-50', text: 'text-green-800', badge: 'bg-green-100', label: 'AUTOPURCHASE RECOMMENDED', status: 'BUY' };
+      case 'DO_NOT_BUY': return { border: 'border-neutral-200', bg: 'bg-white', text: 'text-neutral-700', badge: 'bg-neutral-100', label: 'NO PURCHASE REQUIRED', status: 'DO_NOT_BUY' };
+      case 'ASK_USER': return { border: 'border-orange-200', bg: 'bg-orange-50', text: 'text-orange-800', badge: 'bg-orange-100', label: 'NEEDS YOUR DECISION', status: 'ASK_USER' };
+      default: return { border: 'border-neutral-200', bg: 'bg-white', text: 'text-neutral-800', badge: 'bg-neutral-100', label: '', status: '' };
     }
   };
 
@@ -32,8 +33,11 @@ export default function DecisionCard({ decision }: { decision: Decision }) {
         <div className="flex justify-between items-start mb-6">
           <div>
             <h3 className="text-xl font-bold text-neutral-900 tracking-tight mb-2 uppercase">{decision.category}</h3>
-            <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${theme.badge} ${theme.text}`}>
-              {theme.icon}
+            <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${theme.badge} ${theme.text}`}>
+              {theme.status === 'BUY' && <CheckCircle2 className="w-3.5 h-3.5 text-green-700" />}
+              {theme.status === 'DO_NOT_BUY' && <ShieldCheck className="w-3.5 h-3.5 text-neutral-700" />}
+              {theme.status === 'ASK_USER' && <AlertCircle className="w-3.5 h-3.5 text-orange-700" />}
+              <span>{theme.label}</span>
             </div>
           </div>
           

@@ -1,6 +1,8 @@
 import ProductCard from './ProductCard';
 import { useRef } from 'react';
 
+import Link from 'next/link';
+
 interface Product {
   id: string;
   name: string;
@@ -43,14 +45,14 @@ export default function ProductShelf({ title, products, viewAllLink }: ProductSh
   if (!products || products.length === 0) return null;
 
   return (
-    <div className="mb-12">
-      <div className="flex items-center justify-between mb-6">
+    <div className="mb-2">
+      <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl md:text-2xl font-bold text-neutral-900 tracking-tight uppercase">{title}</h2>
         <div className="flex items-center gap-4">
           {viewAllLink && (
-            <a href={viewAllLink} className="hidden md:block text-sm font-semibold text-neutral-500 hover:text-neutral-900 transition-colors uppercase tracking-wider">
-              View All →
-            </a>
+            <Link href={viewAllLink} className="hidden md:block text-sm font-semibold text-neutral-500 hover:text-neutral-900 transition-colors uppercase tracking-wider">
+              View All &rarr;
+            </Link>
           )}
           <div className="hidden md:flex items-center gap-2">
             <button onClick={() => scroll('left')} className="w-8 h-8 rounded-full border border-neutral-200 flex items-center justify-center text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors">

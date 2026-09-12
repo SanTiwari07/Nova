@@ -92,6 +92,15 @@ class ConnectRequest(BaseModel):
 class AutonomyRequest(BaseModel):
     profile: str
 
+@app.get("/api/health")
+async def health_check():
+    return {
+        "status": "ok",
+        "service": "NOVA API",
+        "commerce": "Swiggy Instamart",
+        "authenticated": commerce_adapter.is_live
+    }
+
 @app.post("/api/auth/login")
 async def login(req: LoginRequest):
     session_service.login(req.email)
@@ -197,6 +206,8 @@ async def reset_demo():
     reminder_engine.reset()
     commerce_adapter.carts = {}
     commerce_adapter.orders = {}
+    commerce_adapter._catalog_cache = None
+    commerce_adapter._catalog_cache_time = 0.0
     return {"status": "ok"}
 
 @app.post("/api/command")
@@ -226,13 +237,24 @@ async def get_activity():
     return audit_service.get_recent()
 
 @app.get("/api/products")
-async def get_products(skip: int = Query(0, ge=0), limit: int = Query(20, ge=1, le=100)):
-    items = await commerce_adapter.search_products("")
+async def get_products(
+    q: Optional[str] = Query(None),
+    category: Optional[str] = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=250)
+):
+    query_val = q or ""
+    items = await commerce_adapter.search_products(query=query_val, category=category)
     return items[skip:skip+limit]
 
 @app.get("/api/products/search")
-async def search_products(q: str, skip: int = Query(0, ge=0), limit: int = Query(20, ge=1, le=100)):
-    items = await commerce_adapter.search_products(q)
+async def search_products(
+    q: str = Query(""),
+    category: Optional[str] = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=250)
+):
+    items = await commerce_adapter.search_products(query=q, category=category)
     return items[skip:skip+limit]
 
 @app.get("/api/commerce/status")
@@ -417,63 +439,94 @@ async def clear_image_cache():
 
 class CartRequest(BaseModel):
     product_id: str
+    quantity: Optional[int] = 1
+
+class CartUpdateRequest(BaseModel):
+    product_id: str
+    quantity: int
 
 @app.get("/api/cart")
 async def get_cart():
     if not commerce_adapter.carts:
-        return {"items": []}
-    cart_id = list(commerce_adapter.carts.keys())[0]
-    return {"cart_id": cart_id, "items": commerce_adapter.carts[cart_id]}
+        cart_id = await commerce_adapter.create_cart()
+    else:
+        cart_id = list(commerce_adapter.carts.keys())[0]
+    return commerce_adapter.get_cart(cart_id)
 
 @app.post("/api/cart/add")
 async def add_to_cart(req: CartRequest):
-    # Dummy cart for demo single user
     if not commerce_adapter.carts:
         cart_id = await commerce_adapter.create_cart()
     else:
         cart_id = list(commerce_adapter.carts.keys())[0]
-    await commerce_adapter.add_to_cart(cart_id, req.product_id)
-    return {"cart_id": cart_id, "items": commerce_adapter.carts[cart_id]}
+    return await commerce_adapter.add_to_cart(cart_id, req.product_id, req.quantity or 1)
+
+@app.post("/api/cart/update")
+async def update_cart_item(req: CartUpdateRequest):
+    if not commerce_adapter.carts:
+        cart_id = await commerce_adapter.create_cart()
+    else:
+        cart_id = list(commerce_adapter.carts.keys())[0]
+    return await commerce_adapter.update_cart_quantity(cart_id, req.product_id, req.quantity)
 
 @app.post("/api/cart/remove")
 async def remove_from_cart(req: CartRequest):
     if not commerce_adapter.carts:
-        return {"items": []}
+        return {"items": [], "item_count": 0, "subtotal": 0}
     cart_id = list(commerce_adapter.carts.keys())[0]
-    commerce_adapter.carts[cart_id] = [p for p in commerce_adapter.carts[cart_id] if p.get("id") != req.product_id]
-    return {"cart_id": cart_id, "items": commerce_adapter.carts[cart_id]}
+    return await commerce_adapter.remove_from_cart(cart_id, req.product_id)
 
 @app.post("/api/cart/clear")
 async def clear_cart():
     if not commerce_adapter.carts:
-        return {"items": []}
+        return {"items": [], "item_count": 0, "subtotal": 0}
     cart_id = list(commerce_adapter.carts.keys())[0]
     commerce_adapter.carts[cart_id] = []
-    return {"cart_id": cart_id, "items": []}
+    return {"cart_id": cart_id, "items": [], "item_count": 0, "subtotal": 0}
 
 @app.post("/api/checkout")
 async def checkout():
     if not commerce_adapter.carts:
-        return {"error": "No active cart"}
+        raise HTTPException(status_code=400, detail="No active cart")
     cart_id = list(commerce_adapter.carts.keys())[0]
-    # Remove from active carts immediately to prevent double processing
-    cart_items = commerce_adapter.carts.pop(cart_id, None)
-    if cart_items is None:
-         return {"error": "Cart already checked out"}
-         
-    # Temporarily put back for commerce adapter to process, 
-    # but in a real app we pass the items directly or use a lock.
-    commerce_adapter.carts[cart_id] = cart_items
+    cart = commerce_adapter.get_cart(cart_id)
+    if not cart["items"]:
+        raise HTTPException(status_code=400, detail="Cart is empty")
+
+    subtotal = cart["subtotal"]
+    budget_remaining = await budget_service.get_remaining_budget()
+
+    # Deterministic budget constraint check (Requirement 23)
+    if subtotal > budget_remaining:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Order total (₹{subtotal}) exceeds remaining monthly budget (₹{budget_remaining}). Please review items or adjust budget."
+        )
+
+    # Auto-limit evaluation
+    auto_limit = await budget_service.get_auto_buy_limit()
+    requires_explicit_approval = subtotal > auto_limit
+
     try:
         order = await commerce_adapter.checkout(cart_id)
-        # Deduct from budget
-        await budget_service.record_spend(order["total"])
-        del commerce_adapter.carts[cart_id]
+        # Deduct actual spend in budget service
+        await budget_service.record_spend(subtotal)
+        # Clear cart
+        commerce_adapter.carts[cart_id] = []
+
+        audit_service.log_decision(
+            order["id"],
+            "CHECKOUT_COMPLETED",
+            [
+                f"Total: ₹{subtotal}",
+                f"Items: {cart['item_count']}",
+                f"Budget remaining: ₹{budget_remaining - subtotal}",
+                f"Mode: {'EXPLICIT_APPROVAL' if requires_explicit_approval else 'AUTO_WITHIN_LIMIT'}"
+            ]
+        )
         return order
     except Exception as e:
-        # Rollback
-        commerce_adapter.carts[cart_id] = cart_items
-        return {"error": str(e)}, 500
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ─────────────────────────────────────────────────────────────────────────────
 # AMAZON-FIRST ROUTES

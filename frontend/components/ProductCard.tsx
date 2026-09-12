@@ -115,7 +115,7 @@ export default function ProductCard({ product }: { product: Product }) {
       await fetch("/api/cart/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product_id: product.id }),
+        body: JSON.stringify({ product_id: product.id, quantity: 1 }),
       });
       setAdded(true);
       if (typeof window !== "undefined") {

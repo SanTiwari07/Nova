@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
+import { Star } from "lucide-react";
 
 interface Product {
   id: string;
@@ -148,11 +149,14 @@ function SearchContent() {
               <div className="space-y-1">
                 {[4, 3, 2].map((stars) => (
                   <div key={stars} className="flex items-center gap-1.5 cursor-pointer hover:text-[#C45500]">
-                    <div className="flex text-[#FFA41C]">
+                    <div className="flex items-center gap-0.5">
                       {Array.from({ length: 5 }).map((_, i) => (
-                        <span key={i} className="text-sm leading-none">
-                          {i < stars ? "★" : "☆"}
-                        </span>
+                        <Star
+                          key={i}
+                          className={`w-3.5 h-3.5 ${
+                            i < stars ? "fill-[#FFA41C] text-[#FFA41C]" : "text-neutral-300"
+                          }`}
+                        />
                       ))}
                     </div>
                     <span className="text-[11px] text-neutral-600">&amp; Up</span>

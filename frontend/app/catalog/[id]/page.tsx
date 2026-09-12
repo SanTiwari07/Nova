@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import ProductImage from "@/components/ProductImage";
+import { Search, CheckCircle2, Star } from "lucide-react";
 
 interface Product {
   id: string;
@@ -189,7 +190,7 @@ export default function ProductDetailPage({ params }: { params?: { id: string } 
     return (
       <div className="min-h-screen bg-[#f3f3f3] flex items-center justify-center">
         <div className="text-center bg-white p-12 rounded-sm border border-neutral-200 max-w-md mx-4">
-          <div className="text-5xl mb-4">🔍</div>
+          <Search className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-neutral-900 mb-2">Product not found</h1>
           <p className="text-neutral-500 mb-6 text-sm">
             We couldn&apos;t find the product you&apos;re looking for. It may have been removed or the link may be incorrect.
@@ -411,13 +412,21 @@ export default function ProductDetailPage({ params }: { params?: { id: string } 
                     onClick={handleAddToCart}
                     disabled={addingToCart}
                     id="add-to-cart-btn"
-                    className={`w-full py-2 rounded-full text-sm font-medium transition-colors ${
+                    className={`w-full py-2 rounded-full text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${
                       addedToCart
                         ? "bg-green-100 text-green-700 border border-green-200"
                         : "bg-[#FFD814] text-neutral-900 hover:bg-[#F7CA00] border border-[#F2C200]"
                     } disabled:opacity-60`}
                   >
-                    {addedToCart ? "✓ Added to Cart" : addingToCart ? "Adding..." : "Add to Cart"}
+                    {addedToCart ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" /> Added to Cart
+                      </>
+                    ) : addingToCart ? (
+                      "Adding..."
+                    ) : (
+                      "Add to Cart"
+                    )}
                   </button>
 
                   <button
@@ -433,7 +442,7 @@ export default function ProductDetailPage({ params }: { params?: { id: string } 
               <div className="border-t border-neutral-100 pt-3 space-y-1 text-xs text-neutral-500">
                 <p>Ships from and sold by <span className="text-[#0066c0]">NOVA Commerce</span></p>
                 <p className="text-amber-700 bg-amber-50 rounded p-1.5 mt-1">
-                  Demo mode — No real purchase will be made
+                  Demo mode &mdash; No real purchase will be made
                 </p>
               </div>
             </div>
@@ -475,8 +484,9 @@ export default function ProductDetailPage({ params }: { params?: { id: string } 
                       </p>
                       {p.rating !== undefined && (
                         <div className="flex items-center gap-0.5 mb-1">
-                          <span className="text-[#FF9900] text-xs">
-                            {"★".repeat(Math.round(p.rating))}
+                          <span className="text-xs font-bold text-amber-600 flex items-center gap-1">
+                            <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                            {p.rating.toFixed(1)}
                           </span>
                         </div>
                       )}

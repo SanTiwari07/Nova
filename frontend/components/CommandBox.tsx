@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Sparkles } from 'lucide-react';
 
 export default function CommandBox() {
   const [command, setCommand] = useState('');
@@ -31,7 +32,7 @@ export default function CommandBox() {
     <div className="w-full mb-16">
       <form onSubmit={handleSubmit} className="relative group">
         <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
-          <span className="text-orange-500 text-xl">✦</span>
+          <Sparkles className="text-orange-500 w-5 h-5" />
         </div>
         <input 
           type="text" 
@@ -55,7 +56,9 @@ export default function CommandBox() {
         <div className="mt-4 bg-orange-50 border border-orange-100 rounded-2xl p-6 shadow-sm relative overflow-hidden">
           <div className="absolute top-0 left-0 w-1 h-full bg-orange-400"></div>
           <div className="flex items-start gap-4">
-            <div className="mt-1 text-orange-500">✦</div>
+            <div className="mt-1 text-orange-500">
+              <Sparkles className="w-5 h-5" />
+            </div>
             <div>
               <h3 className="text-xs text-orange-700 font-bold uppercase tracking-wider mb-2">Autopilot Response</h3>
               <p className="text-base text-neutral-800 leading-relaxed whitespace-pre-wrap">{response}</p>

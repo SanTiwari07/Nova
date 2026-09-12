@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
+import { Check } from "lucide-react";
 
 type AutoLevel = 0 | 1 | 2 | 3;
 
@@ -119,9 +120,10 @@ export default function RulesPage() {
               <button
                 key={cat}
                 onClick={() => toggleCat(cat)}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${allowedCats.includes(cat) ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"}`}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5 ${allowedCats.includes(cat) ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"}`}
               >
-                {allowedCats.includes(cat) ? "✓ " : ""}{cat}
+                {allowedCats.includes(cat) && <Check className="w-3.5 h-3.5" />}
+                {cat}
               </button>
             ))}
           </div>
@@ -202,9 +204,15 @@ export default function RulesPage() {
         {/* Save */}
         <button
           onClick={handleSave}
-          className={`w-full py-4 rounded-2xl font-bold text-base transition-all ${saved ? "bg-green-500 text-white" : "bg-neutral-900 text-white hover:bg-neutral-800"}`}
+          className={`w-full py-4 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-2 ${saved ? "bg-green-500 text-white" : "bg-neutral-900 text-white hover:bg-neutral-800"}`}
         >
-          {saved ? "✓ Rules saved" : "Save Autopilot Rules"}
+          {saved ? (
+            <>
+              <Check className="w-5 h-5" /> Rules saved
+            </>
+          ) : (
+            "Save Autopilot Rules"
+          )}
         </button>
         <p className="text-xs text-center text-neutral-400 mt-2">
           Changes take effect immediately. NOVA will re-evaluate pending items.

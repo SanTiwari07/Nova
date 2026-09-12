@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { TrendingDown, Check } from "lucide-react";
 
 export default function PriceWatchPage() {
   const [items, setItems] = useState<any[]>([]);
@@ -83,9 +84,11 @@ export default function PriceWatchPage() {
 
         {items.length === 0 && (
           <div className="text-center py-16 bg-white rounded-2xl border border-neutral-200">
-            <p className="text-4xl mb-4">📊</p>
+            <TrendingDown className="w-12 h-12 text-neutral-300 mx-auto mb-4" />
             <p className="text-neutral-500 font-medium">No items being tracked yet.</p>
-            <Link href="/store" className="mt-3 inline-block text-[#FF9900] font-semibold hover:underline text-sm">Browse products →</Link>
+            <Link href="/store" className="mt-3 inline-flex items-center gap-1 text-[#FF9900] font-semibold hover:underline text-sm">
+              Browse products &rarr;
+            </Link>
           </div>
         )}
       </div>
@@ -148,9 +151,15 @@ function PriceCard({ item, watching, onToggleWatch }: { item: any; watching: boo
         ) : (
           <button
             onClick={onToggleWatch}
-            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-colors ${watching ? "bg-blue-100 text-blue-700" : "bg-neutral-100 text-neutral-700 hover:bg-blue-50 hover:text-blue-700"}`}
+            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5 ${watching ? "bg-blue-100 text-blue-700" : "bg-neutral-100 text-neutral-700 hover:bg-blue-50 hover:text-blue-700"}`}
           >
-            {watching ? "✓ Watching price" : "Watch price"}
+            {watching ? (
+              <>
+                <Check className="w-3.5 h-3.5" /> Watching price
+              </>
+            ) : (
+              "Watch price"
+            )}
           </button>
         )}
         <div className={`px-3 py-2 rounded-xl text-xs font-semibold ${item.days_remaining <= 7 ? "bg-red-50 text-red-600" : "bg-neutral-50 text-neutral-500"}`}>

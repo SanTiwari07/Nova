@@ -68,7 +68,7 @@ export default function Header() {
     { href: "/catalog?category=Beverages", label: "Beverages" },
     { href: "/catalog?category=Detergent", label: "Household" },
     { href: "/catalog?category=Tea", label: "Tea & Coffee" },
-    { href: "/autopilot", label: "🤖 Autopilot" },
+    { href: "/autopilot", label: "Autopilot" },
     { href: "/budget", label: "Budget" },
   ];
 

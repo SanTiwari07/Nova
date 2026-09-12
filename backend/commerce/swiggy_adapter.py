@@ -1,15 +1,61 @@
 import os
 import json
 import time
+import asyncio
 import urllib.request
 import urllib.error
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from .interface import CommerceInterface
 from .swiggy_oauth import oauth_manager
 from images.image_resolver import image_resolver
 
 SWIGGY_MCP_URL = os.environ.get("SWIGGY_MCP_URL", "https://mcp.swiggy.com/im")
 COMMERCE_MODE = os.environ.get("COMMERCE_MODE", "live").lower()
+
+
+def infer_product_category(name: str, brand: Optional[str] = None, existing_cat: Optional[str] = None) -> Tuple[str, List[str]]:
+    """
+    Infers the standard UI category and search/shelf tags from product title and brand.
+    Returns: (category, tags)
+    """
+    text = (str(brand or "") + " " + str(name or "") + " " + str(existing_cat or "")).lower()
+
+    # 1. Milk & Dairy
+    if any(k in text for k in ["milk", "curd", "dahi", "paneer", "butter", "cheese", "ghee", "yogurt", "cream", "taaza", "nandini", "dairy", "chaas", "lassi", "cow milk"]):
+        return "Milk & Dairy", ["milk", "dairy", "usual", "staple"]
+
+    # 2. Instant Noodles & Pasta
+    if any(k in text for k in ["noodle", "noodles", "maggi", "pasta", "ramen", "macaroni", "yippee", "chow"]):
+        return "Instant Noodles", ["noodles", "snacks", "instant_food"]
+
+    # 3. Atta & Rice (Grains)
+    if any(k in text for k in ["atta", "rice", "basmati", "flour", "wheat", "maida", "sooji", "suji", "rava", "besan", "poha", "kolam", "sona masoori", "grain"]):
+        return "Atta & Rice", ["grains", "atta", "rice", "staple", "usual"]
+
+    # 4. Cooking Oils
+    if any(k in text for k in ["oil", "sunflower", "mustard", "olive", "groundnut", "refined", "soyabean", "tel"]) and not any(k in text for k in ["hair", "shampoo"]):
+        return "Cooking Oils", ["oil", "cooking_oil", "staple", "usual"]
+
+    # 5. Dal & Pulses
+    if any(k in text for k in ["dal", "pulses", "chana", "toor", "arhar", "moong", "urad", "rajma", "masoor", "lentil", "kabuli", "kala chana"]):
+        return "Dal & Pulses", ["dal", "pulses", "staple", "usual", "grains"]
+
+    # 6. Cleaning & Toiletries
+    if any(k in text for k in ["detergent", "surf", "ariel", "rin", "tide", "soap", "wash", "cleaner", "harpic", "vim", "dishwash", "shampoo", "toothpaste", "colgate", "lizol", "toilet", "handwash", "dettol"]):
+        return "Cleaning & Toiletries", ["cleaning", "household", "toiletries"]
+
+    # 7. Tea & Staples
+    if any(k in text for k in ["tea", "chai", "coffee", "sugar", "salt", "spices", "masala", "turmeric", "haldi", "chilli", "mirch", "jeera", "cumin", "pepper"]):
+        return "Tea & Staples", ["tea", "staples", "spices", "usual"]
+
+    # 8. Snacks & Beverages
+    if any(k in text for k in ["biscuit", "biscuits", "cookie", "cookies", "chips", "namkeen", "snack", "chocolate", "cadbury", "beverage", "drink", "juice"]):
+        return "Snacks & Beverages", ["snacks", "beverages"]
+
+    if existing_cat and existing_cat.lower() not in ["grocery", "groceries", "default", ""]:
+        return existing_cat, ["general"]
+    return "Tea & Staples", ["staples"]
+
 
 class SwiggyInstamartAdapter(CommerceInterface):
     """
@@ -26,11 +72,19 @@ class SwiggyInstamartAdapter(CommerceInterface):
         self.oauth = oauth_manager
         self.carts: Dict[str, List[Dict[str, Any]]] = {}
         self.orders: Dict[str, Dict[str, Any]] = {}
+        self._catalog_cache: Optional[List[Dict[str, Any]]] = None
+        self._catalog_cache_time: float = 0.0
 
     @property
     def is_live(self) -> bool:
         """True if authenticated with a valid Swiggy OAuth access token."""
         return self.oauth.is_authenticated()
+
+    def is_authenticated(self) -> bool:
+        return self.is_live
+
+    def is_connected(self) -> bool:
+        return self.is_live
 
     @property
     def commerce_mode(self) -> str:
@@ -298,6 +352,9 @@ class SwiggyInstamartAdapter(CommerceInterface):
             else:
                 unit = pack_size
 
+        # Category inference & tags
+        cat_name, tags = infer_product_category(name, brand, product.get("category"))
+
         normalized = {
             "id": spin_id,
             "productId": prod_id,
@@ -321,9 +378,10 @@ class SwiggyInstamartAdapter(CommerceInterface):
             "barcode": str(barcode) if barcode else None,
             "availability": is_available,
             "in_stock": is_available,
-            "retailer": "swiggy_instamart",
-            "retailerName": "Swiggy Instamart",
-            "category": product.get("category", "Grocery"),
+            "retailer": "swiggy_instamart" if not is_demo else "demo_catalog",
+            "retailerName": "Swiggy Instamart" if not is_demo else "NOVA Demo Catalog (Simulated)",
+            "category": cat_name,
+            "tags": tags,
             "is_demo": is_demo,
             "rawData": {
                 "product": product,
@@ -331,88 +389,139 @@ class SwiggyInstamartAdapter(CommerceInterface):
             }
         }
 
-        # Observability log
-        print(
-            f"[Product Adapter] "
-            f"Product ID: {normalized['productId']} "
-            f"Variant ID: {normalized['variantId']} "
-            f"Name: {normalized['name']} "
-            f"Price: Rs. {normalized['price']} "
-            f"MRP: Rs. {normalized['mrp']} "
-            f"Swiggy Image URL: {normalized['imageUrl']} "
-            f"Barcode: {normalized['barcode']}"
-        )
-
         return normalized
 
     # ── COMMERCE OPERATIONS ───────────────────────────────────────────────────
 
-    async def search_products(self, query: str, filters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+    async def _search_mcp_single_query(self, query_str: str) -> List[Dict[str, Any]]:
+        """Helper to search live products for a single query string via Swiggy Instamart MCP."""
+        address_id = await self.get_or_resolve_address_id()
+        if not address_id:
+            address_id = "default_address"
+
+        args = {
+            "addressId": address_id,
+            "query": query_str,
+            "offset": 0
+        }
+        res = await self.call_mcp_tool("search_products", args)
+        if not res:
+            return []
+
+        raw_products = res.get("products") or res.get("data", {}).get("products") or []
+        if not raw_products and isinstance(res, list):
+            raw_products = res
+
+        results = []
+        for prod in raw_products:
+            variations = prod.get("variations") or [{}]
+            for var in variations:
+                results.append(self._normalize_variation(prod, var, is_demo=False))
+
+        if results:
+            try:
+                results = await image_resolver.resolve_batch(results)
+            except Exception as img_err:
+                print(f"[IMAGE RESOLVER] Batch resolution error (non-fatal): {img_err}")
+
+        return results
+
+    async def search_products(self, query: str = "", category: Optional[str] = None, filters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
         """
         Searches live products via Swiggy Instamart MCP search_products tool.
+        Supports both text queries, category filtering, and pooled multi-category live catalog.
         """
         query_str = (query or "").strip()
-        print(f"[Commerce] Searching Swiggy Instamart for: {query_str}")
+        cat_filter = (category or "").strip().lower()
+        if cat_filter in ["all", "all items", "none", ""]:
+            cat_filter = None
+
+        print(f"[Commerce] Searching Swiggy Instamart for query='{query_str}', category='{cat_filter}'")
 
         # 1. Live MCP Search
         if self.is_live:
-            address_id = await self.get_or_resolve_address_id()
-            if not address_id:
-                print("[Swiggy MCP] Warning: No active address selected for Swiggy search.")
-                address_id = "default_address"
+            # Case A: User supplied a specific text search query
+            if query_str:
+                results = await self._search_mcp_single_query(query_str)
+                if cat_filter:
+                    results = [
+                        p for p in results
+                        if cat_filter in p.get("category", "").lower() or any(cat_filter in t.lower() for t in p.get("tags", []))
+                    ]
+                return results
 
-            args = {
-                "addressId": address_id,
-                "query": query_str or "groceries",
-                "offset": 0
-            }
-            res = await self.call_mcp_tool("search_products", args)
-            if res:
-                raw_products = res.get("products") or res.get("data", {}).get("products") or []
-                if not raw_products and isinstance(res, list):
-                    raw_products = res
+            # Case B: User selected a specific category tab
+            if cat_filter:
+                query_map = {
+                    "milk": "milk curd paneer",
+                    "dairy": "milk curd paneer",
+                    "noodles": "maggi noodles pasta",
+                    "cleaning": "detergent cleaner soap",
+                    "household": "detergent cleaner soap",
+                    "oil": "sunflower cooking oil",
+                    "grains": "atta basmati rice",
+                    "atta": "atta whole wheat flour",
+                    "rice": "basmati rice",
+                    "dal": "toor dal pulses",
+                    "staples": "tea coffee sugar salt",
+                    "tea": "tea chai coffee",
+                    "snacks": "biscuits snacks namkeen",
+                    "beverages": "cold drinks juice",
+                }
+                mapped_q = query_map.get(cat_filter, cat_filter)
+                results = await self._search_mcp_single_query(mapped_q)
+                return results
 
-                print(f"[Commerce] Found {len(raw_products)} products")
+            # Case C: Browse all (All Items) - return pooled multi-category live catalog
+            now = time.time()
+            if self._catalog_cache and (now - self._catalog_cache_time < 600):
+                print(f"[Commerce] Returning cached live catalog ({len(self._catalog_cache)} items)")
+                return self._catalog_cache
 
-                if raw_products:
-                    # Log the FULL first raw product schema for inspection.
-                    # This is critical to verify which image / barcode fields Swiggy provides.
-                    try:
-                        print(f"[Swiggy MCP] RAW sample product schema (full):\n{json.dumps(raw_products[0], indent=2)}")
-                    except Exception:
-                        pass
+            core_queries = ["milk", "atta", "oil", "tea", "maggi", "detergent", "dal"]
+            tasks = [self._search_mcp_single_query(q) for q in core_queries]
+            batch_results = await asyncio.gather(*tasks, return_exceptions=True)
 
-                    # Normalize all products synchronously first (commerce data)
-                    results = []
-                    for prod in raw_products:
-                        variations = prod.get("variations") or [{}]
-                        for var in variations:
-                            results.append(self._normalize_variation(prod, var, is_demo=False))
+            combined: List[Dict[str, Any]] = []
+            seen_ids = set()
+            for res in batch_results:
+                if isinstance(res, list):
+                    for item in res:
+                        item_id = item.get("id") or item.get("variantId")
+                        if item_id and item_id not in seen_ids:
+                            seen_ids.add(item_id)
+                            combined.append(item)
 
-                    if results:
-                        # Async image resolution: enrich products that lack a Swiggy image URL.
-                        # Products that already have a Swiggy URL (Priority 1) are passed through
-                        # directly by the resolver without calling Open Food Facts.
-                        try:
-                            results = await image_resolver.resolve_batch(results)
-                        except Exception as img_err:
-                            # Image resolution failure must NEVER break commerce data.
-                            print(f"[IMAGE RESOLVER] Batch resolution error (non-fatal): {img_err}")
+            if combined:
+                self._catalog_cache = combined
+                self._catalog_cache_time = now
+                print(f"[Commerce] Cached {len(combined)} live Swiggy items across core categories")
+                return combined
 
-                        return results
-
-        # 2. If unauthenticated and COMMERCE_MODE == "mock", return clearly labeled simulated catalog
-        if COMMERCE_MODE == "mock":
-            print("[Commerce] Running in COMMERCE_MODE=mock. Using isolated simulated items.")
-            return self._get_simulated_catalog(query_str)
-
-        # 3. Default: Not connected
-        print("[Commerce] Swiggy Instamart is currently not connected or returned no live items.")
-        return []
+        # 2. If unauthenticated or COMMERCE_MODE == "mock", return clearly labeled simulated catalog
+        print("[Commerce] Returning simulated catalog (Demo Mode)")
+        return self._get_simulated_catalog(query_str, cat_filter)
 
     async def get_product(self, product_id: str) -> Optional[Dict[str, Any]]:
         """Retrieves a single product by variant or product ID."""
-        # Search live or mock items
+        # Check active carts first
+        for cart_items in self.carts.values():
+            for item in cart_items:
+                if item.get("id") == product_id or item.get("productId") == product_id or item.get("variantId") == product_id:
+                    return item
+
+        # Check catalog cache
+        if self._catalog_cache:
+            for item in self._catalog_cache:
+                if item.get("id") == product_id or item.get("productId") == product_id or item.get("variantId") == product_id:
+                    return item
+
+        # Check simulated catalog
+        for item in self._get_simulated_catalog(""):
+            if item.get("id") == product_id or item.get("productId") == product_id or item.get("variantId") == product_id:
+                return item
+
+        # Fallback to search
         items = await self.search_products("")
         for item in items:
             if item.get("id") == product_id or item.get("productId") == product_id or item.get("variantId") == product_id:
@@ -423,6 +532,8 @@ class SwiggyInstamartAdapter(CommerceInterface):
         p = await self.get_product(product_id)
         return bool(p and p.get("availability"))
 
+    # ── CART OPERATIONS ───────────────────────────────────────────────────────
+
     async def create_cart(self) -> str:
         """Initializes cart via Swiggy MCP get_cart / local session."""
         if self.is_live:
@@ -432,18 +543,88 @@ class SwiggyInstamartAdapter(CommerceInterface):
         self.carts[cart_id] = []
         return cart_id
 
-    async def add_to_cart(self, cart_id: str, product_id: str, quantity: int = 1):
+    def get_cart(self, cart_id: str) -> Dict[str, Any]:
+        """Calculates accurate totals, counts, and items for the cart."""
+        items = self.carts.get(cart_id, [])
+        subtotal = round(sum(float(i.get("price", 0)) * int(i.get("quantity", 1)) for i in items), 2)
+        item_count = sum(int(i.get("quantity", 1)) for i in items)
+        return {
+            "cart_id": cart_id,
+            "items": items,
+            "item_count": item_count,
+            "subtotal": subtotal,
+        }
+
+    async def add_to_cart(self, cart_id: str, product_id: str, quantity: int = 1) -> Dict[str, Any]:
+        """Adds a product or increments quantity in the cart."""
         if cart_id not in self.carts:
             self.carts[cart_id] = []
 
         if self.is_live:
-            await self.call_mcp_tool("update_cart", {
-                "items": [{"spinId": product_id, "quantity": quantity}]
-            })
+            try:
+                await self.call_mcp_tool("update_cart", {
+                    "items": [{"spinId": product_id, "quantity": quantity}]
+                })
+            except Exception as e:
+                print(f"[Swiggy MCP] update_cart non-fatal: {e}")
 
-        p = await self.get_product(product_id)
-        if p:
-            self.carts[cart_id].append(p)
+        # Check if already present in cart
+        existing = next(
+            (i for i in self.carts[cart_id] if i.get("id") == product_id or i.get("variantId") == product_id or i.get("productId") == product_id),
+            None
+        )
+        if existing:
+            existing["quantity"] = int(existing.get("quantity", 1)) + max(1, quantity)
+        else:
+            p = await self.get_product(product_id)
+            if p:
+                p_copy = dict(p)
+                p_copy["quantity"] = max(1, quantity)
+                p_copy["product_id"] = p_copy.get("id")
+                self.carts[cart_id].append(p_copy)
+
+        return self.get_cart(cart_id)
+
+    async def update_cart_quantity(self, cart_id: str, product_id: str, quantity: int) -> Dict[str, Any]:
+        """Sets an exact quantity or removes if quantity <= 0."""
+        if cart_id not in self.carts:
+            self.carts[cart_id] = []
+
+        if quantity <= 0:
+            return await self.remove_from_cart(cart_id, product_id)
+
+        existing = next(
+            (i for i in self.carts[cart_id] if i.get("id") == product_id or i.get("variantId") == product_id or i.get("productId") == product_id),
+            None
+        )
+        if existing:
+            existing["quantity"] = quantity
+            if self.is_live:
+                try:
+                    await self.call_mcp_tool("update_cart", {
+                        "items": [{"spinId": product_id, "quantity": quantity}]
+                    })
+                except Exception:
+                    pass
+
+        return self.get_cart(cart_id)
+
+    async def remove_from_cart(self, cart_id: str, product_id: str) -> Dict[str, Any]:
+        """Removes a product completely from the cart."""
+        if cart_id in self.carts:
+            self.carts[cart_id] = [
+                p for p in self.carts[cart_id]
+                if p.get("id") != product_id and p.get("variantId") != product_id and p.get("productId") != product_id
+            ]
+            if self.is_live:
+                try:
+                    await self.call_mcp_tool("update_cart", {
+                        "items": [{"spinId": product_id, "quantity": 0}]
+                    })
+                except Exception:
+                    pass
+
+        return self.get_cart(cart_id)
 
     async def checkout(self, cart_id: str) -> Dict[str, Any]:
         """Places checkout order via Swiggy MCP checkout tool."""
@@ -459,13 +640,13 @@ class SwiggyInstamartAdapter(CommerceInterface):
             "id": order_id,
             "orderId": order_id,
             "status": "CONFIRMED",
-            "retailer": "swiggy_instamart",
-            "retailerName": "Swiggy Instamart",
+            "retailer": "swiggy_instamart" if self.is_live else "demo_catalog",
+            "retailerName": "Swiggy Instamart" if self.is_live else "NOVA Demo Catalog",
             "source": "SWIGGY_INSTAMART_MCP" if self.is_live else "SWIGGY_INSTAMART_SIMULATED",
             "items": items,
-            "total": sum(i.get("price", 0) for i in items),
+            "total": sum(float(i.get("price", 0)) * int(i.get("quantity", 1)) for i in items),
             "eta": "10-15 min",
-            "message": "Order scheduled for delivery via Swiggy Instamart in 10-15 minutes.",
+            "message": "Order scheduled for delivery via Swiggy Instamart in 10-15 minutes." if self.is_live else "Order simulated in Demo Mode.",
             "mcp_response": mcp_res
         }
         self.orders[order_id] = order
@@ -520,107 +701,70 @@ class SwiggyInstamartAdapter(CommerceInterface):
             })
         return offers
 
-    # ── ISOLATED SIMULATED CATALOG (COMMERCE_MODE=mock ONLY) ──────────────────
+    # ── ISOLATED SIMULATED CATALOG (products.json) ─────────────────────────────
 
-    def _get_simulated_catalog(self, query: str) -> List[Dict[str, Any]]:
+    def _get_simulated_catalog(self, query: str = "", category: Optional[str] = None) -> List[Dict[str, Any]]:
         """
-        Isolated simulated catalog strictly for COMMERCE_MODE=mock.
-        Every product is labeled is_demo=True.
-        imageUrl is None (rendered as neutral UI placeholder) — NEVER AI-generated.
+        Loads the rich catalog from products.json (64 products) with is_demo=True.
+        All products are clearly marked as demo/simulated.
         """
-        catalog = [
-            {
-                "productId": "swiggy_maggi_masala",
-                "name": "Maggi 2-Minute Masala Instant Noodles",
-                "brand": "Maggi",
-                "category": "Noodles",
-                "variations": [
-                    {
-                        "spinId": "spin_maggi_4pk",
-                        "attributeValue": "280 g (Pack of 4)",
-                        "price": {"mrp": 60.0, "netPrice": 56.0},
-                        "availability": {"inStock": True},
-                        "imageUrl": None
-                    },
-                    {
-                        "spinId": "spin_maggi_single",
-                        "attributeValue": "70 g",
-                        "price": {"mrp": 14.0, "netPrice": 14.0},
-                        "availability": {"inStock": True},
-                        "imageUrl": None
-                    }
-                ]
-            },
-            {
-                "productId": "swiggy_amul_taaza",
-                "name": "Amul Taaza Homogenised Toned Milk",
-                "brand": "Amul",
-                "category": "Milk",
-                "variations": [
-                    {
-                        "spinId": "spin_amul_taaza_1l",
-                        "attributeValue": "1 L (Tetra Pak)",
-                        "price": {"mrp": 75.0, "netPrice": 72.0},
-                        "availability": {"inStock": True},
-                        "imageUrl": None
-                    }
-                ]
-            },
-            {
-                "productId": "swiggy_india_gate_basmati",
-                "name": "India Gate Basmati Rice Feast Rozzana",
-                "brand": "India Gate",
-                "category": "Rice",
-                "variations": [
-                    {
-                        "spinId": "spin_indiagate_5kg",
-                        "attributeValue": "5 kg",
-                        "price": {"mrp": 550.0, "netPrice": 465.0},
-                        "availability": {"inStock": True},
-                        "imageUrl": None
-                    }
-                ]
-            },
-            {
-                "productId": "swiggy_harpic_1000ml",
-                "name": "Harpic Power Plus 10X Max Clean Toilet Cleaner",
-                "brand": "Harpic",
-                "category": "Cleaning",
-                "variations": [
-                    {
-                        "spinId": "spin_harpic_1l",
-                        "attributeValue": "1 L",
-                        "price": {"mrp": 230.0, "netPrice": 207.0},
-                        "availability": {"inStock": True},
-                        "imageUrl": None
-                    }
-                ]
-            }
-        ]
-
-        q = (query or "").lower().strip()
-        results = []
-        for prod in catalog:
-            name = prod["name"].lower()
-            brand = (prod.get("brand") or "").lower()
-            cat = (prod.get("category") or "").lower()
-            if not q or q in name or q in brand or q in cat:
-                for var in prod.get("variations", []):
-                    results.append(self._normalize_variation(prod, var, is_demo=True))
-
-        # Resolve images for mock catalog too (so demo mode shows real OFF images)
-        if results:
-            import asyncio
+        import json
+        catalog_file = os.path.join(os.path.dirname(__file__), "..", "catalog", "products.json")
+        items = []
+        if os.path.exists(catalog_file):
             try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    # We are already in an async context — schedule as a task and
-                    # return the un-enriched products now; images will be resolved
-                    # asynchronously via the /api/images/resolve endpoint.
-                    pass
-                else:
-                    results = loop.run_until_complete(image_resolver.resolve_batch(results))
-            except Exception as img_err:
-                print(f"[IMAGE RESOLVER] Mock catalog resolution error (non-fatal): {img_err}")
+                with open(catalog_file, "r", encoding="utf-8") as f:
+                    raw_items = json.load(f)
+                for item in raw_items:
+                    cat_name, tags = infer_product_category(item.get("name", ""), item.get("brand", ""), item.get("category", ""))
+                    prod_id = item.get("id")
+                    img = item.get("imageUrl") or item.get("image")
+                    items.append({
+                        "id": prod_id,
+                        "productId": prod_id,
+                        "variantId": prod_id,
+                        "name": item.get("name", ""),
+                        "brand": item.get("brand", ""),
+                        "price": float(item.get("price", 0)),
+                        "mrp": float(item["mrp"]) if item.get("mrp") else None,
+                        "discount": max(0.0, float(item["mrp"]) - float(item["price"])) if item.get("mrp") else 0.0,
+                        "quantity": item.get("pack_size"),
+                        "unit": item.get("unit"),
+                        "pack_size": item.get("pack_size"),
+                        "imageUrl": img,
+                        "image": img,
+                        "imageSource": "open_food_facts" if img else "unavailable",
+                        "imageConfidence": 1.0 if img else 0.0,
+                        "imageStatus": "found" if img else "unavailable",
+                        "barcode": item.get("barcode"),
+                        "availability": True,
+                        "in_stock": True,
+                        "retailer": "demo_catalog",
+                        "retailerName": "NOVA Demo Catalog (Simulated)",
+                        "category": cat_name,
+                        "tags": tags,
+                        "is_demo": True,
+                    })
+            except Exception as e:
+                print(f"[Simulated Catalog] Error loading products.json: {e}")
 
-        return results
+        # Filter by query & category
+        q = (query or "").lower().strip()
+        cat = (category or "").lower().strip()
+        if cat in ["all", "all items", "none"]:
+            cat = ""
+
+        filtered = []
+        for item in items:
+            name = item["name"].lower()
+            brand = (item.get("brand") or "").lower()
+            c = item.get("category", "").lower()
+            tags_str = " ".join(item.get("tags", [])).lower()
+
+            matches_q = not q or (q in name or q in brand or q in c or q in tags_str)
+            matches_cat = not cat or (cat in c or cat in tags_str or cat in name)
+
+            if matches_q and matches_cat:
+                filtered.append(item)
+
+        return filtered

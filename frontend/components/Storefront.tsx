@@ -3,9 +3,28 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import ProductShelf from "@/components/ProductShelf";
-import ProductCard from "@/components/ProductCard";
 import CategoryCard from "@/components/CategoryCard";
-import ProductImage from "@/components/ProductImage";
+import {
+  Zap,
+  Sparkles,
+  ShieldCheck,
+  AlertCircle,
+  Package,
+  Utensils,
+  Droplet,
+  Coffee,
+  Sun,
+  Cookie,
+  CupSoda,
+  Lightbulb,
+  X,
+  CheckCircle2,
+  Check,
+  Milk,
+  Layers,
+  ArrowRight,
+  RefreshCw,
+} from "lucide-react";
 
 interface Product {
   id: string;
@@ -34,7 +53,8 @@ interface Product {
 const HERO_SLIDES = [
   {
     id: 1,
-    badge: "⚡ Household Autopilot Active",
+    badge: "Household Autopilot Active",
+    icon: "zap",
     title: "NOVA Super Value Days",
     subtitle: "Up to 35% off on Groceries & Monthly Staples",
     detail: "Atta, Basmati Rice, Cooking Oils & Daily Essentials delivered next-day.",
@@ -44,7 +64,8 @@ const HERO_SLIDES = [
   },
   {
     id: 2,
-    badge: "🥛 Pantry Restock Alert",
+    badge: "Pantry Restock Alert",
+    icon: "alert",
     title: "Never Run Out of Morning Tea & Fresh Milk",
     subtitle: "Amul, Tata Tea, Nescafe & Kellogg's Breakfast Essentials",
     detail: "NOVA predicts depletion before you wake up to an empty carton.",
@@ -54,7 +75,8 @@ const HERO_SLIDES = [
   },
   {
     id: 3,
-    badge: "🛡️ Budget-Safe Autonomous Shopping",
+    badge: "Budget-Safe Autonomous Shopping",
+    icon: "shield",
     title: "Home Care & Cleaning Essentials",
     subtitle: "Surf Excel, Vim, Dettol & Harpic",
     detail: "Automatic orders respect your ₹5,000 monthly household budget limit.",
@@ -96,7 +118,7 @@ export default function Storefront() {
     async function loadInitialData() {
       try {
         const [prodRes, budRes, statRes] = await Promise.all([
-          fetch("/api/products?limit=100").then((r) => r.json()).catch(() => []),
+          fetch("/api/products?limit=150").then((r) => r.json()).catch(() => []),
           fetch("/api/budget").then((r) => r.json()).catch(() => null),
           fetch("/api/household-status").then((r) => r.json()).catch(() => null),
         ]);
@@ -119,6 +141,13 @@ export default function Storefront() {
     }, 6000);
     return () => clearInterval(timer);
   }, []);
+
+  // Category matching helper
+  const matchCategory = (cat: string | undefined, targets: string[]) => {
+    if (!cat) return false;
+    const lower = cat.toLowerCase();
+    return targets.some((t) => lower.includes(t.toLowerCase()) || t.toLowerCase().includes(lower));
+  };
 
   // Filter specific product sets for shelves
   // Deals of the day: Select diverse products across distinct categories
@@ -151,28 +180,42 @@ export default function Storefront() {
   }, [products]);
 
   const usuals = useMemo(() => {
-    return products
-      .filter((p) => ["Tea", "Coffee", "Oil", "Milk", "Atta", "Salt"].includes(p.category || ""))
-      .slice(0, 10)
-      .map((p) => ({ ...p, tags: p.tags ? Array.from(new Set([...p.tags, "usual"])) : ["usual"] }));
+    if (!products.length) return [];
+    const matched = products.filter((p) =>
+      matchCategory(p.category, ["tea", "coffee", "oil", "milk", "dairy", "atta", "staples", "rice", "salt"])
+    );
+    const pool = matched.length >= 4 ? matched : products;
+    return pool.slice(0, 10).map((p) => ({
+      ...p,
+      tags: p.tags ? Array.from(new Set([...p.tags, "usual"])) : ["usual"],
+    }));
   }, [products]);
 
   const groceries = useMemo(() => {
-    return products
-      .filter((p) => ["Rice", "Atta", "Dal", "Oil", "Salt", "Sugar", "Spices", "Ghee"].includes(p.category || ""))
-      .slice(0, 10);
+    if (!products.length) return [];
+    const matched = products.filter((p) =>
+      matchCategory(p.category, ["rice", "atta", "dal", "oil", "salt", "sugar", "spices", "ghee", "staples"])
+    );
+    const pool = matched.length >= 4 ? matched : products;
+    return pool.slice(0, 10);
   }, [products]);
 
   const household = useMemo(() => {
-    return products
-      .filter((p) => ["Detergent", "Dishwash", "Cleaning", "Laundry", "Soap", "Toothpaste", "Personal Care"].includes(p.category || ""))
-      .slice(0, 10);
+    if (!products.length) return [];
+    const matched = products.filter((p) =>
+      matchCategory(p.category, ["detergent", "dishwash", "cleaning", "toiletries", "laundry", "soap", "toothpaste", "personal care"])
+    );
+    const pool = matched.length >= 4 ? matched : products.slice(10, 20);
+    return pool.slice(0, 10);
   }, [products]);
 
   const snacks = useMemo(() => {
-    return products
-      .filter((p) => ["Noodles", "Biscuits", "Snacks", "Beverages", "Coffee", "Tea"].includes(p.category || ""))
-      .slice(0, 10);
+    if (!products.length) return [];
+    const matched = products.filter((p) =>
+      matchCategory(p.category, ["noodles", "instant noodles", "biscuits", "snacks", "beverages", "cold drinks", "tea", "coffee"])
+    );
+    const pool = matched.length >= 4 ? matched : products.slice(5, 15);
+    return pool.slice(0, 10);
   }, [products]);
 
   // Scenario 3 trigger
@@ -205,7 +248,7 @@ export default function Storefront() {
     return (
       <div className="min-h-screen bg-[#EAEDED] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-neutral-200 border-t-[#FF9900] rounded-full animate-spin mx-auto mb-3" />
+          <RefreshCw className="w-8 h-8 text-[#FF9900] animate-spin mx-auto mb-3" />
           <p className="text-sm font-medium text-neutral-600">Loading NOVA Commerce Storefront...</p>
         </div>
       </div>
@@ -223,6 +266,9 @@ export default function Storefront() {
         >
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-black/10 text-neutral-900 text-[11px] font-bold tracking-wide uppercase mb-3 backdrop-blur-xs">
+              {slide.icon === "zap" && <Zap className="w-3.5 h-3.5" />}
+              {slide.icon === "alert" && <AlertCircle className="w-3.5 h-3.5" />}
+              {slide.icon === "shield" && <ShieldCheck className="w-3.5 h-3.5" />}
               {slide.badge}
             </div>
             <h1 className="text-3xl md:text-5xl font-black text-neutral-900 tracking-tight leading-tight mb-2">
@@ -238,7 +284,7 @@ export default function Storefront() {
               href={slide.href}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#131921] hover:bg-[#232F3E] text-white text-xs font-bold rounded shadow-md transition-all hover:translate-x-0.5"
             >
-              {slide.cta} →
+              {slide.cta} &rarr;
             </Link>
           </div>
 
@@ -257,7 +303,7 @@ export default function Storefront() {
           </div>
         </div>
 
-        {/* ── 2. SIGNATURE 4-UP AMAZON FEATURE CARDS OVERLAPPING BANNER ──── */}
+        {/* ── 2. SIGNATURE 4-UP FEATURE CARDS OVERLAPPING BANNER ──── */}
         <div className="relative -mt-24 md:-mt-32 px-4 z-20 mb-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Box 1: Restock Essentials */}
@@ -268,31 +314,34 @@ export default function Storefront() {
                 </h2>
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   {[
-                    { name: "Atta & Flour", href: "/catalog?category=Atta", icon: "🌾", color: "bg-amber-50 text-amber-700 border-amber-100" },
-                    { name: "Basmati Rice", href: "/catalog?category=Rice", icon: "🍚", color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-                    { name: "Cooking Oils", href: "/catalog?category=Oil", icon: "🫒", color: "bg-yellow-50 text-yellow-700 border-yellow-100" },
-                    { name: "Dals & Pulses", href: "/catalog?category=Dal", icon: "🥣", color: "bg-orange-50 text-orange-700 border-orange-100" },
-                  ].map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className="group flex flex-col items-center text-center p-2 rounded-lg border border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50 transition-all"
-                    >
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-1.5 border ${item.color} group-hover:scale-105 transition-transform`}>
-                        {item.icon}
-                      </div>
-                      <span className="text-[11px] font-semibold text-neutral-700 group-hover:text-[#C7511F] truncate w-full">
-                        {item.name}
-                      </span>
-                    </Link>
-                  ))}
+                    { name: "Atta & Flour", href: "/catalog?category=Atta", icon: Package, color: "bg-amber-50 text-amber-700 border-amber-100" },
+                    { name: "Basmati Rice", href: "/catalog?category=Rice", icon: Utensils, color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+                    { name: "Cooking Oils", href: "/catalog?category=Oil", icon: Droplet, color: "bg-yellow-50 text-yellow-700 border-yellow-100" },
+                    { name: "Dals & Pulses", href: "/catalog?category=Dal", icon: Layers, color: "bg-orange-50 text-orange-700 border-orange-100" },
+                  ].map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className="group flex flex-col items-center text-center p-2 rounded-lg border border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50 transition-all"
+                      >
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-1.5 border ${item.color} group-hover:scale-105 transition-transform`}>
+                          <Icon className="w-6 h-6" />
+                        </div>
+                        <span className="text-[11px] font-semibold text-neutral-700 group-hover:text-[#C7511F] truncate w-full">
+                          {item.name}
+                        </span>
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
               <Link
                 href="/catalog?category=Rice"
                 className="text-xs font-semibold text-[#007185] hover:text-[#C7511F] hover:underline"
               >
-                See all groceries →
+                See all groceries &rarr;
               </Link>
             </div>
 
@@ -307,34 +356,37 @@ export default function Storefront() {
                 </div>
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   {[
-                    { name: "Amul Milk 1L", tag: "Due Tomorrow", color: "bg-red-50 text-red-700", icon: "🥛", boxColor: "bg-blue-50 text-blue-700 border-blue-100" },
-                    { name: "Tata Tea 500g", tag: "Due in 5d", color: "bg-orange-50 text-orange-700", icon: "☕", boxColor: "bg-amber-50 text-amber-700 border-amber-100" },
-                    { name: "Cooking Oil 1L", tag: "Stock Good", color: "bg-green-50 text-green-700", icon: "🌻", boxColor: "bg-yellow-50 text-yellow-700 border-yellow-100" },
-                    { name: "Surf Excel 1kg", tag: "Due in 8d", color: "bg-blue-50 text-blue-700", icon: "🧼", boxColor: "bg-cyan-50 text-cyan-700 border-cyan-100" },
-                  ].map((item) => (
-                    <div
-                      key={item.name}
-                      onClick={() => setActiveScenario(item.name.includes("Milk") ? 1 : item.name.includes("Oil") ? 2 : 1)}
-                      className="group flex flex-col items-center text-center p-2 rounded-lg border border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50 cursor-pointer transition-all"
-                    >
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-1.5 border ${item.boxColor} group-hover:scale-105 transition-transform`}>
-                        {item.icon}
+                    { name: "Amul Milk 1L", tag: "Due Tomorrow", color: "bg-red-50 text-red-700", icon: Milk, boxColor: "bg-blue-50 text-blue-700 border-blue-100" },
+                    { name: "Tata Tea 500g", tag: "Due in 5d", color: "bg-orange-50 text-orange-700", icon: Coffee, boxColor: "bg-amber-50 text-amber-700 border-amber-100" },
+                    { name: "Cooking Oil 1L", tag: "Stock Good", color: "bg-green-50 text-green-700", icon: Sun, boxColor: "bg-yellow-50 text-yellow-700 border-yellow-100" },
+                    { name: "Surf Excel 1kg", tag: "Due in 8d", color: "bg-blue-50 text-blue-700", icon: Sparkles, boxColor: "bg-cyan-50 text-cyan-700 border-cyan-100" },
+                  ].map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <div
+                        key={item.name}
+                        onClick={() => setActiveScenario(item.name.includes("Milk") ? 1 : item.name.includes("Oil") ? 2 : 1)}
+                        className="group flex flex-col items-center text-center p-2 rounded-lg border border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50 cursor-pointer transition-all"
+                      >
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-1.5 border ${item.boxColor} group-hover:scale-105 transition-transform`}>
+                          <Icon className="w-6 h-6" />
+                        </div>
+                        <span className="text-[11px] font-semibold text-neutral-800 truncate w-full">
+                          {item.name}
+                        </span>
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full mt-1 ${item.color}`}>
+                          {item.tag}
+                        </span>
                       </div>
-                      <span className="text-[11px] font-semibold text-neutral-800 truncate w-full">
-                        {item.name}
-                      </span>
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full mt-1 ${item.color}`}>
-                        {item.tag}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
               <Link
                 href="/autopilot"
                 className="text-xs font-semibold text-[#007185] hover:text-[#C7511F] hover:underline"
               >
-                Manage household plan →
+                Manage household plan &rarr;
               </Link>
             </div>
 
@@ -346,31 +398,34 @@ export default function Storefront() {
                 </h2>
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   {[
-                    { name: "Biscuits", href: "/catalog?category=Snacks", icon: "🍪", color: "bg-amber-50 text-amber-700 border-amber-100" },
-                    { name: "Noodles", href: "/catalog?category=Snacks", icon: "🍜", color: "bg-orange-50 text-orange-700 border-orange-100" },
-                    { name: "Chocolates", href: "/catalog?category=Snacks", icon: "🍫", color: "bg-rose-50 text-rose-700 border-rose-100" },
-                    { name: "Cold Drinks", href: "/catalog?category=Beverages", icon: "🧃", color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-                  ].map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className="group flex flex-col items-center text-center p-2 rounded-lg border border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50 transition-all"
-                    >
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-1.5 border ${item.color} group-hover:scale-105 transition-transform`}>
-                        {item.icon}
-                      </div>
-                      <span className="text-[11px] font-semibold text-neutral-700 group-hover:text-[#C7511F] truncate w-full">
-                        {item.name}
-                      </span>
-                    </Link>
-                  ))}
+                    { name: "Biscuits", href: "/catalog?category=Snacks", icon: Cookie, color: "bg-amber-50 text-amber-700 border-amber-100" },
+                    { name: "Noodles", href: "/catalog?category=Snacks", icon: Utensils, color: "bg-orange-50 text-orange-700 border-orange-100" },
+                    { name: "Chocolates", href: "/catalog?category=Snacks", icon: Package, color: "bg-rose-50 text-rose-700 border-rose-100" },
+                    { name: "Cold Drinks", href: "/catalog?category=Beverages", icon: CupSoda, color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+                  ].map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className="group flex flex-col items-center text-center p-2 rounded-lg border border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50 transition-all"
+                      >
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-1.5 border ${item.color} group-hover:scale-105 transition-transform`}>
+                          <Icon className="w-6 h-6" />
+                        </div>
+                        <span className="text-[11px] font-semibold text-neutral-700 group-hover:text-[#C7511F] truncate w-full">
+                          {item.name}
+                        </span>
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
               <Link
                 href="/catalog?category=Snacks"
                 className="text-xs font-semibold text-[#007185] hover:text-[#C7511F] hover:underline"
               >
-                See all snacks &amp; drinks →
+                See all snacks &amp; drinks &rarr;
               </Link>
             </div>
 
@@ -405,7 +460,7 @@ export default function Storefront() {
                 href="/budget"
                 className="text-xs font-semibold text-[#007185] hover:text-[#C7511F] hover:underline"
               >
-                Manage budget &amp; limits →
+                Manage budget &amp; limits &rarr;
               </Link>
             </div>
           </div>
@@ -430,14 +485,14 @@ export default function Storefront() {
                 onClick={() => setActiveScenario(1)}
                 className="px-3 py-1.5 rounded bg-neutral-100 hover:bg-neutral-200 text-xs font-semibold text-neutral-800 transition-colors flex items-center gap-1.5 border border-neutral-200"
               >
-                <span>🥛</span> Scenario 1: Milk (Auto-Buy)
+                <Milk className="w-4 h-4 text-blue-600" /> Scenario 1: Milk (Auto-Buy)
               </button>
 
               <button
                 onClick={() => setActiveScenario(2)}
                 className="px-3 py-1.5 rounded bg-neutral-100 hover:bg-neutral-200 text-xs font-semibold text-neutral-800 transition-colors flex items-center gap-1.5 border border-neutral-200"
               >
-                <span>🛢️</span> Scenario 2: Oil (Do Not Buy)
+                <Droplet className="w-4 h-4 text-amber-600" /> Scenario 2: Oil (Do Not Buy)
               </button>
 
               <button
@@ -447,7 +502,7 @@ export default function Storefront() {
                 }}
                 className="px-3 py-1.5 rounded bg-orange-100 hover:bg-orange-200 text-xs font-bold text-orange-900 transition-colors flex items-center gap-1.5 border border-orange-300"
               >
-                <span>🍜</span> Scenario 3: &quot;Make Maggi tonight&quot;
+                <Utensils className="w-4 h-4 text-orange-600" /> Scenario 3: &quot;Make Maggi tonight&quot;
               </button>
             </div>
           </div>
@@ -458,8 +513,8 @@ export default function Storefront() {
       <div className="max-w-[1500px] mx-auto px-4 mb-8">
         <div className="bg-[#FFFDF9] border-l-4 border-l-[#FF9900] border border-neutral-200 rounded-sm p-4 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#FF9900]/15 flex items-center justify-center text-[#FF9900] text-base shrink-0">
-              💡
+            <div className="w-8 h-8 rounded-full bg-[#FF9900]/15 flex items-center justify-center text-[#FF9900] shrink-0">
+              <Lightbulb className="w-4 h-4 text-[#FF9900]" />
             </div>
             <div>
               <p className="text-xs font-bold text-neutral-900">
@@ -482,7 +537,7 @@ export default function Storefront() {
               href="/nova-cart"
               className="px-3.5 py-1.5 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-800 text-xs font-semibold rounded-full shadow-xs transition-colors"
             >
-              NOVA Cart →
+              NOVA Cart &rarr;
             </Link>
           </div>
         </div>
@@ -499,7 +554,7 @@ export default function Storefront() {
               href="/catalog"
               className="text-xs font-semibold text-[#007185] hover:text-[#C7511F] hover:underline"
             >
-              View all categories →
+              View all categories &rarr;
             </Link>
           </div>
           <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar">
@@ -517,63 +572,91 @@ export default function Storefront() {
       </div>
 
       {/* ── 6. DEALS OF THE DAY SHELF ─────────────────────────────────────── */}
-      <div className="max-w-[1500px] mx-auto px-4 mb-8">
-        <div className="bg-white p-5 rounded-sm border border-neutral-200 shadow-xs">
-          <ProductShelf
-            title="Deals of the Day | Grocery & Essentials"
-            products={deals}
-            viewAllLink="/catalog"
-          />
+      {deals.length > 0 && (
+        <div className="max-w-[1500px] mx-auto px-4 mb-8">
+          <div className="bg-white p-5 rounded-sm border border-neutral-200 shadow-xs">
+            <ProductShelf
+              title="Deals of the Day | Grocery &amp; Essentials"
+              products={deals}
+              viewAllLink="/catalog"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── 7. YOUR USUAL BRANDS SHELF ────────────────────────────────────── */}
-      <div className="max-w-[1500px] mx-auto px-4 mb-8">
-        <div className="bg-white p-5 rounded-sm border border-neutral-200 shadow-xs">
-          <ProductShelf
-            title="Frequently Purchased by Your Household"
-            products={usuals}
-            viewAllLink="/catalog"
-          />
+      {usuals.length > 0 && (
+        <div className="max-w-[1500px] mx-auto px-4 mb-8">
+          <div className="bg-white p-5 rounded-sm border border-neutral-200 shadow-xs">
+            <ProductShelf
+              title="Frequently Purchased by Your Household"
+              products={usuals}
+              viewAllLink="/catalog"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── 8. GROCERIES & COOKING STAPLES ─────────────────────────────────── */}
-      <div className="max-w-[1500px] mx-auto px-4 mb-8">
-        <div className="bg-white p-5 rounded-sm border border-neutral-200 shadow-xs">
-          <ProductShelf
-            title="Kitchen & Cooking Staples"
-            products={groceries}
-            viewAllLink="/catalog?category=Rice"
-          />
+      {groceries.length > 0 && (
+        <div className="max-w-[1500px] mx-auto px-4 mb-8">
+          <div className="bg-white p-5 rounded-sm border border-neutral-200 shadow-xs">
+            <ProductShelf
+              title="Kitchen &amp; Cooking Staples"
+              products={groceries}
+              viewAllLink="/catalog?category=Rice"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── 9. HOUSEHOLD & PERSONAL CARE ───────────────────────────────────── */}
-      <div className="max-w-[1500px] mx-auto px-4 mb-10">
-        <div className="bg-white p-5 rounded-sm border border-neutral-200 shadow-xs">
-          <ProductShelf
-            title="Household Cleaning & Laundry"
-            products={household}
-            viewAllLink="/catalog?category=Detergent"
-          />
+      {household.length > 0 && (
+        <div className="max-w-[1500px] mx-auto px-4 mb-10">
+          <div className="bg-white p-5 rounded-sm border border-neutral-200 shadow-xs">
+            <ProductShelf
+              title="Household Cleaning &amp; Laundry"
+              products={household}
+              viewAllLink="/catalog?category=Detergent"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── 10. SNACKS & BEVERAGES ────────────────────────────────────────── */}
-      <div className="max-w-[1500px] mx-auto px-4 mb-12">
-        <div className="bg-white p-5 rounded-sm border border-neutral-200 shadow-xs">
-          <ProductShelf
-            title="Snacks, Biscuits & Beverages"
-            products={snacks}
-            viewAllLink="/catalog?category=Snacks"
-          />
+      {snacks.length > 0 && (
+        <div className="max-w-[1500px] mx-auto px-4 mb-12">
+          <div className="bg-white p-5 rounded-sm border border-neutral-200 shadow-xs">
+            <ProductShelf
+              title="Snacks, Biscuits &amp; Beverages"
+              products={snacks}
+              viewAllLink="/catalog?category=Snacks"
+            />
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Empty State Fallback if no products loaded */}
+      {!loading && products.length === 0 && (
+        <div className="max-w-[1500px] mx-auto px-4 mb-12">
+          <div className="bg-white p-8 rounded-sm border border-neutral-200 shadow-xs text-center">
+            <Package className="w-12 h-12 text-neutral-400 mx-auto mb-3" />
+            <h3 className="text-base font-bold text-neutral-800 mb-1">Catalog Ready to Connect</h3>
+            <p className="text-xs text-neutral-500 mb-4 max-w-md mx-auto">
+              Connect your Swiggy Instamart session or browse the catalog to populate household shelves.
+            </p>
+            <Link
+              href="/catalog"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-neutral-900 text-xs font-semibold rounded-md shadow-xs"
+            >
+              Open Catalog &rarr;
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* ── 11. COMMERCE FOOTER ───────────────────────────────────────────── */}
       <footer className="w-full bg-[#232F3E] text-white pt-6">
-        {/* Back to top button */}
         <button
           onClick={scrollToTop}
           className="w-full py-3 bg-[#37475A] hover:bg-[#485769] text-xs font-semibold text-center transition-colors block"
@@ -622,14 +705,13 @@ export default function Storefront() {
           </div>
         </div>
 
-        {/* Bottom copyright */}
         <div className="border-t border-white/10 bg-[#131921] py-6 text-center text-[11px] text-neutral-400">
           <div className="flex items-center justify-center gap-1 font-black text-white text-lg mb-2">
             <span className="text-[#FF9900]">N</span>OVA
           </div>
           <p>© 2026 NOVA Commerce Technologies. Household Autopilot Layer Active.</p>
           <p className="mt-1 text-neutral-500">
-            Simulated Amazon India commerce integration for Household Decision Agent demonstration.
+            Commerce integration for Household Decision Agent demonstration.
           </p>
         </div>
       </footer>
@@ -643,16 +725,16 @@ export default function Storefront() {
                 setActiveScenario(null);
                 setScenarioResponse(null);
               }}
-              className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-900 text-lg font-bold"
+              className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-900"
             >
-              ✕
+              <X className="w-5 h-5" />
             </button>
 
             {/* SCENARIO 1: MILK AUTO PURCHASE */}
             {activeScenario === 1 && (
               <div>
                 <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-green-100 text-green-800 text-[10px] font-bold rounded mb-2">
-                  DEMO 1 — PREDICTIVE PURCHASE
+                  DEMO 1 &mdash; PREDICTIVE PURCHASE
                 </div>
                 <h3 className="text-xl font-bold text-neutral-900 mb-2">
                   Autonomous Decision: Amul Taaza Milk 1L
@@ -679,7 +761,7 @@ export default function Storefront() {
                     <span className="font-bold text-green-700">92% (High Confidence)</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-neutral-500">Amazon Item Price:</span>
+                    <span className="text-neutral-500">Item Price:</span>
                     <span className="font-bold text-neutral-900">₹68 (Within ₹500 limit)</span>
                   </div>
                   <div className="pt-2 border-t border-neutral-200 flex justify-between font-bold">
@@ -699,7 +781,7 @@ export default function Storefront() {
                     href="/catalog/p_amul_milk_1l"
                     className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-xs font-semibold rounded text-neutral-900"
                   >
-                    View Product Details →
+                    View Product Details &rarr;
                   </Link>
                 </div>
               </div>
@@ -709,7 +791,7 @@ export default function Storefront() {
             {activeScenario === 2 && (
               <div>
                 <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold rounded mb-2">
-                  DEMO 2 — RESTRAINT (DO NOT BUY)
+                  DEMO 2 &mdash; RESTRAINT (DO NOT BUY)
                 </div>
                 <h3 className="text-xl font-bold text-neutral-900 mb-2">
                   Autonomous Restraint: Fortune Sunflower Oil
@@ -741,8 +823,11 @@ export default function Storefront() {
                   </div>
                 </div>
 
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-900 mb-4 leading-relaxed">
-                  ✓ <strong>Reasoning:</strong> Existing supply is healthy. Preventing redundant spend preserves ₹155 of household monthly budget.
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-900 mb-4 leading-relaxed flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                  <div>
+                    <strong>Reasoning:</strong> Existing supply is healthy. Preventing redundant spend preserves ₹155 of household monthly budget.
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-2">
@@ -756,7 +841,7 @@ export default function Storefront() {
                     href="/pantry"
                     className="px-4 py-2 bg-[#131921] hover:bg-[#232F3E] text-xs font-semibold rounded text-white"
                   >
-                    Check Pantry Stock →
+                    Check Pantry Stock &rarr;
                   </Link>
                 </div>
               </div>
@@ -766,7 +851,7 @@ export default function Storefront() {
             {activeScenario === 3 && (
               <div>
                 <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-orange-100 text-orange-800 text-[10px] font-bold rounded mb-2">
-                  DEMO 3 — INTENT → SHOPPING
+                  DEMO 3 &mdash; INTENT &rarr; SHOPPING
                 </div>
                 <h3 className="text-xl font-bold text-neutral-900 mb-2">
                   Intent: &quot;I want to make Maggi tonight&quot;
@@ -781,15 +866,15 @@ export default function Storefront() {
                     <span className="text-[11px] text-neutral-500">Meal: Maggi 2-Pack</span>
                   </div>
                   <div className="flex justify-between items-center text-green-700">
-                    <span>✓ Cooking Oil</span>
+                    <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-green-600" /> Cooking Oil</span>
                     <span className="font-semibold">Available in pantry (2.4L)</span>
                   </div>
                   <div className="flex justify-between items-center text-green-700">
-                    <span>✓ Spices &amp; Salt</span>
+                    <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-green-600" /> Spices &amp; Salt</span>
                     <span className="font-semibold">Available in pantry</span>
                   </div>
                   <div className="flex justify-between items-center text-red-600 font-bold">
-                    <span>✕ Maggi Noodles</span>
+                    <span className="flex items-center gap-1.5"><X className="w-3.5 h-3.5 text-red-600" /> Maggi Noodles</span>
                     <span>MISSING from pantry</span>
                   </div>
                   <div className="pt-2 border-t border-neutral-200 flex justify-between font-bold text-neutral-900">
@@ -799,29 +884,33 @@ export default function Storefront() {
                 </div>
 
                 {scenarioLoading ? (
-                  <div className="p-4 bg-orange-50 border border-orange-200 rounded text-center text-xs text-orange-800">
-                    <div className="w-5 h-5 border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin mx-auto mb-2" />
-                    NOVA Agent is evaluating intent against pantry...
+                  <div className="p-4 bg-orange-50/50 rounded border border-orange-100 flex items-center gap-3 mb-4">
+                    <RefreshCw className="w-4 h-4 text-[#FF9900] animate-spin" />
+                    <span className="text-xs text-neutral-600">
+                      NOVA Agent reasoning over household state...
+                    </span>
                   </div>
                 ) : scenarioResponse ? (
-                  <div className="p-4 bg-orange-50 border border-orange-200 rounded text-xs text-orange-900 mb-4 whitespace-pre-wrap leading-relaxed">
-                    <strong>Agent Response:</strong>
-                    <p className="mt-1">{scenarioResponse}</p>
+                  <div className="p-3 bg-neutral-100 rounded border border-neutral-200 text-xs text-neutral-700 mb-4 whitespace-pre-wrap max-h-40 overflow-y-auto font-mono">
+                    {scenarioResponse}
                   </div>
                 ) : null}
 
-                <div className="flex justify-end gap-2 mt-4">
+                <div className="flex justify-end gap-2">
                   <button
-                    onClick={() => setActiveScenario(null)}
+                    onClick={() => {
+                      setActiveScenario(null);
+                      setScenarioResponse(null);
+                    }}
                     className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-xs font-semibold rounded text-neutral-800"
                   >
                     Close
                   </button>
                   <Link
-                    href="/search?q=maggi"
+                    href="/catalog?q=maggi"
                     className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-xs font-semibold rounded text-neutral-900"
                   >
-                    Search Maggi in Store →
+                    Search Maggi in Store &rarr;
                   </Link>
                 </div>
               </div>

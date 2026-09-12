@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import ProductImage from "@/components/ProductImage";
+import { ShoppingBag, TrendingDown, RefreshCw, CheckCircle2, ArrowRight } from "lucide-react";
 
 export default function NovaCartPage() {
   const [cart, setCart] = useState<any>(null);
@@ -40,6 +42,33 @@ export default function NovaCartPage() {
       next.add(productId);
       return next;
     });
+  };
+
+  const router = useRouter();
+  const [syncing, setSyncing] = useState(false);
+  const [syncSuccess, setSyncSuccess] = useState(false);
+
+  const handleSendToCart = async () => {
+    setSyncing(true);
+    try {
+      const activeItems = (cart?.items || []).filter((i: any) => !removed.has(i.product_id));
+      for (const item of activeItems) {
+        await fetch("/api/cart/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ product_id: item.product_id, quantity: quantities[item.product_id] || 1 }),
+        }).catch(() => {});
+      }
+      setSyncSuccess(true);
+      window.dispatchEvent(new Event("cart-updated"));
+      setTimeout(() => {
+        router.push("/cart");
+      }, 1200);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSyncing(false);
+    }
   };
 
   if (loading) {
@@ -140,9 +169,11 @@ export default function NovaCartPage() {
 
         {items.length === 0 && (
           <div className="text-center py-16 bg-white rounded-2xl border border-neutral-200">
-            <p className="text-4xl mb-4">🛒</p>
+            <ShoppingBag className="w-12 h-12 text-neutral-300 mx-auto mb-4" />
             <p className="text-neutral-500 font-medium">Your NOVA Cart is empty.</p>
-            <Link href="/store" className="mt-4 inline-block text-[#FF9900] font-semibold hover:underline">Browse household items →</Link>
+            <Link href="/store" className="mt-4 inline-flex items-center gap-1 text-[#FF9900] font-semibold hover:underline">
+              Browse household items &rarr;
+            </Link>
           </div>
         )}
 
@@ -156,12 +187,25 @@ export default function NovaCartPage() {
               </div>
               <div className="flex flex-col gap-2">
                 <button
-                  className="px-8 py-3.5 bg-[#FF9900] text-white font-bold rounded-xl hover:bg-[#e68900] transition-colors text-sm"
-                  onClick={() => alert("Demo mode: Cart would be sent to Amazon. READY FOR YOUR APPROVAL.")}
+                  disabled={syncing}
+                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-[#FF9900] text-white font-bold rounded-xl hover:bg-[#e68900] transition-colors text-sm disabled:opacity-50"
+                  onClick={handleSendToCart}
                 >
-                  Send to Amazon Cart →
+                  {syncing ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" /> Synchronizing Cart...
+                    </>
+                  ) : syncSuccess ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" /> Synchronized! Redirecting...
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingBag className="w-4 h-4" /> Send to Commerce Cart &rarr;
+                    </>
+                  )}
                 </button>
-                <p className="text-xs text-center text-neutral-400">Demo mode · No real purchase will be made</p>
+                <p className="text-xs text-center text-neutral-400">Deterministic validation &middot; Budget protected</p>
               </div>
             </div>
           </div>
@@ -203,8 +247,9 @@ function CartItemRow({ item, quantity, onQtyChange, onRemove, requiresApproval =
             <div>
               <span className="text-lg font-black text-neutral-900">₹{item.current_price}</span>
               {item.avg_price && (
-                <span className={`ml-2 text-xs ${belowAvg ? "text-green-600" : "text-neutral-400"}`}>
-                  {belowAvg ? `₹${Math.abs(priceDiff)} below avg ✓` : `₹${priceDiff} above avg`}
+                <span className={`ml-2 text-xs flex items-center gap-1 ${belowAvg ? "text-green-600" : "text-neutral-400"}`}>
+                  {belowAvg && <TrendingDown className="w-3.5 h-3.5 text-green-600 inline" />}
+                  {belowAvg ? `₹${Math.abs(priceDiff)} below avg` : `₹${priceDiff} above avg`}
                 </span>
               )}
             </div>

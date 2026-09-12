@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Check } from 'lucide-react';
 
 export default function ConnectServicesPage() {
   const router = useRouter();
@@ -57,7 +58,9 @@ export default function ConnectServicesPage() {
               </div>
               
               {connected.includes(provider.name) ? (
-                <span className="text-green-600 font-medium px-4 py-2 bg-green-50 rounded-lg">✓ Connected</span>
+                <span className="flex items-center gap-1 text-green-600 font-medium px-4 py-2 bg-green-50 rounded-lg">
+                  <Check className="w-4 h-4" /> Connected
+                </span>
               ) : connecting === provider.name ? (
                 <span className="text-neutral-500 font-medium px-4 py-2 bg-neutral-100 rounded-lg">Connecting...</span>
               ) : (

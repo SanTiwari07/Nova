@@ -1,48 +1,91 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ProductImage from "@/components/ProductImage";
+import {
+  Trash2,
+  Plus,
+  Minus,
+  ShoppingBag,
+  Zap,
+  CheckCircle2,
+  AlertCircle,
+  ArrowRight,
+  ShieldCheck,
+} from "lucide-react";
 
-interface CartItem {
+export interface CartItem {
   id: string;
+  product_id?: string;
+  productId?: string;
+  variantId?: string;
   name: string;
   brand: string;
   price: number;
+  mrp?: number | null;
+  quantity: number;
   currency?: string;
   pack_size?: string;
+  unit?: string;
   image?: string | null;
   imageUrl?: string | null;
   category?: string;
+  retailer?: string;
 }
 
 export default function CartPage() {
   const router = useRouter();
-  const [cart, setCart] = useState<{ cart_id?: string; items: CartItem[] }>({ items: [] });
+  const [cart, setCart] = useState<{ cart_id?: string; items: CartItem[]; item_count?: number; subtotal?: number }>({
+    items: [],
+    item_count: 0,
+    subtotal: 0,
+  });
   const [budget, setBudget] = useState<{ monthly: number; spent: number; remaining: number; auto_limit: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkingOut, setCheckingOut] = useState(false);
   const [orderComplete, setOrderComplete] = useState<any>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
-  const fetchCartAndBudget = async () => {
+  const fetchCartAndBudget = useCallback(async () => {
     try {
       const [cartRes, budgetRes] = await Promise.all([
-        fetch("/api/cart").then((r) => r.json()).catch(() => ({ items: [] })),
+        fetch("/api/cart").then((r) => r.json()).catch(() => ({ items: [], item_count: 0, subtotal: 0 })),
         fetch("/api/budget").then((r) => r.json()).catch(() => null),
       ]);
-      setCart(cartRes || { items: [] });
+      setCart(cartRes || { items: [], item_count: 0, subtotal: 0 });
       setBudget(budgetRes);
     } catch (err) {
       console.error("Failed to load cart", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchCartAndBudget();
-  }, []);
+  }, [fetchCartAndBudget]);
+
+  const handleUpdateQuantity = async (productId: string, newQty: number) => {
+    try {
+      if (newQty <= 0) {
+        await handleRemoveItem(productId);
+        return;
+      }
+      await fetch("/api/cart/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product_id: productId, quantity: newQty }),
+      });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("cart-updated"));
+      }
+      fetchCartAndBudget();
+    } catch (err) {
+      console.error("Failed to update quantity", err);
+    }
+  };
 
   const handleRemoveItem = async (productId: string) => {
     try {
@@ -61,26 +104,31 @@ export default function CartPage() {
   };
 
   const handleCheckout = async () => {
-    if (checkingOut || cart.items.length === 0) return;
+    if (checkingOut || (cart.items || []).length === 0) return;
     setCheckingOut(true);
+    setCheckoutError(null);
     try {
       const res = await fetch("/api/checkout", { method: "POST" });
-      const order = await res.json();
-      if (order && !order.error) {
-        setOrderComplete(order);
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setCheckoutError(data.detail || data.error || "Checkout failed. Please review your budget limits.");
+      } else {
+        setOrderComplete(data);
         if (typeof window !== "undefined") {
           window.dispatchEvent(new Event("cart-updated"));
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Checkout failed", err);
+      setCheckoutError(err.message || "Failed to execute checkout.");
     } finally {
       setCheckingOut(false);
     }
   };
 
   const items = cart.items || [];
-  const subtotal = items.reduce((sum, item) => sum + (item.price || 0), 0);
+  const subtotal = items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
+  const totalItems = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
   const budgetRemaining = budget?.remaining ?? 1580;
   const budgetAfter = Math.max(0, budgetRemaining - subtotal);
   const isWithinBudget = subtotal <= budgetRemaining;
@@ -98,49 +146,47 @@ export default function CartPage() {
 
   if (orderComplete) {
     return (
-      <div className="min-h-screen bg-[#EAEDED] py-8">
-        <div className="max-w-3xl mx-auto px-4">
+      <div className="min-h-screen bg-[#EAEDED] py-10">
+        <div className="max-w-2xl mx-auto px-4">
           <div className="bg-white p-8 rounded-sm border border-neutral-200 shadow-sm text-center">
-            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
+            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4 text-green-600">
+              <CheckCircle2 className="w-6 h-6" />
             </div>
-            <h1 className="text-2xl font-black text-neutral-900 mb-2">Order Confirmed!</h1>
-            <p className="text-sm text-neutral-600 mb-2">
-              Order #{orderComplete.id} placed with Amazon (Simulated demo integration).
+            <h1 className="text-2xl font-bold text-neutral-900 mb-2">Order Confirmed!</h1>
+            <p className="text-xs text-neutral-500 mb-4">
+              Order ID: <span className="font-mono font-bold text-neutral-700">{orderComplete.orderId || orderComplete.id}</span>
             </p>
-            <p className="text-xs text-neutral-400 mb-6">
-              NOVA Household Autopilot updated your pantry stock and deducted ₹{orderComplete.total?.toLocaleString("en-IN")} from your monthly budget.
+            <p className="text-sm text-neutral-700 mb-6 max-w-md mx-auto">
+              {orderComplete.message || "Your order has been placed via Swiggy Instamart and is scheduled for delivery in 10-15 minutes."}
             </p>
 
-            <div className="bg-neutral-50 p-4 rounded border border-neutral-200 text-left max-w-md mx-auto mb-6 text-xs space-y-2">
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Total Items:</span>
-                <span className="font-bold text-neutral-900">{orderComplete.items?.length || 0}</span>
+            <div className="bg-neutral-50 border border-neutral-200 rounded p-4 text-left text-xs mb-6 space-y-2">
+              <div className="flex justify-between font-semibold">
+                <span>Total Paid:</span>
+                <span>₹{(orderComplete.total || subtotal).toLocaleString("en-IN")}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Total Amount:</span>
-                <span className="font-bold text-neutral-900">₹{orderComplete.total?.toLocaleString("en-IN")}</span>
+              <div className="flex justify-between text-neutral-600">
+                <span>Estimated Delivery:</span>
+                <span className="font-medium text-green-700">{orderComplete.eta || "10-15 mins"}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Delivery Status:</span>
-                <span className="font-semibold text-green-700">Scheduled for Tomorrow by 11 AM</span>
+              <div className="flex justify-between text-neutral-600">
+                <span>Source:</span>
+                <span>{orderComplete.source || "SWIGGY_INSTAMART"}</span>
               </div>
             </div>
 
             <div className="flex justify-center gap-3">
               <Link
-                href="/orders"
-                className="px-6 py-2.5 bg-neutral-900 text-white rounded text-xs font-semibold hover:bg-neutral-800"
+                href="/store"
+                className="px-6 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-neutral-900 text-xs font-semibold rounded-full shadow-xs"
               >
-                View Orders
+                Return to NOVA Home
               </Link>
               <Link
-                href="/store"
-                className="px-6 py-2.5 bg-[#FFD814] hover:bg-[#F7CA00] text-neutral-900 rounded text-xs font-semibold"
+                href="/catalog"
+                className="px-6 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-semibold rounded-full border border-neutral-300"
               >
-                Continue Shopping
+                Browse Catalog
               </Link>
             </div>
           </div>
@@ -151,49 +197,56 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-[#EAEDED] py-6">
-      <div className="max-w-[1500px] mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5 items-start">
-          {/* Main Cart Items Column */}
-          <div className="bg-white p-6 rounded-sm border border-neutral-200 shadow-xs">
+      <div className="max-w-[1400px] mx-auto px-4">
+        {/* Breadcrumbs */}
+        <div className="text-xs text-neutral-500 mb-3 flex items-center gap-1.5">
+          <Link href="/store" className="hover:text-[#C45500] hover:underline">
+            Home
+          </Link>
+          <span>/</span>
+          <span className="text-neutral-900 font-medium">Shopping Cart</span>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">
+          {/* Main Cart Items */}
+          <div className="bg-white p-5 rounded-sm border border-neutral-200 shadow-xs">
             <div className="flex items-baseline justify-between border-b border-neutral-200 pb-3 mb-4">
               <div>
-                <h1 className="text-2xl font-bold text-neutral-900">Shopping Cart</h1>
-                <p className="text-xs text-[#007185] hover:underline cursor-pointer">
-                  Deselect all items
+                <h1 className="text-2xl font-bold text-neutral-900 tracking-tight">Shopping Cart</h1>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Real items ready for instant fulfillment via Swiggy Instamart dark store.
                 </p>
               </div>
-              <span className="text-xs font-semibold text-neutral-500 hidden sm:block">Price</span>
+              <span className="text-xs text-neutral-500 hidden sm:block">Price</span>
             </div>
 
             {items.length === 0 ? (
-              <div className="py-12 text-center">
-                <p className="text-lg font-bold text-neutral-900 mb-2">Your NOVA Cart is empty</p>
-                <p className="text-xs text-neutral-500 mb-6">
-                  Check out today&apos;s deals or browse recommendations based on your household consumption.
+              <div className="py-14 text-center">
+                <ShoppingBag className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
+                <h2 className="text-lg font-bold text-neutral-800 mb-1">Your NOVA Cart is empty.</h2>
+                <p className="text-xs text-neutral-500 mb-4">
+                  Explore household staples, fresh milk, cooking oils, and daily essentials.
                 </p>
-                <div className="flex justify-center gap-3">
-                  <Link
-                    href="/catalog"
-                    className="px-6 py-2.5 bg-[#FFD814] hover:bg-[#F7CA00] text-xs font-semibold rounded-full text-neutral-900"
-                  >
-                    Browse Products
-                  </Link>
-                  <Link
-                    href="/autopilot"
-                    className="px-6 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-xs font-semibold rounded-full text-neutral-800 border border-neutral-300"
-                  >
-                    Open Autopilot
-                  </Link>
-                </div>
+                <Link
+                  href="/catalog"
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-[#FFD814] hover:bg-[#F7CA00] text-xs font-semibold rounded-full text-neutral-900 transition-colors shadow-xs"
+                >
+                  Browse Catalog
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
               </div>
             ) : (
-              <div>
-                <div className="divide-y divide-neutral-200">
-                  {items.map((item, idx) => (
-                    <div key={`${item.id}-${idx}`} className="py-4 flex flex-col sm:flex-row gap-4 items-start">
+              <div className="divide-y divide-neutral-200">
+                {items.map((item) => {
+                  const itemKey = item.id || item.variantId || item.product_id;
+                  const itemQty = item.quantity || 1;
+                  const itemTotal = (item.price || 0) * itemQty;
+
+                  return (
+                    <div key={itemKey} className="py-4 flex gap-4 items-start">
                       {/* Thumbnail */}
                       <Link
-                        href={`/catalog/${item.id}`}
+                        href={`/catalog/${item.id || item.product_id}`}
                         className="relative w-24 h-24 shrink-0 bg-white border border-neutral-100 rounded overflow-hidden"
                       >
                         <ProductImage
@@ -207,48 +260,84 @@ export default function CartPage() {
                         />
                       </Link>
 
-                      {/* Info */}
+                      {/* Info & Quantity Controls */}
                       <div className="flex-1">
                         <Link
-                          href={`/catalog/${item.id}`}
-                          className="text-sm font-medium text-neutral-900 hover:text-[#C45500] line-clamp-2 leading-snug"
+                          href={`/catalog/${item.id || item.product_id}`}
+                          className="text-sm font-semibold text-neutral-900 hover:text-[#C45500] line-clamp-2 leading-snug"
                         >
                           {item.name}
                         </Link>
                         {item.pack_size && (
                           <p className="text-xs text-neutral-500 mt-0.5">{item.pack_size}</p>
                         )}
-                        <p className="text-xs font-semibold text-green-700 mt-1">In stock</p>
-                        <p className="text-[11px] text-neutral-500">Eligible for FREE Shipping</p>
+                        <p className="text-xs font-semibold text-emerald-700 mt-1 flex items-center gap-1">
+                          <ShieldCheck className="w-3 h-3" />
+                          In stock (10-15 min delivery)
+                        </p>
 
-                        <div className="mt-2 flex items-center gap-3 text-xs">
+                        {/* Controls Row */}
+                        <div className="mt-3 flex items-center gap-4 flex-wrap">
+                          {/* Quantity Selector: Minus / Qty / Plus */}
+                          <div className="flex items-center border border-neutral-300 rounded bg-neutral-50 shadow-2xs">
+                            <button
+                              onClick={() => handleUpdateQuantity(item.id || item.product_id!, itemQty - 1)}
+                              className="px-2 py-1 text-neutral-600 hover:bg-neutral-200 hover:text-neutral-900 transition-colors"
+                              title="Decrease quantity"
+                              aria-label="Decrease quantity"
+                            >
+                              <Minus className="w-3 h-3" />
+                            </button>
+                            <span className="px-3 py-1 text-xs font-bold text-neutral-900 bg-white border-x border-neutral-300 min-w-[32px] text-center">
+                              {itemQty}
+                            </span>
+                            <button
+                              onClick={() => handleUpdateQuantity(item.id || item.product_id!, itemQty + 1)}
+                              className="px-2 py-1 text-neutral-600 hover:bg-neutral-200 hover:text-neutral-900 transition-colors"
+                              title="Increase quantity"
+                              aria-label="Increase quantity"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
+
+                          <div className="h-4 w-px bg-neutral-200" />
+
+                          {/* Remove button */}
                           <button
-                            onClick={() => handleRemoveItem(item.id)}
-                            className="text-[#007185] hover:text-[#C45500] hover:underline"
+                            onClick={() => handleRemoveItem(item.id || item.product_id!)}
+                            className="text-xs text-[#007185] hover:text-[#C45500] hover:underline flex items-center gap-1"
                           >
+                            <Trash2 className="w-3 h-3" />
                             Delete
                           </button>
-                          <span className="text-neutral-300">|</span>
-                          <span className="text-neutral-500 text-[11px]">
-                            ⚡ Monitored by Household Autopilot
+
+                          <span className="text-neutral-400 text-[11px] flex items-center gap-1">
+                            <Zap className="w-3 h-3 text-[#FC8019]" />
+                            Household Autopilot Tracked
                           </span>
                         </div>
                       </div>
 
-                      {/* Price */}
+                      {/* Price per item / total */}
                       <div className="text-right shrink-0">
                         <p className="text-base font-bold text-neutral-900">
-                          ₹{item.price?.toLocaleString("en-IN")}
+                          ₹{itemTotal.toLocaleString("en-IN")}
                         </p>
+                        {itemQty > 1 && (
+                          <p className="text-[11px] text-neutral-500">
+                            (₹{item.price?.toLocaleString("en-IN")} each)
+                          </p>
+                        )}
                       </div>
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
 
                 {/* Subtotal bottom */}
                 <div className="border-t border-neutral-200 pt-4 text-right">
                   <p className="text-base text-neutral-800">
-                    Subtotal ({items.length} item{items.length !== 1 ? "s" : ""}):{" "}
+                    Subtotal ({totalItems} item{totalItems !== 1 ? "s" : ""}):{" "}
                     <span className="font-bold text-neutral-900 text-lg">
                       ₹{subtotal.toLocaleString("en-IN")}
                     </span>
@@ -262,43 +351,57 @@ export default function CartPage() {
           {items.length > 0 && (
             <div className="space-y-4">
               <div className="bg-white p-5 rounded-sm border border-neutral-200 shadow-xs">
-                <div className="flex items-center gap-1.5 text-xs text-green-700 font-semibold mb-3">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  Your order qualifies for FREE Delivery.
+                <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-semibold mb-3">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  Your order qualifies for FAST Delivery.
                 </div>
 
                 <div className="text-sm mb-4">
-                  Subtotal ({items.length} item{items.length !== 1 ? "s" : ""}):{" "}
+                  Subtotal ({totalItems} item{totalItems !== 1 ? "s" : ""}):{" "}
                   <span className="font-bold text-neutral-900 text-lg">
                     ₹{subtotal.toLocaleString("en-IN")}
                   </span>
                 </div>
 
+                {checkoutError && (
+                  <div className="mb-3 p-2.5 bg-rose-50 border border-rose-200 rounded text-rose-800 text-xs flex items-start gap-1.5">
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                    <span>{checkoutError}</span>
+                  </div>
+                )}
+
                 <button
                   onClick={handleCheckout}
-                  disabled={checkingOut}
-                  className="w-full py-2.5 px-4 bg-[#FFD814] hover:bg-[#F7CA00] active:bg-[#F0B800] text-xs font-semibold rounded-full text-neutral-900 shadow-xs transition-colors mb-2 disabled:opacity-50"
+                  disabled={checkingOut || !isWithinBudget}
+                  className={`w-full py-2.5 px-4 text-xs font-bold rounded-full shadow-xs transition-colors mb-2 ${
+                    !isWithinBudget
+                      ? "bg-neutral-200 text-neutral-400 cursor-not-allowed"
+                      : "bg-[#FFD814] hover:bg-[#F7CA00] active:bg-[#F0B800] text-neutral-900"
+                  }`}
                 >
-                  {checkingOut ? "Placing Simulated Order..." : "Proceed to Buy (Simulated)"}
+                  {checkingOut
+                    ? "Placing Order..."
+                    : !isWithinBudget
+                    ? "Exceeds Monthly Budget"
+                    : "Proceed to Checkout"}
                 </button>
 
                 <p className="text-[10px] text-neutral-400 text-center leading-relaxed">
-                  Demo checkout. Simulated purchase via Amazon mock adapter.
+                  Real-time Swiggy Instamart checkout with deterministic budget enforcement.
                 </p>
               </div>
 
               {/* Household Budget & Autopilot Impact Box */}
               <div className="bg-white p-5 rounded-sm border border-neutral-200 shadow-xs text-xs">
                 <h3 className="font-bold text-neutral-900 text-sm mb-2 flex items-center gap-1.5">
-                  <span className="text-[#FF9900]">⚡</span> Household Budget Impact
+                  <Zap className="w-4 h-4 text-[#FF9900]" />
+                  Household Budget Impact
                 </h3>
                 <div className="space-y-2 text-neutral-600 mb-3">
                   <div className="flex justify-between">
                     <span>Monthly Household Budget:</span>
                     <span className="font-semibold text-neutral-900">
-                      ₹{(budget?.monthly || 5000).toLocaleString("en-IN")}
+                      ₹{(budget?.monthly || 5500).toLocaleString("en-IN")}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -315,24 +418,26 @@ export default function CartPage() {
                   </div>
                   <div className="flex justify-between pt-2 border-t border-neutral-100 font-bold">
                     <span>Remaining After Order:</span>
-                    <span className={isWithinBudget ? "text-green-700" : "text-[#CC0C39]"}>
+                    <span className={isWithinBudget ? "text-emerald-700" : "text-rose-600"}>
                       ₹{budgetAfter.toLocaleString("en-IN")}
                     </span>
                   </div>
                 </div>
 
                 <div
-                  className={`p-2 rounded text-[11px] font-medium flex items-center gap-1.5 ${
-                    isWithinBudget ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
+                  className={`p-2.5 rounded text-[11px] font-medium flex items-center gap-1.5 ${
+                    isWithinBudget ? "bg-emerald-50 text-emerald-800" : "bg-rose-50 text-rose-800"
                   }`}
                 >
                   {isWithinBudget ? (
                     <>
-                      <span>✓</span> Order is within your monthly household limit.
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span>Order is within your monthly household budget limit.</span>
                     </>
                   ) : (
                     <>
-                      <span>⚠</span> Order exceeds your monthly limit. Approval required.
+                      <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                      <span>Order exceeds your monthly limit. Cannot proceed without adjustment.</span>
                     </>
                   )}
                 </div>
