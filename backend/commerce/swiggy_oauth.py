@@ -59,7 +59,7 @@ class SwiggyOAuthManager:
         digest = hashlib.sha256(verifier.encode("utf-8")).digest()
         return base64.urlsafe_b64encode(digest).decode("utf-8").rstrip("=")
 
-    def start_auth_flow(self, redirect_uri: Optional[str] = None) -> Dict[str, str]:
+    def start_auth_flow(self, redirect_uri: Optional[str] = None, return_to: Optional[str] = None) -> Dict[str, str]:
         """
         Initiates the PKCE OAuth authorization flow.
         Returns the authorization URL and state.
@@ -73,6 +73,7 @@ class SwiggyOAuthManager:
         self._pending_states[state] = {
             "verifier": verifier,
             "redirect_uri": chosen_redirect,
+            "return_to": return_to or "/store",
             "created_at": time.time()
         }
         self._cleanup_pending_states()
@@ -108,6 +109,7 @@ class SwiggyOAuthManager:
         Exchanges the authorization code for an OAuth access token using PKCE verifier.
         """
         pending = self._pending_states.pop(state, None)
+        return_to = pending.get("return_to", "/store") if pending else "/store"
         if not pending:
             # Check if there is an active session or fallback state for tolerance
             print(f"[Swiggy OAuth] Warning: State {state} not found in pending cache.")
@@ -155,7 +157,9 @@ class SwiggyOAuthManager:
                 }
                 self._save_session()
                 print(f"[Swiggy OAuth] Successfully exchanged token! Expires in {expires_in}s")
-                return self._session_cache
+                res = dict(self._session_cache)
+                res["return_to"] = return_to
+                return res
         except urllib.error.HTTPError as e:
             err_body = e.read().decode("utf-8", errors="replace")
             print(f"[Swiggy OAuth] Token exchange failed HTTP {e.code}: {err_body}")

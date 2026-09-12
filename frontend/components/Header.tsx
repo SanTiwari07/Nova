@@ -245,8 +245,8 @@ export default function Header() {
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   <span className="hidden sm:inline">Swiggy Instamart:</span> Connected
                   {swiggyStatus.active_address && (
-                    <span className="text-[11px] text-emerald-200/80 border-l border-emerald-500/40 pl-1.5 hidden md:inline truncate max-w-[120px]">
-                      {swiggyStatus.active_address.label || swiggyStatus.active_address.addressCategory || "Delivery Set"}
+                    <span className="text-[11px] text-emerald-200/80 border-l border-emerald-500/40 pl-1.5 hidden md:inline truncate max-w-[160px]">
+                      Delivery: {swiggyStatus.active_address.addressTag || swiggyStatus.active_address.label || swiggyStatus.active_address.addressCategory || "Active"}
                     </span>
                   )}
                 </span>
@@ -259,14 +259,21 @@ export default function Header() {
                 </button>
               </div>
             ) : (
-              <a
-                href="/api/auth/swiggy/login?redirect=true"
-                className="flex items-center gap-1.5 px-3 py-1 bg-[#FC8019] hover:bg-[#e07014] text-white text-xs font-bold rounded shadow-sm transition-all"
-                title="Authenticate with your Swiggy phone + OTP via official OAuth 2.1"
-              >
-                <span className="w-2 h-2 rounded-full bg-white/80 animate-ping" />
-                Connect Swiggy Instamart
-              </a>
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-950/80 border border-amber-500/40 rounded text-amber-300 text-xs font-semibold">
+                  <span className="w-2 h-2 rounded-full bg-amber-400" />
+                  <span className="hidden sm:inline">Demo Commerce — Active</span>
+                  <span className="sm:hidden">Demo</span>
+                </span>
+                <a
+                  href="/api/auth/swiggy/login?redirect=true"
+                  className="flex items-center gap-1.5 px-3 py-1 bg-[#FC8019] hover:bg-[#e07014] text-white text-xs font-bold rounded shadow-sm transition-all"
+                  title="Authenticate with your Swiggy phone + OTP via official OAuth 2.1"
+                >
+                  <span className="w-2 h-2 rounded-full bg-white/80 animate-ping" />
+                  Connect Swiggy Instamart
+                </a>
+              </div>
             )}
 
             {/* Reset Demo button */}

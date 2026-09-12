@@ -9,18 +9,20 @@ import os
 import logging
 from pathlib import Path
 import random
-from dotenv import load_dotenv
 
 logger = logging.getLogger("nova.api")
-
-for p in [
-    Path(__file__).resolve().parent / ".env",
-    Path(__file__).resolve().parent.parent / ".env",
-    Path(__file__).resolve().parent.parent.parent / ".env"
-]:
-    if p.exists():
-        load_dotenv(dotenv_path=p)
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    for p in [
+        Path(__file__).resolve().parent / ".env",
+        Path(__file__).resolve().parent.parent / ".env",
+        Path(__file__).resolve().parent.parent.parent / ".env"
+    ]:
+        if p.exists():
+            load_dotenv(dotenv_path=p)
+    load_dotenv()
+except ImportError:
+    pass
 
 from ai.ai_service import AIService
 from decision.decision_service import DecisionEngine
@@ -157,34 +159,82 @@ class SelectAddressRequest(BaseModel):
     address_id: str
 
 @app.get("/api/auth/swiggy/login")
-async def swiggy_login(redirect: bool = False):
+async def swiggy_login(redirect: bool = False, return_to: Optional[str] = "/store"):
     """Initiates Swiggy OAuth 2.1 + PKCE authorization flow."""
-    flow = oauth_manager.start_auth_flow()
-    if redirect:
-        return RedirectResponse(url=flow["auth_url"], status_code=307)
-    return flow
+    try:
+        flow = oauth_manager.start_auth_flow(return_to=return_to)
+        if redirect:
+            return RedirectResponse(url=flow["auth_url"], status_code=307)
+        return flow
+    except Exception as e:
+        logger.error(f"[Swiggy Auth] Login initiation failed: {e}")
+        if redirect:
+            return HTMLResponse(
+                content=f"""
+                <html>
+                    <body style="font-family:sans-serif;padding:40px;text-align:center;">
+                        <h2>Swiggy Instamart Login Error</h2>
+                        <p style="color:red;">Failed to initiate authentication: {str(e)}</p>
+                        <a href="http://localhost:3000/store" style="display:inline-block;padding:10px 20px;background:#FC8019;color:white;text-decoration:none;border-radius:4px;margin-top:16px;">Return to Store</a>
+                    </body>
+                </html>
+                """,
+                status_code=500
+            )
+        raise HTTPException(status_code=500, detail=f"Failed to initiate Swiggy auth flow: {str(e)}")
 
 @app.get("/api/auth/swiggy/callback")
-async def swiggy_callback(code: str = Query(...), state: str = Query(...)):
+async def swiggy_callback(code: Optional[str] = None, state: Optional[str] = None):
     """Exchanges Swiggy authorization code for access token and pre-fetches addresses."""
+    if not code or not state:
+        return HTMLResponse(
+            content="""
+            <html>
+                <body style="font-family:sans-serif;padding:40px;text-align:center;">
+                    <h2>Swiggy Instamart Connection Error</h2>
+                    <p style="color:red;">Missing authorization code or state parameter.</p>
+                    <a href="/api/auth/swiggy/login?redirect=true" style="display:inline-block;padding:10px 20px;background:#FC8019;color:white;text-decoration:none;border-radius:4px;margin-top:16px;">Try Reconnecting</a>
+                    <br><br>
+                    <a href="http://localhost:3000/store" style="color:#666;">Return to Store</a>
+                </body>
+            </html>
+            """,
+            status_code=400
+        )
+
     try:
-        oauth_manager.exchange_code(code, state)
-        await commerce_adapter.get_addresses()
-        return RedirectResponse(url="http://localhost:3000/?swiggy_connected=true", status_code=307)
+        res = oauth_manager.exchange_code(code, state)
+        return_to = res.get("return_to") or "/store"
+        if not return_to.startswith("/"):
+            return_to = "/store"
     except Exception as e:
-        print(f"[Swiggy Auth] Callback error: {e}")
+        logger.error(f"[Swiggy Auth] Callback token exchange failed: {e}")
         return HTMLResponse(
             content=f"""
             <html>
                 <body style="font-family:sans-serif;padding:40px;text-align:center;">
                     <h2>Swiggy Instamart Connection Error</h2>
                     <p style="color:red;">{str(e)}</p>
-                    <a href="http://localhost:3000" style="color:#FC8019;">Return to Nova</a>
+                    <a href="/api/auth/swiggy/login?redirect=true" style="display:inline-block;padding:10px 20px;background:#FC8019;color:white;text-decoration:none;border-radius:4px;margin-top:16px;">Try Again</a>
+                    <br><br>
+                    <a href="http://localhost:3000/store" style="color:#666;">Return to Store</a>
                 </body>
             </html>
             """,
             status_code=400
         )
+
+    try:
+        await commerce_adapter.get_addresses()
+    except Exception as e:
+        logger.warning(f"[Swiggy Auth] Could not pre-fetch addresses: {e}")
+
+    # Invalidate cached catalog so freshly authenticated dark store items load immediately
+    commerce_adapter._catalog_cache = None
+    commerce_adapter._catalog_cache_time = 0.0
+
+    target_url = f"http://localhost:3000{return_to}?swiggy_connected=true"
+    return RedirectResponse(url=target_url, status_code=307)
 
 @app.get("/api/auth/swiggy/status")
 async def swiggy_auth_status():
@@ -220,6 +270,9 @@ async def swiggy_select_address(req: SelectAddressRequest):
 async def swiggy_disconnect():
     """Disconnects Swiggy account and clears OAuth session."""
     oauth_manager.clear_session()
+    commerce_adapter._catalog_cache = None
+    commerce_adapter._catalog_cache_time = 0.0
+    commerce_adapter.carts = {}
     return {"status": "ok", "authenticated": False}
 
 @app.post("/api/onboarding/services")
