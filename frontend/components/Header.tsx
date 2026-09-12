@@ -63,13 +63,16 @@ export default function Header() {
 
   const secondaryNavLinks = [
     { href: "/store", label: "NOVA Home" },
-    { href: "/catalog?category=Rice", label: "Rice & Grains" },
-    { href: "/catalog?category=Snacks", label: "Snacks" },
-    { href: "/catalog?category=Beverages", label: "Beverages" },
-    { href: "/catalog?category=Detergent", label: "Household" },
-    { href: "/catalog?category=Tea", label: "Tea & Coffee" },
+    { href: "/pantry", label: "Pantry" },
     { href: "/autopilot", label: "Autopilot" },
+    { href: "/nova-cart", label: "NOVA Cart" },
     { href: "/budget", label: "Budget" },
+    { href: "/rules", label: "Rules" },
+    { href: "/reminders", label: "Reminders" },
+    { href: "/activity", label: "Activity" },
+    { href: "/price-watch", label: "Price Watch" },
+    { href: "/memory", label: "Memory" },
+    { href: "/orders", label: "Orders" },
   ];
 
   return (

@@ -28,6 +28,9 @@ export default function RemindersPage() {
   const [reminders, setReminders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"ALL" | "ACTIVE" | "COMPLETED">("ACTIVE");
+  const [newTitle, setNewTitle] = useState("");
+  const [newMsg, setNewMsg] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
 
   const loadReminders = () => {
     const status = filter === "ALL" ? undefined : filter;
@@ -48,6 +51,32 @@ export default function RemindersPage() {
     loadReminders();
   };
 
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim()) return;
+    setIsCreating(true);
+    try {
+      await fetch("/api/reminders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newTitle.trim(),
+          message: newMsg.trim() || newTitle.trim(),
+          priority: "HIGH",
+          type: "INVENTORY",
+          hours_until_due: 24,
+        }),
+      });
+      setNewTitle("");
+      setNewMsg("");
+      loadReminders();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   const sortedReminders = [...reminders].sort((a, b) => {
     const priorityOrder = { HIGH: 0, MEDIUM: 1, LOW: 2 };
     return (
@@ -65,6 +94,24 @@ export default function RemindersPage() {
           <h1 className="text-3xl font-black text-neutral-900 tracking-tight mb-2">Household Reminders</h1>
           <p className="text-neutral-500">Autonomous notifications, replenishment alerts, and approval requests.</p>
         </div>
+
+        {/* Quick Add Form */}
+        <form onSubmit={handleCreate} className="bg-white border border-neutral-200 rounded-2xl p-4 mb-6 shadow-sm flex flex-col md:flex-row gap-2">
+          <input
+            type="text"
+            placeholder="Add a household reminder (e.g. Check water purifier filter)..."
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            className="flex-1 px-4 py-2 text-sm bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:border-neutral-900"
+          />
+          <button
+            type="submit"
+            disabled={isCreating || !newTitle.trim()}
+            className="px-5 py-2 bg-neutral-900 text-white text-xs font-bold rounded-xl hover:bg-neutral-800 transition-colors disabled:opacity-50"
+          >
+            {isCreating ? "Adding..." : "Add Reminder"}
+          </button>
+        </form>
 
         {/* Filter pills */}
         <div className="flex gap-2 mb-6">

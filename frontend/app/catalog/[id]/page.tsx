@@ -170,7 +170,7 @@ export default function ProductDetailPage({ params }: { params?: { id: string } 
         <div className="max-w-[1400px] mx-auto px-4 py-6">
           <div className="h-4 bg-neutral-200 rounded w-64 mb-6 animate-pulse" />
           <div className="bg-white rounded-sm border border-neutral-200 p-6">
-            <div className="grid grid-cols-1 md:grid-cols-[40%_60%] gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-8">
               <div className="aspect-square bg-neutral-100 animate-pulse rounded-sm" />
               <div className="space-y-4 pt-4">
                 <div className="h-5 bg-neutral-100 animate-pulse rounded w-48" />
@@ -211,8 +211,8 @@ export default function ProductDetailPage({ params }: { params?: { id: string } 
   const inStock = product.availability !== "OUT_OF_STOCK";
 
   return (
-    <div className="min-h-screen bg-[#f3f3f3]">
-      <div className="max-w-[1400px] mx-auto px-4 py-4">
+    <div className="min-h-screen bg-[#f3f3f3] overflow-x-hidden">
+      <div className="max-w-[1400px] mx-auto px-4 py-4 w-full">
         {/* Breadcrumb */}
         <nav className="text-xs text-neutral-500 mb-3 flex items-center gap-1 flex-wrap">
           <Link href="/store" className="hover:text-[#0066c0] hover:underline">Home</Link>
@@ -230,10 +230,10 @@ export default function ProductDetailPage({ params }: { params?: { id: string } 
         </nav>
 
         {/* Main Product Area */}
-        <div className="bg-white border border-neutral-200 rounded-sm p-4 md:p-6 mb-4">
-          <div className="grid grid-cols-1 md:grid-cols-[38%_37%_25%] gap-6 lg:gap-8">
+        <div className="bg-white border border-neutral-200 rounded-sm p-4 md:p-6 mb-4 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.3fr)_240px] lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)_260px] xl:grid-cols-[minmax(0,380px)_minmax(0,1fr)_280px] gap-4 md:gap-6 lg:gap-8 items-start">
             {/* Image */}
-            <div className="flex flex-col items-center gap-3">
+            <div className="flex flex-col items-center gap-3 min-w-0">
               <div className="relative w-full max-w-sm mx-auto aspect-square border border-neutral-200 rounded-sm overflow-hidden bg-white p-4">
                 <ProductImage
                   src={product.imageUrl || product.image}
@@ -244,23 +244,25 @@ export default function ProductDetailPage({ params }: { params?: { id: string } 
                   sizes="(max-width: 768px) 90vw, 38vw"
                 />
               </div>
-              {/* Thumbnail strip */}
-              <div className="flex gap-2 justify-center">
-                <div className="w-14 h-14 border-2 border-[#FC8019] rounded-sm overflow-hidden bg-white cursor-pointer p-1">
-                  <ProductImage
-                    src={product.imageUrl || product.image}
-                    alt={product.name}
-                    category={product.category}
-                    product={product}
-                    width={52}
-                    height={52}
-                  />
+              {/* Thumbnail strip — only shown when an image is present */}
+              {Boolean(product.imageUrl || product.image) && (
+                <div className="flex gap-2 justify-center">
+                  <div className="w-14 h-14 border-2 border-[#FC8019] rounded-sm overflow-hidden bg-white cursor-pointer p-1">
+                    <ProductImage
+                      src={product.imageUrl || product.image}
+                      alt={product.name}
+                      category={product.category}
+                      product={product}
+                      width={52}
+                      height={52}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Product Info */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 min-w-0">
               <div>
                 <p className="text-sm text-[#0066c0] cursor-pointer hover:underline mb-1">
                   Brand: <span className="font-medium">{product.brand}</span>
@@ -360,7 +362,7 @@ export default function ProductDetailPage({ params }: { params?: { id: string } 
             </div>
 
             {/* Buy Box */}
-            <div className="border border-neutral-300 rounded-sm p-4 space-y-3 h-fit">
+            <div className="border border-neutral-300 rounded-sm p-4 space-y-3 h-fit min-w-0">
               <div>
                 <span className="text-2xl font-medium text-neutral-900">
                   ₹{product.price.toLocaleString("en-IN")}

@@ -13,7 +13,7 @@ export default function OrdersPage() {
   useEffect(() => {
     Promise.all([
       fetch("/api/orders").then(r => r.json()).catch(() => []),
-      fetch("/api/purchase-history").then(r => r.json()).catch(() => { products: [] }),
+      fetch("/api/purchase-history").then(r => r.json()).catch(() => ({ products: [] })),
     ]).then(([liveOrders, history]) => {
       setOrders(liveOrders || []);
       // Build order list from history service

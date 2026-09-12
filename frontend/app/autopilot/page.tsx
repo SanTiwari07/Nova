@@ -44,19 +44,21 @@ export default function AutopilotPage() {
     setStepsCompleted(0);
     setPlan(null);
 
-    // Animate steps with delays
+    // Concurrently trigger real backend autopilot monthly plan generation
+    const fetchPromise = fetch("/api/autopilot/monthly-plan", { method: "POST" })
+      .then((r) => r.json())
+      .catch((err) => {
+        console.error("Autopilot generation error:", err);
+        return null;
+      });
+
+    // Advance step indicators smoothly
     for (let i = 0; i < ANALYSIS_STEPS.length; i++) {
-      await new Promise((resolve) =>
-        setTimeout(resolve, ANALYSIS_STEPS[i].delay - (i > 0 ? ANALYSIS_STEPS[i - 1].delay : 0))
-      );
+      await new Promise((resolve) => setTimeout(resolve, 150));
       setStepsCompleted(i + 1);
     }
 
-    // Fetch the actual plan from backend
-    const data = await fetch("/api/autopilot/monthly-plan", { method: "POST" })
-      .then((r) => r.json())
-      .catch(() => null);
-
+    const data = await fetchPromise;
     setPlan(data);
     setPhase("done");
   };

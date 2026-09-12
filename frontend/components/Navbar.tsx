@@ -30,9 +30,11 @@ export default function Navbar() {
   const navLinks = [
     { href: "/store", label: "Home" },
     { href: "/catalog", label: "Shop" },
+    { href: "/pantry", label: "Pantry" },
     { href: "/nova-cart", label: "NOVA Cart" },
     { href: "/autopilot", label: "Autopilot" },
     { href: "/orders", label: "Orders" },
+    { href: "/activity", label: "Activity" },
     { href: "/price-watch", label: "Price Watch" },
     { href: "/reminders", label: "Reminders" },
     { href: "/memory", label: "Memory" },

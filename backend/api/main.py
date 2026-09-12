@@ -1,11 +1,26 @@
 from fastapi import FastAPI, Query, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, HTMLResponse
 # pyrefly: ignore [missing-import]
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 import os
+import logging
+from pathlib import Path
 import random
+from dotenv import load_dotenv
+
+logger = logging.getLogger("nova.api")
+
+for p in [
+    Path(__file__).resolve().parent / ".env",
+    Path(__file__).resolve().parent.parent / ".env",
+    Path(__file__).resolve().parent.parent.parent / ".env"
+]:
+    if p.exists():
+        load_dotenv(dotenv_path=p)
+load_dotenv()
 
 from ai.ai_service import AIService
 from decision.decision_service import DecisionEngine
@@ -34,6 +49,15 @@ from images.image_cache import image_cache
 
 app = FastAPI(title="NOVA API")
 
+# Enable CORS for direct frontend/API interactions
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Mount static assets directory
 assets_dir = os.path.join(os.path.dirname(__file__), "..", "assets")
 if not os.path.exists(assets_dir):
@@ -51,6 +75,9 @@ session_service = UserSessionService()
 
 product_repo = ProductRepository()
 asset_repo = AssetRepository()
+
+from intent.intent_service import IntentReconciliationService
+intent_service = IntentReconciliationService(inventory_service=inventory_service)
 
 # Amazon-first services
 history_service = MockAmazonHistoryProvider()
@@ -77,11 +104,20 @@ nova_agent = NovaAgent(
     commerce_adapter=commerce_adapter,
     inventory_service=inventory_service,
     budget_service=budget_service,
-    audit_service=audit_service
+    audit_service=audit_service,
+    history_service=history_service,
+    reminder_engine=reminder_engine,
+    savings_engine=savings_engine,
+    session_service=session_service,
+    intent_service=intent_service
 )
 
 class RequestModel(BaseModel):
-    text: str
+    text: Optional[str] = None
+    command: Optional[str] = None
+
+    def get_text(self) -> str:
+        return (self.text or self.command or "").strip()
 
 class LoginRequest(BaseModel):
     email: str
@@ -196,6 +232,21 @@ async def set_autonomy(req: AutonomyRequest):
     session_service.set_autonomy_profile(req.profile)
     return session_service.get_session_state()
 
+@app.get("/api/session/autonomy")
+async def get_autonomy():
+    return {
+        "autonomy_profile": session_service.get_autonomy_profile(),
+        "session": session_service.get_session_state()
+    }
+
+@app.get("/api/agent/provider")
+async def get_agent_provider():
+    return {
+        "provider": nova_agent.active_provider,
+        "is_llm_active": nova_agent.agent is not None,
+        "configured_provider": os.environ.get("LLM_PROVIDER", "gemini")
+    }
+
 @app.post("/api/demo/reset")
 async def reset_demo():
     session_service.reset()
@@ -212,8 +263,23 @@ async def reset_demo():
 
 @app.post("/api/command")
 async def process_command(req: RequestModel):
-    response_text = await nova_agent.handle_request(req.text)
-    return {"response": response_text}
+    query_text = req.get_text()
+    if not query_text:
+        return {
+            "response": "Please enter a valid command or request for NOVA.",
+            "tool_trace": [],
+            "mode": "STRANDS_AGENT",
+            "status": "error"
+        }
+    result = await nova_agent.handle_request(query_text)
+    if isinstance(result, dict):
+        return result
+    return {
+        "response": str(result),
+        "tool_trace": [],
+        "mode": "STRANDS_AGENT",
+        "status": "success"
+    }
 
 @app.get("/api/budget")
 async def get_budget():
@@ -353,8 +419,8 @@ async def get_product(product_id: str):
                     product["imageSource"] = resolved.get("imageSource")
                     product["imageConfidence"] = resolved.get("imageConfidence")
                     product["imageStatus"] = resolved.get("imageStatus")
-            except Exception:
-                pass
+            except Exception as img_err:
+                logger.debug(f"[API] Product image resolution skipped: {img_err}")
         return product
     raise HTTPException(status_code=404, detail="Product not found")
 
@@ -620,6 +686,28 @@ async def get_reminders(status: Optional[str] = "ACTIVE"):
         "count": len(reminder_engine.get_reminders(status=status)),
     }
 
+class CreateReminderRequest(BaseModel):
+    title: str
+    message: str
+    priority: Optional[str] = "MEDIUM"
+    type: Optional[str] = "INVENTORY"
+    product_id: Optional[str] = None
+    hours_until_due: Optional[int] = 24
+
+@app.post("/api/reminders")
+async def create_reminder(req: CreateReminderRequest):
+    """Create a new household reminder."""
+    new_r = reminder_engine.create_reminder(
+        type=req.type.upper(),
+        title=req.title,
+        message=req.message,
+        product_id=req.product_id,
+        priority=req.priority.upper(),
+        hours_until_due=req.hours_until_due or 24
+    )
+    audit_service.log_decision(req.title, "REMINDER_CREATED", [req.message])
+    return new_r
+
 class ReminderActionRequest(BaseModel):
     action: str  # snooze | complete | dismiss
     snooze_hours: Optional[int] = 24
@@ -637,6 +725,100 @@ async def reminder_action(reminder_id: str, req: ReminderActionRequest):
         raise HTTPException(status_code=400, detail=f"Unknown action: {req.action}")
     if not result:
         raise HTTPException(status_code=404, detail="Reminder not found")
+    return result
+
+@app.post("/api/reminders/{reminder_id}/{action}")
+async def reminder_action_path(reminder_id: str, action: str):
+    """Handle reminder action directly via URL path: snooze | complete | dismiss."""
+    if action == "snooze":
+        result = reminder_engine.snooze(reminder_id, hours=24)
+    elif action == "complete":
+        result = reminder_engine.complete(reminder_id)
+    elif action == "dismiss":
+        result = reminder_engine.dismiss(reminder_id)
+    else:
+        raise HTTPException(status_code=400, detail=f"Unknown action: {action}")
+    if not result:
+        raise HTTPException(status_code=404, detail="Reminder not found")
+    return result
+
+# ─────────────────────────────────────────────────────────────────────────────
+# POLICY & RULES ROUTES
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.get("/api/policy")
+async def get_policy():
+    """Current household purchasing policy and limits."""
+    rules = policy_service.get_rules() if hasattr(policy_service, "get_rules") else {
+        "automatic_categories": policy_service.automatic_categories,
+        "ask_categories": policy_service.ask_categories,
+        "restricted_categories": policy_service.restricted_categories,
+    }
+    budget_status = budget_service.get_status()
+    session_state = session_service.get_session_state() if session_service else {}
+    return {
+        **rules,
+        "auto_buy_limit": budget_status["auto_limit"],
+        "monthly_budget": budget_status["monthly"],
+        "spent": budget_status["spent"],
+        "autonomy_profile": session_state.get("autonomy_profile", "FULL_AUTOPILOT"),
+    }
+
+class PolicyUpdateRequest(BaseModel):
+    automatic_categories: Optional[List[str]] = None
+    ask_categories: Optional[List[str]] = None
+    restricted_categories: Optional[List[str]] = None
+    auto_buy_limit: Optional[float] = None
+    monthly_budget: Optional[float] = None
+    autonomy_profile: Optional[str] = None
+
+@app.post("/api/policy")
+async def update_policy(req: PolicyUpdateRequest):
+    """Update household policy, budget limits, or autonomy profile."""
+    if req.automatic_categories is not None or req.ask_categories is not None or req.restricted_categories is not None:
+        policy_service.update_rules(
+            automatic=req.automatic_categories if req.automatic_categories is not None else policy_service.automatic_categories,
+            ask=req.ask_categories if req.ask_categories is not None else policy_service.ask_categories,
+            restricted=req.restricted_categories if req.restricted_categories is not None else policy_service.restricted_categories,
+        )
+    if req.auto_buy_limit is not None:
+        budget_service.set_auto_limit(float(req.auto_buy_limit))
+    if req.monthly_budget is not None:
+        budget_service.set_budget(float(req.monthly_budget))
+    if req.autonomy_profile is not None and session_service:
+        session_service.set_autonomy_profile(req.autonomy_profile)
+
+    audit_service.log_decision(
+        "Household Policy",
+        "POLICY_UPDATED",
+        [
+            f"Auto-limit: ₹{budget_service.auto_limit}",
+            f"Monthly budget: ₹{budget_service.monthly_budget}",
+            f"Autonomy profile: {getattr(session_service, 'autonomy_profile', 'UNKNOWN')}"
+        ]
+    )
+    return await get_policy()
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PANTRY MUTATION ROUTE
+# ─────────────────────────────────────────────────────────────────────────────
+
+class PantryUpdateRequest(BaseModel):
+    item_name: str
+    quantity: Optional[float] = None
+    unit: Optional[str] = "units"
+    status: Optional[str] = None
+
+@app.post("/api/pantry/update")
+async def update_pantry(req: PantryUpdateRequest):
+    """Update stock or report item in pantry."""
+    result = inventory_service.update_item(
+        item_name_or_id=req.item_name,
+        quantity=req.quantity,
+        unit=req.unit,
+        status=req.status
+    )
+    audit_service.log_decision(req.item_name, "PANTRY_UPDATED", [f"Quantity: {req.quantity} {req.unit}"])
     return result
 
 @app.post("/api/autopilot/monthly-plan")

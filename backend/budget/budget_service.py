@@ -21,3 +21,11 @@ class BudgetService:
         
     async def record_spend(self, amount: float):
         self.spent += amount
+
+    def get_status(self) -> dict:
+        return {
+            "monthly": self.monthly_budget,
+            "spent": self.spent,
+            "remaining": self.monthly_budget - self.spent,
+            "auto_limit": self.auto_limit
+        }

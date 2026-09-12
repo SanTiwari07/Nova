@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import ProductShelf from "@/components/ProductShelf";
 import CategoryCard from "@/components/CategoryCard";
+import CommandBox from "@/components/CommandBox";
 import {
   Zap,
   Sparkles,
@@ -109,12 +110,6 @@ export default function Storefront() {
   const [budget, setBudget] = useState<{ monthly: number; spent: number; remaining: number; auto_limit: number } | null>(null);
   const [status, setStatus] = useState<any>(null);
 
-  // Demo Modal state
-  const [activeScenario, setActiveScenario] = useState<1 | 2 | 3 | null>(null);
-  const [scenarioPrompt, setScenarioPrompt] = useState("");
-  const [scenarioResponse, setScenarioResponse] = useState<string | null>(null);
-  const [scenarioLoading, setScenarioLoading] = useState(false);
-
   useEffect(() => {
     async function loadInitialData() {
       try {
@@ -135,6 +130,16 @@ export default function Storefront() {
       }
     }
     loadInitialData();
+
+    const handleUpdate = () => {
+      loadInitialData();
+    };
+    window.addEventListener("household-updated", handleUpdate);
+    window.addEventListener("cart-updated", handleUpdate);
+    return () => {
+      window.removeEventListener("household-updated", handleUpdate);
+      window.removeEventListener("cart-updated", handleUpdate);
+    };
   }, []);
 
   // Slide auto-rotation
@@ -212,26 +217,6 @@ export default function Storefront() {
       .filter((p) => p.category === "Snacks & Biscuits" || p.category === "Instant Noodles" || p.category === "Beverages")
       .slice(0, 10);
   }, [sections, products]);
-
-  // Scenario 3 trigger
-  const handleRunCommand = async (cmdText: string) => {
-    setScenarioLoading(true);
-    setScenarioPrompt(cmdText);
-    setScenarioResponse(null);
-    try {
-      const res = await fetch("/api/command", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: cmdText }),
-      });
-      const data = await res.json();
-      setScenarioResponse(data.response || "No response received.");
-    } catch (e) {
-      setScenarioResponse("Failed to communicate with NOVA agent.");
-    } finally {
-      setScenarioLoading(false);
-    }
-  };
 
   const scrollToTop = () => {
     if (typeof window !== "undefined") {
@@ -462,46 +447,9 @@ export default function Storefront() {
         </div>
       </div>
 
-      {/* ── 3. HACKATHON DEMO QUICK BAR ────────────────────────────────────── */}
+      {/* ── 3. NOVA AUTONOMOUS HOUSEHOLD COPILOT (AWS STRANDS AGENT) ──────── */}
       <div className="max-w-[1500px] mx-auto px-4 mb-6">
-        <div className="bg-white border border-[#FF9900]/40 rounded-sm p-4 shadow-xs">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 bg-[#FF9900] text-white text-[10px] font-black rounded-xs uppercase tracking-wider">
-                Hackathon Demo
-              </span>
-              <span className="text-xs font-bold text-neutral-800">
-                Interactive Autopilot Scenarios:
-              </span>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={() => setActiveScenario(1)}
-                className="px-3 py-1.5 rounded bg-neutral-100 hover:bg-neutral-200 text-xs font-semibold text-neutral-800 transition-colors flex items-center gap-1.5 border border-neutral-200"
-              >
-                <Milk className="w-4 h-4 text-blue-600" /> Scenario 1: Milk (Auto-Buy)
-              </button>
-
-              <button
-                onClick={() => setActiveScenario(2)}
-                className="px-3 py-1.5 rounded bg-neutral-100 hover:bg-neutral-200 text-xs font-semibold text-neutral-800 transition-colors flex items-center gap-1.5 border border-neutral-200"
-              >
-                <Droplet className="w-4 h-4 text-amber-600" /> Scenario 2: Oil (Do Not Buy)
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveScenario(3);
-                  handleRunCommand("I want to make Maggi tonight");
-                }}
-                className="px-3 py-1.5 rounded bg-orange-100 hover:bg-orange-200 text-xs font-bold text-orange-900 transition-colors flex items-center gap-1.5 border border-orange-300"
-              >
-                <Utensils className="w-4 h-4 text-orange-600" /> Scenario 3: &quot;Make Maggi tonight&quot;
-              </button>
-            </div>
-          </div>
-        </div>
+        <CommandBox />
       </div>
 
       {/* ── 4. CONTEXTUAL NOVA ASSISTANT BANNER ─────────────────────────────── */}
@@ -710,209 +658,6 @@ export default function Storefront() {
           </p>
         </div>
       </footer>
-
-      {/* ── 12. HACKATHON DEMO MODAL POPUP ─────────────────────────────────── */}
-      {activeScenario !== null && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-sm border border-neutral-300 max-w-xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-            <button
-              onClick={() => {
-                setActiveScenario(null);
-                setScenarioResponse(null);
-              }}
-              className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-900"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* SCENARIO 1: MILK AUTO PURCHASE */}
-            {activeScenario === 1 && (
-              <div>
-                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-green-100 text-green-800 text-[10px] font-bold rounded mb-2">
-                  DEMO 1 &mdash; PREDICTIVE PURCHASE
-                </div>
-                <h3 className="text-xl font-bold text-neutral-900 mb-2">
-                  Autonomous Decision: Amul Taaza Milk 1L
-                </h3>
-                <p className="text-xs text-neutral-600 mb-4">
-                  NOVA detected that milk supply will deplete tomorrow based on 1L/day average consumption.
-                </p>
-
-                <div className="bg-neutral-50 p-4 rounded border border-neutral-200 space-y-2.5 text-xs mb-4">
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">Estimated Inventory:</span>
-                    <span className="font-bold text-neutral-800">1 L remaining</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">Consumption Rate:</span>
-                    <span className="font-semibold text-neutral-800">1 L / day</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">Predicted Depletion:</span>
-                    <span className="font-bold text-red-600">Tomorrow morning</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">Inventory Confidence:</span>
-                    <span className="font-bold text-green-700">92% (High Confidence)</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">Item Price:</span>
-                    <span className="font-bold text-neutral-900">₹68 (Within ₹500 limit)</span>
-                  </div>
-                  <div className="pt-2 border-t border-neutral-200 flex justify-between font-bold">
-                    <span>Autopilot Action:</span>
-                    <span className="text-green-700 uppercase tracking-wide">AUTO-PURCHASE AUTHORIZED</span>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => setActiveScenario(null)}
-                    className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-xs font-semibold rounded text-neutral-800"
-                  >
-                    Close
-                  </button>
-                  <Link
-                    href="/catalog/prod_000109"
-                    className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-xs font-semibold rounded text-neutral-900"
-                  >
-                    View Product Details &rarr;
-                  </Link>
-                </div>
-              </div>
-            )}
-
-            {/* SCENARIO 2: RESTRAINT / OIL DO NOT BUY */}
-            {activeScenario === 2 && (
-              <div>
-                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold rounded mb-2">
-                  DEMO 2 &mdash; RESTRAINT (DO NOT BUY)
-                </div>
-                <h3 className="text-xl font-bold text-neutral-900 mb-2">
-                  Autonomous Restraint: Fortune Sunflower Oil
-                </h3>
-                <p className="text-xs text-neutral-600 mb-4">
-                  NOVA calculated existing pantry inventory and decided NO purchase is required.
-                </p>
-
-                <div className="bg-neutral-50 p-4 rounded border border-neutral-200 space-y-2.5 text-xs mb-4">
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">Estimated Inventory:</span>
-                    <span className="font-bold text-neutral-800">2.4 L in pantry</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">Consumption Rate:</span>
-                    <span className="font-semibold text-neutral-800">0.8 L / month</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">Expected Remaining:</span>
-                    <span className="font-bold text-green-700">~3 months (~90 days)</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">Confidence Score:</span>
-                    <span className="font-semibold text-neutral-800">88%</span>
-                  </div>
-                  <div className="pt-2 border-t border-neutral-200 flex justify-between font-bold">
-                    <span>Autopilot Action:</span>
-                    <span className="text-neutral-700 uppercase tracking-wide">DO NOT BUY (Restraint Active)</span>
-                  </div>
-                </div>
-
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-900 mb-4 leading-relaxed flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                  <div>
-                    <strong>Reasoning:</strong> Existing supply is healthy. Preventing redundant spend preserves ₹155 of household monthly budget.
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => setActiveScenario(null)}
-                    className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-xs font-semibold rounded text-neutral-800"
-                  >
-                    Close
-                  </button>
-                  <Link
-                    href="/pantry"
-                    className="px-4 py-2 bg-[#131921] hover:bg-[#232F3E] text-xs font-semibold rounded text-white"
-                  >
-                    Check Pantry Stock &rarr;
-                  </Link>
-                </div>
-              </div>
-            )}
-
-            {/* SCENARIO 3: INTENT TO SHOPPING (MAGGI) */}
-            {activeScenario === 3 && (
-              <div>
-                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-orange-100 text-orange-800 text-[10px] font-bold rounded mb-2">
-                  DEMO 3 &mdash; INTENT &rarr; SHOPPING
-                </div>
-                <h3 className="text-xl font-bold text-neutral-900 mb-2">
-                  Intent: &quot;I want to make Maggi tonight&quot;
-                </h3>
-                <p className="text-xs text-neutral-600 mb-4">
-                  NOVA decomposes meal intent into ingredients, reconciles against household pantry, and only purchases what is missing.
-                </p>
-
-                <div className="bg-neutral-50 p-4 rounded border border-neutral-200 space-y-2 text-xs mb-4">
-                  <div className="flex items-center justify-between pb-2 border-b border-neutral-200">
-                    <span className="font-semibold text-neutral-700">Pantry Reconciliation:</span>
-                    <span className="text-[11px] text-neutral-500">Meal: Maggi 2-Pack</span>
-                  </div>
-                  <div className="flex justify-between items-center text-green-700">
-                    <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-green-600" /> Cooking Oil</span>
-                    <span className="font-semibold">Available in pantry (2.4L)</span>
-                  </div>
-                  <div className="flex justify-between items-center text-green-700">
-                    <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-green-600" /> Spices &amp; Salt</span>
-                    <span className="font-semibold">Available in pantry</span>
-                  </div>
-                  <div className="flex justify-between items-center text-red-600 font-bold">
-                    <span className="flex items-center gap-1.5"><X className="w-3.5 h-3.5 text-red-600" /> Maggi Noodles</span>
-                    <span>MISSING from pantry</span>
-                  </div>
-                  <div className="pt-2 border-t border-neutral-200 flex justify-between font-bold text-neutral-900">
-                    <span>Purchase Plan:</span>
-                    <span className="text-[#C45500]">Maggi Noodles Only (₹28)</span>
-                  </div>
-                </div>
-
-                {scenarioLoading ? (
-                  <div className="p-4 bg-orange-50/50 rounded border border-orange-100 flex items-center gap-3 mb-4">
-                    <RefreshCw className="w-4 h-4 text-[#FF9900] animate-spin" />
-                    <span className="text-xs text-neutral-600">
-                      NOVA Agent reasoning over household state...
-                    </span>
-                  </div>
-                ) : scenarioResponse ? (
-                  <div className="p-3 bg-neutral-100 rounded border border-neutral-200 text-xs text-neutral-700 mb-4 whitespace-pre-wrap max-h-40 overflow-y-auto font-mono">
-                    {scenarioResponse}
-                  </div>
-                ) : null}
-
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => {
-                      setActiveScenario(null);
-                      setScenarioResponse(null);
-                    }}
-                    className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-xs font-semibold rounded text-neutral-800"
-                  >
-                    Close
-                  </button>
-                  <Link
-                    href="/catalog?q=maggi"
-                    className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-xs font-semibold rounded text-neutral-900"
-                  >
-                    Search Maggi in Store &rarr;
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

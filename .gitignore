@@ -7,3 +7,7 @@ __pycache__/
 .env.local
 *session*.json
 backend/commerce/swiggy_session.json
+.pytest_cache/
+*.tsbuildinfo
+.DS_Store
+Thumbs.db

@@ -104,7 +104,6 @@ export default function ProductCard({ product }: { product: Product }) {
   const mrp = product.mrp && product.mrp > price ? product.mrp : null;
   const discountPct = mrp ? Math.round(((mrp - price) / mrp) * 100) : 0;
   const packSize = product.pack_size || (product.quantity && product.unit ? `${product.quantity} ${product.unit}` : null);
-  const isDemo = product.is_demo ?? true;
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -132,24 +131,6 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className="group relative flex flex-col h-full bg-white border border-neutral-200 rounded-md p-3 hover:shadow-md transition-all duration-200">
-      {/* Retailer & Demo Status Badge */}
-      <div className="flex items-center justify-between gap-1 mb-2">
-        <span className="text-[10px] font-bold text-[#FC8019] uppercase tracking-wide flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#FC8019]"></span>
-          Swiggy Instamart
-        </span>
-        {isDemo ? (
-          <span className="px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 text-[9px] font-bold rounded">
-            SIMULATED
-          </span>
-        ) : (
-          <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-bold rounded flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            Live MCP
-          </span>
-        )}
-      </div>
-
       {/* Product Image — uses async-resolved real URL (never emoji, never AI) */}
       <Link href={`/catalog/${product.id}`} className="block relative w-full aspect-square mb-2 overflow-hidden bg-neutral-50/50 rounded">
         {imageResolving ? (

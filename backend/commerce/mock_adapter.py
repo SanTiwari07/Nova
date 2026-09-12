@@ -79,12 +79,13 @@ class MockCommerceAdapter(CommerceInterface):
         self.carts[cart_id] = []
         return cart_id
         
-    async def add_to_cart(self, cart_id: str, product_id: str):
+    async def add_to_cart(self, cart_id: str, product_id: str, quantity: int = 1):
         if cart_id not in self.carts:
             raise ValueError("Invalid cart")
         p = await self.get_product(product_id)
         if p:
-            self.carts[cart_id].append(p)
+            for _ in range(max(1, quantity)):
+                self.carts[cart_id].append(p)
             
     async def checkout(self, cart_id: str) -> Dict[str, Any]:
         if cart_id not in self.carts:

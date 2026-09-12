@@ -12,11 +12,24 @@ interface AuditLog {
 
 export default function ActivityPage() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/audit/activity')
-      .then(res => res.json())
-      .then(data => setLogs(data));
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        setLogs(Array.isArray(data) ? data : []);
+        setError(null);
+      })
+      .catch(err => {
+        console.error("Failed to fetch activity logs:", err);
+        setError("Unable to load activity logs at this time.");
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const formatTime = (ts: string) => {
@@ -49,37 +62,48 @@ export default function ActivityPage() {
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold text-neutral-900 mb-8">Recently Taken Care Of</h1>
         
-        <div className="space-y-4">
-          {logs.map(log => (
-            <div key={log.id} className="bg-white p-6 rounded-2xl shadow-sm border border-neutral-200">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="font-bold text-lg">{log.product}</h3>
-                  <div className="flex items-center gap-3 mt-2">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getBadgeClass(log.decision)}`}>
-                      {getHumanDecision(log.decision)}
-                    </span>
-                    <span className="text-sm text-neutral-400">{formatTime(log.timestamp)}</span>
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-16 text-neutral-500">
+            <div className="w-8 h-8 border-4 border-neutral-200 border-t-neutral-800 rounded-full animate-spin mb-3"></div>
+            <p className="text-sm">Loading activity logs...</p>
+          </div>
+        ) : error ? (
+          <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm mb-6">
+            {error}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {logs.map(log => (
+              <div key={log.id} className="bg-white p-6 rounded-2xl shadow-sm border border-neutral-200">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="font-bold text-lg">{log.product}</h3>
+                    <div className="flex items-center gap-3 mt-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getBadgeClass(log.decision)}`}>
+                        {getHumanDecision(log.decision)}
+                      </span>
+                      <span className="text-sm text-neutral-400">{formatTime(log.timestamp)}</span>
+                    </div>
                   </div>
                 </div>
+                <div className="bg-neutral-50 rounded-xl p-4 mt-4 text-sm text-neutral-600 space-y-1">
+                  <p className="font-medium text-neutral-800 mb-2">Why?</p>
+                  <ul className="list-disc list-inside pl-4 space-y-1">
+                    {log.reasons.map((r, i) => (
+                      <li key={i}>{r}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-              <div className="bg-neutral-50 rounded-xl p-4 mt-4 text-sm text-neutral-600 space-y-1">
-                <p className="font-medium text-neutral-800 mb-2">Why?</p>
-                <ul className="list-disc list-inside pl-4 space-y-1">
-                  {log.reasons.map((r, i) => (
-                    <li key={i}>{r}</li>
-                  ))}
-                </ul>
+            ))}
+            
+            {logs.length === 0 && (
+              <div className="text-center text-neutral-500 py-12">
+                No recent activity.
               </div>
-            </div>
-          ))}
-          
-          {logs.length === 0 && (
-            <div className="text-center text-neutral-500 py-12">
-              No recent activity.
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

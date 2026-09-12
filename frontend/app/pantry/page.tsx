@@ -10,19 +10,51 @@ interface PantryItem {
   days_remaining: number;
   status: string;
   category: string;
+  confidence?: number;
+  confidence_score?: string;
 }
 
 export default function PantryPage() {
   const [items, setItems] = useState<PantryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copilotQuery, setCopilotQuery] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [agentFeedback, setAgentFeedback] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchPantry = () => {
     fetch('/api/pantry')
       .then(res => res.json())
       .then(data => setItems(data))
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchPantry();
   }, []);
+
+  const handleCopilotSubmit = async (queryToRun?: string) => {
+    const query = queryToRun || copilotQuery;
+    if (!query.trim()) return;
+    setIsProcessing(true);
+    setAgentFeedback(null);
+    try {
+      const res = await fetch('/api/command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: query.trim(), command: query.trim() }),
+      });
+      const data = await res.json();
+      setAgentFeedback(data.response || "Pantry updated.");
+      setCopilotQuery("");
+      fetchPantry();
+    } catch (err) {
+      console.error(err);
+      setAgentFeedback("Error contacting NOVA Agent.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -35,10 +67,69 @@ export default function PantryPage() {
   return (
     <div className="min-h-screen bg-neutral-50 p-8 pt-24 font-sans pb-24">
       <div className="max-w-5xl mx-auto">
-        <header className="mb-10">
+        <header className="mb-8">
           <h1 className="text-3xl font-extrabold text-neutral-900 mb-2 uppercase tracking-tight">Household Inventory</h1>
-          <p className="text-neutral-500 font-medium">Tracking {items.length} essential items in your household.</p>
+          <p className="text-neutral-500 font-medium">Tracking {items.length} essential items in your household with real-time autonomous intelligence.</p>
         </header>
+
+        {/* Agentic Pantry Copilot */}
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-200 mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <p className="text-xs font-bold uppercase tracking-wider text-neutral-500">NOVA Pantry Copilot · Real Strands Agent</p>
+          </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleCopilotSubmit();
+            }}
+            className="flex flex-col md:flex-row gap-3"
+          >
+            <input
+              type="text"
+              placeholder="Tell NOVA to update pantry (e.g. 'We ran out of tea', 'Add 2L of milk', 'Check if we need oil')..."
+              value={copilotQuery}
+              onChange={(e) => setCopilotQuery(e.target.value)}
+              disabled={isProcessing}
+              className="flex-1 px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-2xl text-sm focus:outline-none focus:border-neutral-900 transition-colors"
+            />
+            <button
+              type="submit"
+              disabled={isProcessing || !copilotQuery.trim()}
+              className="px-6 py-3 bg-neutral-900 text-white font-bold text-sm rounded-2xl hover:bg-neutral-800 transition-colors disabled:opacity-50 shrink-0"
+            >
+              {isProcessing ? "NOVA Thinking..." : "Send to Agent"}
+            </button>
+          </form>
+
+          {/* Quick chip triggers */}
+          <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-neutral-100">
+            <span className="text-xs text-neutral-400 font-medium self-center">Try asking:</span>
+            {[
+              "We ran out of tea",
+              "Add 2 packets of poha",
+              "Check if we need oil",
+              "Ran out of salt",
+            ].map((chip) => (
+              <button
+                key={chip}
+                type="button"
+                onClick={() => handleCopilotSubmit(chip)}
+                disabled={isProcessing}
+                className="px-3 py-1 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-semibold rounded-lg transition-colors"
+              >
+                {chip} &rarr;
+              </button>
+            ))}
+          </div>
+
+          {agentFeedback && (
+            <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-sm text-emerald-900 leading-relaxed">
+              <span className="font-bold block mb-1 text-emerald-950">Agent Decision:</span>
+              {agentFeedback}
+            </div>
+          )}
+        </div>
         
         <div className="bg-white rounded-3xl shadow-sm border border-neutral-200 overflow-hidden">
           <table className="w-full text-left">
@@ -71,11 +162,11 @@ export default function PantryPage() {
                     </div>
                   </td>
                   <td className="px-6 py-5 text-right">
-                    <div className={`font-bold text-lg ${item.status === 'LOW' ? 'text-green-600' : 'text-neutral-900'}`}>
-                      {item.status === 'LOW' ? '92%' : '88%'}
+                    <div className={`font-bold text-lg ${(item.confidence ?? 0.88) >= 0.9 ? 'text-green-600' : 'text-neutral-900'}`}>
+                      {item.confidence_score || (item.confidence ? `${Math.round(item.confidence * 100)}%` : '88%')}
                     </div>
                     <div className="text-xs text-neutral-500 font-medium uppercase tracking-wider">
-                      {item.status === 'LOW' ? 'High' : 'High'}
+                      {(item.confidence ?? 0.88) >= 0.9 ? 'High' : (item.confidence ?? 0.88) >= 0.75 ? 'Moderate' : 'Low'}
                     </div>
                   </td>
                 </tr>

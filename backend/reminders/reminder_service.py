@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 
@@ -83,9 +83,10 @@ class ReminderEngine:
         ]
 
     def get_reminders(self, status: Optional[str] = "ACTIVE") -> List[Dict[str, Any]]:
-        if status:
-            return [r for r in self._reminders if r["status"] == status]
-        return self._reminders
+        if status and status.strip() and status.upper() != "ALL":
+            target = status.upper().strip()
+            return [r for r in self._reminders if r.get("status", "").upper() == target]
+        return list(self._reminders)
 
     def get_reminder(self, reminder_id: str) -> Optional[Dict[str, Any]]:
         for r in self._reminders:

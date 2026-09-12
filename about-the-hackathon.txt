@@ -1,0 +1,256 @@
+**Title:** Agents for Humans Hackathon
+
+**Source:** [https://agentsforhumans.devpost.com/?ref_content=default&ref_feature=challenge&ref_medium=portfolio](https://agentsforhumans.devpost.com/?ref_content=default&ref_feature=challenge&ref_medium=portfolio)
+
+---
+
+# Page Structure Map
+```text
+Agents for Humans Hackathon
+├── Why Join?
+├── What to Build
+└── What to Submit
+    ├── First online hackathon
+    ├── X Hackathons
+    ├── Hackathon Winner
+    └── Generalist
+```
+
+---
+
+Every day, people lose hours to small, repetitive tasks like paying bills, scheduling meetings, or filling out the same paperwork again. On their own they're minor, but together they drain real time and attention.
+
+AWS wants to help you change that! 
+
+Build an AI agent with the Strands Agents SDK that handles routine and repetitive tasks in the background. Instead of another app people open and manage, the agent runs autonomously and only surfaces when there's a real decision to make. This theme is open to any part of life, from home and work to health, money, errands, and family. Whatever you want to solve, there's a track for it.
+
+Six weeks. One build. We're looking forward to seeing what you create.
+
+#### Why Join?
+
+-   🏆 Compete for $40,000 in cash prizes across three tracks   
+    🌐 Build with Strands Agents SDK, open source, production ready, built and trusted by teams at AWS  
+    🛠️ Solve real problems people actually deal with, from daily chores to professional workloads to community logistics  
+    💳 Get $50 in AWS credits to cover your build costs (go to the Resources tab for request form)  
+    🌍 Open to developers worldwide, solo or team, new or seasoned  
+    📝 Earn bonus points by publishing your build story on builder.aws.com (see rules for details)
+
+#### What to Build
+
+Build a new AI agent with Strands Agents SDK that does real work for people. Your agent should take on something people actually deal with and handle it end to end. Enter it in one of the three tracks below.
+
+1.  **Everyday Agents** - an agent that takes the busywork out of daily life, home, money, health, errands, family. The best ones run quietly in the background and only ping you when there's a real decision to make. 
+
+2.  **Professional Agents** - an agent that makes someone dramatically better at the work they already do, professionals, makers, creators, small-business owners. Target the repetitive, judgment-heavy tasks that eat their day.
+
+3.  **Good Neighbor Agents** - an agent that helps groups of people, not just one, neighborhoods, nonprofits, food banks, schools, libraries, small local orgs.
+
+_Deploying with AgentCore is a smart architectural choice and will strengthen your **Technical Implementation** score, but it's not required._  
+
+#### What to Submit
+
+-   Text description - explain what your project does, who it's for, and how it works
+
+-   **PUBLIC** URL to your code repo 
+
+-   All source code, assets, and setup instructions needed to run the project
+
+-   MIT or Apache open source license, visible in the About section of your repo
+
+-   README 
+
+-   Architecture Diagram  
+
+-   Demo video (maximum 5 minutes) that includes 
+
+-   **Demonstrates** of your working project 
+
+-   Pitch **must** cover: 
+
+-   (1) the problem you're solving
+
+-   (2) who it's for
+
+-   (3) why it matters 
+
+-   Slides, screen recordings, and voiceover are all fine. No need to appear on camera
+
+-   AWS Builder ID 
+
+-   (Optional) Live demo link (projects with a live demo score higher on Technical Implementation)
+
+⭐ **Bonus Points** Publish a post on builder.aws.com covering your build journey and use of AWS for this hackathon. Use Agents for Humans in your title. You can submit more than one post. Posts must be publicly published before the submission deadline. See Full Rules for details.
+
+$40,000 in prizes
+
+###### 
+
+Grand Prize
+
+$10,000 in cash
+
+1 winner
+
+$10,000 USD in cash  
+Featured in AWS Social Post  
+Meeting with AWS Technical Experts
+
+###### 
+
+Everyday Agents | Golden Agent
+
+$5,000 in cash
+
+1 winner
+
+$5,000 USD in cash  
+Featured in AWS Social Post
+
+###### 
+
+Everyday Agents | Silver Agent
+
+$3,000 in cash
+
+1 winner
+
+$3,000 USD in cash  
+Featured in AWS Social Post
+
+###### 
+
+Everyday Agents | Bronze Agent
+
+$2,000 in cash
+
+1 winner
+
+$2,000 USD in cash  
+Featured in AWS Social Post
+
+###### 
+
+Professional Agents | Golden Agent
+
+$5,000 in cash
+
+1 winner
+
+$5,000 USD in cash  
+Featured in AWS Social Post
+
+###### 
+
+Professional Agents | Silver Agent
+
+$3,000 in cash
+
+1 winner
+
+$3,000 USD in cash  
+Featured in AWS Social Post
+
+###### 
+
+Professional Agents | Bronze Agent
+
+$2,000 in cash
+
+1 winner
+
+$2,000 USD in cash  
+Featured in AWS Social Post
+
+###### 
+
+Good Neighbor Agents | Golden Agent
+
+$5,000 in cash
+
+1 winner
+
+$5,000 USD in cash  
+Featured in AWS Social Post
+
+###### 
+
+Good Neighbor Agents | Silver Agent
+
+$3,000 in cash
+
+1 winner
+
+$3,000 USD in cash  
+Featured in AWS Social Post
+
+###### 
+
+Good Neighbor Agents | Bronze Agent
+
+$2,000 in cash
+
+1 winner
+
+$2,000 USD in cash  
+Featured in AWS Social Post
+
+Submitting to this hackathon could earn you:
+
+###### First online hackathon
+
+###### X Hackathons
+
+level 1
+
+###### Hackathon Winner
+
+level 1
+
+###### Generalist
+
+**Debjyoti Paul**  
+_Applied Scientist II, Spectrum, AWS_
+
+**Elizabeth Fuentes Leone**  
+_Developer Advocate, SDE, GenAI, AWS_
+
+**Gonzalo Ron**  
+_Principal Partner Solution Architect at AWS_
+
+**Ian Holtz**  
+_Sr. GTM Specialist Agentic Coding at AWS_
+
+**Ifeanyi Otuonye**  
+_Technical Content Creator at AWS_
+
+**Lahari Chowtoori**  
+_Open Source, Open Source TPM, AI/ML, AWS_
+
+**Rekha Chauhan**  
+_Sr. Technical Program Manager, AWS_
+
+**Rohan Patil**  
+_Sr. Applied Scientist, AWS_
+
+**Rohini Gaonkar**  
+_Sr. Developer Advocate, AWS_
+
+**Sandhya Subramani**  
+_Sr. Dev Advocate, GenAI at AWS_
+
+**Saurabh Garg**  
+_Sr. Software Development Engineer, AWS_
+
+**Sunil Divvela**  
+_Sr. WW Spec Solution Architect, Mainframe at AWS_
+
+-   **Technological Implementation**  
+    How thoroughly and skillfully does the project use Strands Agents? Does the code reflect genuine effort and a working, non-trivial implementation? A live demo and/or Amazon Bedrock AgentCore deployment will strengthen this score.
+-   **Design**  
+    Does the project deliver a complete, coherent product experience and not just a technical proof of concept?
+-   **Potential Impact**  
+    Does the project make a credible, specific case for solving a real problem for a real audience, and does the solution actually address that problem based on what's demonstrated?
+-   **Creativity & Originality**  
+    Is this a creative, non-obvious use of Strands Agents and does the team demonstrate genuine understanding of the problem space they're working in?
+-   **Presentation**  
+    Does the video clearly demonstrate the project working end-to-end? Does the pitch communicate what problem is solved, who it's for, and why it matters? Is the overall presentation easy to follow?

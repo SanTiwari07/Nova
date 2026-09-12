@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Check } from "lucide-react";
 
 type AutoLevel = 0 | 1 | 2 | 3;
@@ -23,16 +23,57 @@ export default function RulesPage() {
   const [askNewBrands, setAskNewBrands] = useState(true);
   const [askPriceIncrease, setAskPriceIncrease] = useState(15);
   const [saved, setSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const allCats = ["Grocery", "Household", "Personal Care", "Electronics", "Clothing", "Furniture"];
+
+  useEffect(() => {
+    fetch("/api/policy")
+      .then(r => r.json())
+      .then(data => {
+        if (data.auto_buy_limit) setAutoLimit(data.auto_buy_limit);
+        if (data.monthly_budget) setMonthlyLimit(data.monthly_budget);
+        if (data.automatic_categories && data.automatic_categories.length > 0) {
+          setAllowedCats(data.automatic_categories);
+        }
+        if (data.autonomy_profile === "SUGGEST_ONLY") setAutoLevel(0);
+        else if (data.autonomy_profile === "PREPARE_CART") setAutoLevel(1);
+        else if (data.autonomy_profile === "ROUTINE_ITEMS") setAutoLevel(2);
+        else if (data.autonomy_profile === "FULL_AUTOPILOT") setAutoLevel(3);
+      })
+      .catch(console.error);
+  }, []);
 
   const toggleCat = (cat: string) => {
     setAllowedCats(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]);
   };
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    setIsSaving(true);
+    const profileMap: Record<AutoLevel, string> = {
+      0: "SUGGEST_ONLY",
+      1: "PREPARE_CART",
+      2: "ROUTINE_ITEMS",
+      3: "FULL_AUTOPILOT",
+    };
+    try {
+      await fetch("/api/policy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          auto_buy_limit: autoLimit,
+          monthly_budget: monthlyLimit,
+          automatic_categories: allowedCats,
+          autonomy_profile: profileMap[autoLevel] || "FULL_AUTOPILOT",
+        }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      console.error("Failed to save rules:", err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (

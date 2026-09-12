@@ -2,12 +2,15 @@ import os
 import json
 import time
 import asyncio
+import logging
 import urllib.request
 import urllib.error
 from typing import Dict, Any, List, Optional, Tuple
 from .interface import CommerceInterface
 from .swiggy_oauth import oauth_manager
 from images.image_resolver import image_resolver
+
+logger = logging.getLogger("nova.commerce.swiggy")
 
 from catalog.taxonomy import classify_product, CANONICAL_CATEGORIES
 
@@ -416,12 +419,14 @@ class SwiggyInstamartAdapter(CommerceInterface):
             # Case A: User supplied a specific text search query
             if query_str:
                 results = await self._search_mcp_single_query(query_str)
-                if cat_filter:
+                if cat_filter and results:
                     results = [
                         p for p in results
                         if cat_filter in p.get("category", "").lower() or any(cat_filter in t.lower() for t in p.get("tags", []))
                     ]
-                return results
+                if results:
+                    return results
+                print(f"[Commerce] Live query '{query_str}' returned 0 results or rate limited. Falling back to local catalog.")
 
             # Case B: User selected a specific category tab
             if cat_filter:
@@ -443,7 +448,8 @@ class SwiggyInstamartAdapter(CommerceInterface):
                 }
                 mapped_q = query_map.get(cat_filter, cat_filter)
                 results = await self._search_mcp_single_query(mapped_q)
-                return results
+                if results:
+                    return results
 
             # Case C: Browse all (All Items) - return pooled multi-category live catalog
             now = time.time()
@@ -585,8 +591,8 @@ class SwiggyInstamartAdapter(CommerceInterface):
                     await self.call_mcp_tool("update_cart", {
                         "items": [{"spinId": product_id, "quantity": quantity}]
                     })
-                except Exception:
-                    pass
+                except Exception as mcp_err:
+                    logger.warning(f"[Swiggy MCP] Failed to sync item quantity update: {mcp_err}")
 
         return self.get_cart(cart_id)
 
@@ -602,8 +608,8 @@ class SwiggyInstamartAdapter(CommerceInterface):
                     await self.call_mcp_tool("update_cart", {
                         "items": [{"spinId": product_id, "quantity": 0}]
                     })
-                except Exception:
-                    pass
+                except Exception as mcp_err:
+                    logger.warning(f"[Swiggy MCP] Failed to sync item removal: {mcp_err}")
 
         return self.get_cart(cart_id)
 

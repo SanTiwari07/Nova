@@ -1,15 +1,20 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
+import os
 
 class UserSessionService:
     def __init__(self):
         self.reset()
         
     def reset(self):
-        self.is_logged_in = False
-        self.user = None
-        self.connected_services = []
-        self.onboarding_complete = False
-        self.autonomy_profile = "NONE"
+        self.is_logged_in = True
+        self.user = {"email": "alex@household.local", "name": "Nova Household"}
+        self.connected_services = [
+            {"provider": "swiggy", "connected": True, "mode": "demo"},
+            {"provider": "amazon", "connected": True, "mode": "demo"}
+        ]
+        self.onboarding_complete = True
+        # Default to FULL_AUTOPILOT for hackathon demo autopilot guarantees, unless overridden
+        self.autonomy_profile = os.environ.get("DEFAULT_AUTONOMY_PROFILE", "FULL_AUTOPILOT")
         
     def login(self, email: str):
         self.is_logged_in = True
@@ -29,6 +34,9 @@ class UserSessionService:
     def set_autonomy_profile(self, profile: str):
         self.autonomy_profile = profile
         self.onboarding_complete = True
+
+    def get_autonomy_profile(self) -> str:
+        return self.autonomy_profile
         
     def get_session_state(self) -> Dict[str, Any]:
         return {
