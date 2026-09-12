@@ -16,7 +16,10 @@ interface ProductImageProps {
     image?: string | null;
     images?: string[];
     category?: string;
-  };
+    [key: string]: any;
+  } | null;
+  /** Source of the resolved image URL — for console logging only */
+  imageSource?: string | null;
   className?: string;
   sizes?: string;
   fill?: boolean;
@@ -31,6 +34,7 @@ export default function ProductImage({
   category,
   id,
   product,
+  imageSource,
   className = '',
   sizes,
   fill,
@@ -38,14 +42,15 @@ export default function ProductImage({
   height,
   priority = false,
 }: ProductImageProps) {
-  // Resolve genuine commerce image URL - NEVER fabricate or use category illustrations
+  // Resolve candidate image URL from direct src or product object
   const candidateSrc =
-    product?.imageUrl ||
-    product?.images?.[0] ||
-    product?.image ||
     src ||
+    product?.imageUrl ||
+    product?.image ||
+    product?.images?.[0] ||
     null;
 
+  // Validate the URL — must be a real HTTPS/HTTP/relative URL, not fabricated
   const isValidUrl =
     typeof candidateSrc === 'string' &&
     candidateSrc.trim().length > 0 &&
@@ -61,7 +66,8 @@ export default function ProductImage({
     setIsLoaded(false);
   }, [candidateSrc]);
 
-  // If no authentic image URL exists or load failed, render neutral UI placeholder
+  // If no authentic image URL exists or load failed, render neutral UI placeholder.
+  // NEVER use emoji here. NEVER use AI-generated art here.
   if (!isValidUrl || hasError) {
     return (
       <div
@@ -88,16 +94,17 @@ export default function ProductImage({
   }
 
   const commonProps = {
-    src: candidateSrc,
+    src: candidateSrc!,
     alt: alt || 'Product image',
     className: `object-contain transition-opacity duration-200 ${
       isLoaded ? 'opacity-100' : 'opacity-0'
     } ${className}`,
     onLoad: () => setIsLoaded(true),
     onError: () => {
-      console.warn(`[Commerce Image Load Error] Could not load image from commerce CDN for product:`, {
+      console.warn(`[Commerce Image Load Error] Could not load image`, {
         id: id || product?.id,
-        name: alt || product?.name || product?.title,
+        alt: alt || product?.name || product?.title,
+        source: imageSource || 'unknown',
         url: candidateSrc,
       });
       setHasError(true);

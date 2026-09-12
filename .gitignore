@@ -5,3 +5,5 @@ __pycache__/
 *.pyc
 .env
 .env.local
+*session*.json
+backend/commerce/swiggy_session.json

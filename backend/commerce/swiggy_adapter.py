@@ -6,6 +6,7 @@ import urllib.error
 from typing import Dict, Any, List, Optional
 from .interface import CommerceInterface
 from .swiggy_oauth import oauth_manager
+from images.image_resolver import image_resolver
 
 SWIGGY_MCP_URL = os.environ.get("SWIGGY_MCP_URL", "https://mcp.swiggy.com/im")
 COMMERCE_MODE = os.environ.get("COMMERCE_MODE", "live").lower()
@@ -66,7 +67,7 @@ class SwiggyInstamartAdapter(CommerceInterface):
         data = json.dumps(payload).encode("utf-8")
         headers = {
             "Content-Type": "application/json",
-            "Accept": "application/json",
+            "Accept": "application/json, text/event-stream",
             "Authorization": f"Bearer {token}",
             "User-Agent": "Household-Autopilot/1.0"
         }
@@ -88,6 +89,10 @@ class SwiggyInstamartAdapter(CommerceInterface):
                 # Extract tool call payload from MCP result
                 result = res_json.get("result", {})
                 
+                # Format 0: Official Swiggy MCP structuredContent
+                if isinstance(result, dict) and "structuredContent" in result and result["structuredContent"]:
+                    return result["structuredContent"]
+
                 # Format 1: MCP content blocks [{type: "text", text: "..."}]
                 if isinstance(result, dict) and "content" in result:
                     for block in result["content"]:
@@ -247,14 +252,41 @@ class SwiggyInstamartAdapter(CommerceInterface):
                 else bool(avail_obj.get("inStock", True))
             )
 
-        # Real commerce image URL or None - NO image generation
+        # ── Image URL resolution (Priority 1: Swiggy CDN) ─────────────────────
+        # Inspect ALL known field names that the Swiggy MCP may use for images.
+        # ONLY use a field if it is actually present in the response — never fabricate.
         raw_img = (
             variation.get("imageUrl")
             or variation.get("imageURL")
+            or variation.get("image_url")
+            or variation.get("thumbnail")
+            or variation.get("thumbnailUrl")
+            or variation.get("thumbnail_url")
+            or variation.get("media")
+            or variation.get("mediaUrl")
             or product.get("imageUrl")
             or product.get("imageURL")
+            or product.get("image_url")
+            or product.get("thumbnail")
+            or product.get("thumbnailUrl")
         )
         image_url = self._resolve_image_url(raw_img)
+
+        # ── Barcode fields (may be present in real Swiggy response) ──────────
+        # Used by ImageResolver Priority 2 for exact Open Food Facts lookup.
+        barcode = (
+            variation.get("barcode")
+            or variation.get("gtin")
+            or variation.get("ean")
+            or variation.get("upc")
+            or variation.get("ean13")
+            or variation.get("gtinUpc")
+            or product.get("barcode")
+            or product.get("gtin")
+            or product.get("ean")
+            or product.get("upc")
+            or None
+        )
 
         # Parse quantity and unit from pack_size string
         quantity = None
@@ -278,8 +310,15 @@ class SwiggyInstamartAdapter(CommerceInterface):
             "quantity": quantity,
             "unit": unit,
             "pack_size": pack_size,
+            # imageUrl starts as the raw Swiggy CDN value (may be None).
+            # ImageResolver will enrich this asynchronously after search.
             "imageUrl": image_url,
             "image": image_url,
+            "imageSource": "swiggy" if image_url else None,
+            "imageConfidence": 1.0 if image_url else None,
+            "imageStatus": "found" if image_url else "pending",
+            # Barcode forwarded to ImageResolver for OFF Priority 2 lookup
+            "barcode": str(barcode) if barcode else None,
             "availability": is_available,
             "in_stock": is_available,
             "retailer": "swiggy_instamart",
@@ -292,15 +331,16 @@ class SwiggyInstamartAdapter(CommerceInterface):
             }
         }
 
-        # User requirement structured log
+        # Observability log
         print(
-            f"[Product Adapter] Product ID: {normalized['productId']} "
+            f"[Product Adapter] "
+            f"Product ID: {normalized['productId']} "
             f"Variant ID: {normalized['variantId']} "
             f"Name: {normalized['name']} "
             f"Price: Rs. {normalized['price']} "
             f"MRP: Rs. {normalized['mrp']} "
-            f"Image URL: {normalized['imageUrl']} "
-            f"Image source: SWIGGY INSTAMART"
+            f"Swiggy Image URL: {normalized['imageUrl']} "
+            f"Barcode: {normalized['barcode']}"
         )
 
         return normalized
@@ -335,18 +375,30 @@ class SwiggyInstamartAdapter(CommerceInterface):
                 print(f"[Commerce] Found {len(raw_products)} products")
 
                 if raw_products:
-                    # Log first product raw JSON for verification during development
+                    # Log the FULL first raw product schema for inspection.
+                    # This is critical to verify which image / barcode fields Swiggy provides.
                     try:
-                        print(f"[Swiggy MCP] Sample raw product schema:\n{json.dumps(raw_products[0], indent=2)[:500]}")
+                        print(f"[Swiggy MCP] RAW sample product schema (full):\n{json.dumps(raw_products[0], indent=2)}")
                     except Exception:
                         pass
 
+                    # Normalize all products synchronously first (commerce data)
                     results = []
                     for prod in raw_products:
                         variations = prod.get("variations") or [{}]
                         for var in variations:
                             results.append(self._normalize_variation(prod, var, is_demo=False))
+
                     if results:
+                        # Async image resolution: enrich products that lack a Swiggy image URL.
+                        # Products that already have a Swiggy URL (Priority 1) are passed through
+                        # directly by the resolver without calling Open Food Facts.
+                        try:
+                            results = await image_resolver.resolve_batch(results)
+                        except Exception as img_err:
+                            # Image resolution failure must NEVER break commerce data.
+                            print(f"[IMAGE RESOLVER] Batch resolution error (non-fatal): {img_err}")
+
                         return results
 
         # 2. If unauthenticated and COMMERCE_MODE == "mock", return clearly labeled simulated catalog
@@ -555,5 +607,20 @@ class SwiggyInstamartAdapter(CommerceInterface):
             if not q or q in name or q in brand or q in cat:
                 for var in prod.get("variations", []):
                     results.append(self._normalize_variation(prod, var, is_demo=True))
+
+        # Resolve images for mock catalog too (so demo mode shows real OFF images)
+        if results:
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # We are already in an async context — schedule as a task and
+                    # return the un-enriched products now; images will be resolved
+                    # asynchronously via the /api/images/resolve endpoint.
+                    pass
+                else:
+                    results = loop.run_until_complete(image_resolver.resolve_batch(results))
+            except Exception as img_err:
+                print(f"[IMAGE RESOLVER] Mock catalog resolution error (non-fatal): {img_err}")
 
         return results

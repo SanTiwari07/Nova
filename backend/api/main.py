@@ -5,6 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 import os
+import random
 
 from ai.ai_service import AIService
 from decision.decision_service import DecisionEngine
@@ -26,6 +27,10 @@ from amazon.price_service import PriceService
 from autopilot.monthly_service import MonthlyAutopilotService
 from reminders.reminder_service import ReminderEngine
 from savings.savings_engine import SavingsEngine
+
+# Image resolution pipeline
+from images.image_resolver import image_resolver
+from images.image_cache import image_cache
 
 app = FastAPI(title="NOVA API")
 
@@ -260,6 +265,17 @@ async def get_product(product_id: str):
     if not product:
         product = product_repo.get_by_id(product_id)
     if product:
+        if not product.get("imageUrl") and not product.get("image"):
+            try:
+                resolved = await image_resolver.resolve(product)
+                if resolved.get("imageUrl"):
+                    product["imageUrl"] = resolved["imageUrl"]
+                    product["image"] = resolved["imageUrl"]
+                    product["imageSource"] = resolved.get("imageSource")
+                    product["imageConfidence"] = resolved.get("imageConfidence")
+                    product["imageStatus"] = resolved.get("imageStatus")
+            except Exception:
+                pass
         return product
     raise HTTPException(status_code=404, detail="Product not found")
 
@@ -316,13 +332,88 @@ async def get_product_assets(product_id: str):
         return {
             "thumbnail": product["imageUrl"],
             "medium": product["imageUrl"],
+            "source": product.get("imageSource", "swiggy"),
+            "confidence": product.get("imageConfidence", 1.0),
             "status": "live"
         }
     return {
         "thumbnail": None,
         "medium": None,
+        "source": "unavailable",
+        "confidence": 0.0,
         "status": "unavailable"
     }
+
+
+# ── IMAGE RESOLUTION ENDPOINTS ───────────────────────────────────────────────────────────────────────────────
+
+class ImageResolveRequest(BaseModel):
+    """
+    Payload for async frontend image resolution.
+    The frontend sends this after rendering the product card with commerce data.
+    """
+    product_key: str          # e.g. "swiggy:spin_maggi_4pk" or "swiggy:spin_amul_taaza_1l"
+    name: str
+    brand: Optional[str] = None
+    quantity: Optional[str] = None
+    unit: Optional[str] = None
+    pack_size: Optional[str] = None
+    barcode: Optional[str] = None
+    swiggy_image_url: Optional[str] = None  # if Swiggy already provided one
+
+
+@app.post("/api/images/resolve")
+async def resolve_product_image(req: ImageResolveRequest):
+    """
+    Async image resolution endpoint.
+
+    The frontend calls this AFTER rendering the product card with commerce data.
+    The product card renders immediately with real price/availability from Swiggy.
+    The image loads asynchronously once this endpoint responds.
+
+    Priority chain (per spec):
+      1. Swiggy image URL if provided
+      2. Open Food Facts barcode lookup
+      3. Open Food Facts identity match (brand + name + quantity)
+      4. null → imageStatus: "unavailable"
+
+    No images are downloaded. Only real remote URLs are returned.
+    """
+    product_dict = {
+        "id": req.product_key,
+        "variantId": req.product_key,
+        "name": req.name,
+        "brand": req.brand,
+        "quantity": req.quantity,
+        "unit": req.unit,
+        "pack_size": req.pack_size,
+        "barcode": req.barcode,
+        "imageUrl": req.swiggy_image_url,
+        "image": req.swiggy_image_url,
+        "retailer": "swiggy_instamart",
+    }
+
+    print(
+        f"[COMMERCE] Image resolve request | "
+        f"Product: {req.name} | "
+        f"Barcode: {req.barcode or 'none'}"
+    )
+
+    result = await image_resolver.resolve(product_dict)
+    return result
+
+
+@app.get("/api/images/cache/stats")
+async def image_cache_stats():
+    """Return image resolution cache statistics (for observability / debugging)."""
+    return image_cache.stats()
+
+
+@app.post("/api/images/cache/clear")
+async def clear_image_cache():
+    """Flush the image resolution cache (development / testing use)."""
+    image_cache.clear()
+    return {"status": "ok", "message": "Image cache cleared"}
 
 class CartRequest(BaseModel):
     product_id: str

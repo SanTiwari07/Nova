@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import ProductImage from "./ProductImage";
 
 export interface Product {
@@ -16,6 +16,10 @@ export interface Product {
   unit?: string | null;
   imageUrl?: string | null;
   image?: string | null;
+  imageSource?: string | null;
+  imageConfidence?: number | null;
+  imageStatus?: string | null;
+  barcode?: string | null;
   category?: string;
   availability?: boolean;
   in_stock?: boolean;
@@ -31,6 +35,70 @@ export default function ProductCard({ product }: { product: Product }) {
   const [added, setAdded] = useState(false);
   const [adding, setAdding] = useState(false);
 
+  // ── Async image resolution ──────────────────────────────────────────────────
+  // Commerce data (price, availability, name) renders immediately from Swiggy.
+  // If no imageUrl was provided by Swiggy, we resolve it asynchronously from
+  // Open Food Facts via the ImageResolver pipeline.
+  const initialImageUrl = product.imageUrl || product.image || null;
+  const initialStatus = product.imageStatus || (initialImageUrl ? "found" : "pending");
+
+  const [resolvedImageUrl, setResolvedImageUrl] = useState<string | null>(initialImageUrl);
+  const [imageSource, setImageSource] = useState<string | null>(product.imageSource || null);
+  const [imageResolving, setImageResolving] = useState(initialStatus === "pending" && !initialImageUrl);
+  const resolveAttempted = useRef(false);
+
+  useEffect(() => {
+    // Reset if product changes
+    const newUrl = product.imageUrl || product.image || null;
+    setResolvedImageUrl(newUrl);
+    setImageSource(product.imageSource || (newUrl ? "swiggy" : null));
+    const newStatus = product.imageStatus || (newUrl ? "found" : "pending");
+    setImageResolving(newStatus === "pending" && !newUrl);
+    resolveAttempted.current = false;
+  }, [product.id, product.imageUrl, product.image]);
+
+  useEffect(() => {
+    // Only attempt resolution if image is genuinely missing
+    if (resolvedImageUrl || resolveAttempted.current || !imageResolving) return;
+    resolveAttempted.current = true;
+
+    const productKey = product.variantId
+      ? `swiggy:${product.variantId}`
+      : `swiggy:${product.id}`;
+
+    fetch("/api/images/resolve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        product_key: productKey,
+        name: product.name,
+        brand: product.brand || null,
+        quantity: product.quantity || null,
+        unit: product.unit || null,
+        pack_size: product.pack_size || null,
+        barcode: product.barcode || null,
+        swiggy_image_url: null,
+      }),
+    })
+      .then((r) => r.json())
+      .then((data: { imageUrl?: string | null; imageSource?: string; imageStatus?: string }) => {
+        if (data.imageUrl) {
+          setResolvedImageUrl(data.imageUrl);
+          setImageSource(data.imageSource || "open_food_facts");
+        } else {
+          setResolvedImageUrl(null);
+          setImageSource("unavailable");
+        }
+      })
+      .catch(() => {
+        // Network error: commerce data must continue working; image unavailable
+        setResolvedImageUrl(null);
+        setImageSource("unavailable");
+      })
+      .finally(() => setImageResolving(false));
+  }, [imageResolving, resolvedImageUrl, product]);
+
+  // ── Commerce data ───────────────────────────────────────────────────────────
   const isAvailable = product.availability ?? product.in_stock ?? true;
   const price = product.price;
   const mrp = product.mrp && product.mrp > price ? product.mrp : null;
@@ -61,6 +129,7 @@ export default function ProductCard({ product }: { product: Product }) {
     }
   };
 
+
   return (
     <div className="group relative flex flex-col h-full bg-white border border-neutral-200 rounded-md p-3 hover:shadow-md transition-all duration-200">
       {/* Retailer & Demo Status Badge */}
@@ -81,18 +150,31 @@ export default function ProductCard({ product }: { product: Product }) {
         )}
       </div>
 
-      {/* Product Image */}
+      {/* Product Image — uses async-resolved real URL (never emoji, never AI) */}
       <Link href={`/catalog/${product.id}`} className="block relative w-full aspect-square mb-2 overflow-hidden bg-neutral-50/50 rounded">
-        <ProductImage
-          src={product.imageUrl || product.image}
-          alt={product.name}
-          category={product.category}
-          id={product.id}
-          product={product}
-          fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-          className="group-hover:scale-105 transition-transform duration-200 object-contain p-2"
-        />
+        {imageResolving ? (
+          /* Skeleton pulse while image resolution is in progress */
+          <div className="absolute inset-0 bg-neutral-100 animate-pulse rounded flex items-center justify-center">
+            <div className="w-6 h-6 border-2 border-neutral-300 border-t-[#FC8019] rounded-full animate-spin" />
+          </div>
+        ) : (
+          <ProductImage
+            src={resolvedImageUrl}
+            alt={product.name}
+            category={product.category}
+            id={product.id}
+            imageSource={imageSource}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+            className="group-hover:scale-105 transition-transform duration-200 object-contain p-2"
+          />
+        )}
+        {/* Image source badge — development observability */}
+        {imageSource && imageSource !== "unavailable" && (
+          <span className="absolute bottom-1 right-1 text-[8px] font-bold px-1 py-0.5 rounded bg-black/30 text-white pointer-events-none select-none">
+            {imageSource === "swiggy" ? "Swiggy" : imageSource === "open_food_facts" ? "OFF" : imageSource}
+          </span>
+        )}
       </Link>
 
       {/* Product Information */}
