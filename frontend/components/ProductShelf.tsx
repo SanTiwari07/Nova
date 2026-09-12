@@ -4,13 +4,23 @@ import { useRef } from 'react';
 interface Product {
   id: string;
   name: string;
-  brand: string;
+  brand?: string | null;
   price: number;
-  currency: string;
-  pack_size: string;
-  image: string;
+  mrp?: number | null;
+  currency?: string;
+  pack_size?: string | null;
+  quantity?: string | null;
+  unit?: string | null;
+  imageUrl?: string | null;
+  image?: string | null;
   category?: string;
+  availability?: boolean;
+  in_stock?: boolean;
+  retailer?: string;
+  is_demo?: boolean;
   tags?: string[];
+  days_until_needed?: number;
+  avg_price?: number;
 }
 
 interface ProductShelfProps {

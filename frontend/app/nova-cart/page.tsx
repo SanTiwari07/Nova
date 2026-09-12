@@ -182,7 +182,7 @@ function CartItemRow({ item, quantity, onQtyChange, onRemove, requiresApproval =
       <div className="flex gap-4">
         {/* Image */}
         <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden bg-neutral-100 shrink-0">
-          <ProductImage src={item.image} alt={item.name} category={item.category} fill={false} />
+          <ProductImage src={item.imageUrl || item.image} alt={item.name} category={item.category} product={item} fill={false} />
         </div>
 
         {/* Details */}

@@ -10,6 +10,7 @@ class InventoryService:
         self.pantry = {
             "prod_000109": {
                 "name": "Amul Taaza Milk 1L",
+                "image": None,
                 "quantity": 0.3,
                 "unit": "L",
                 "daily_consumption": 0.6,
@@ -18,6 +19,7 @@ class InventoryService:
             },
             "prod_000030": {
                 "name": "Fortune Sunflower Oil 5L",
+                "image": None,
                 "quantity": 2.1,
                 "unit": "L",
                 "daily_consumption": 0.07,
@@ -26,6 +28,7 @@ class InventoryService:
             },
             "prod_000010": {
                 "name": "India Gate Basmati Rice 5kg",
+                "image": None,
                 "quantity": 1.8,
                 "unit": "kg",
                 "daily_consumption": 0.25,
@@ -34,6 +37,7 @@ class InventoryService:
             },
             "prod_000001": {
                 "name": "Aashirvaad Whole Wheat Atta 5kg",
+                "image": None,
                 "quantity": 1.2,
                 "unit": "kg",
                 "daily_consumption": 0.2,
@@ -42,6 +46,7 @@ class InventoryService:
             },
             "prod_000050": {
                 "name": "Tata Salt 1kg",
+                "image": None,
                 "quantity": 0.4,
                 "unit": "kg",
                 "daily_consumption": 0.02,
@@ -50,6 +55,7 @@ class InventoryService:
             },
             "prod_000060": {
                 "name": "Tata Sampann Toor Dal 1kg",
+                "image": None,
                 "quantity": 0.5,
                 "unit": "kg",
                 "daily_consumption": 0.07,
@@ -57,7 +63,8 @@ class InventoryService:
                 "category": "Dal"
             },
             "prod_000080": {
-                "name": "Tata Chai Classic Tea 500g",
+                "name": "Tata Tea Gold 500g",
+                "image": None,
                 "quantity": 0.15,
                 "unit": "kg",
                 "daily_consumption": 0.025,
@@ -65,7 +72,8 @@ class InventoryService:
                 "category": "Tea"
             },
             "prod_000090": {
-                "name": "Surf Excel Detergent 3kg",
+                "name": "Surf Excel Matic Front Load Detergent 2kg",
+                "image": None,
                 "quantity": 1.2,
                 "unit": "kg",
                 "daily_consumption": 0.08,
@@ -73,7 +81,8 @@ class InventoryService:
                 "category": "Detergent"
             },
             "prod_000070": {
-                "name": "Uttam Sugar 5kg",
+                "name": "Madhur Pure & Hygienic Sugar 5kg",
+                "image": None,
                 "quantity": 1.8,
                 "unit": "kg",
                 "daily_consumption": 0.1,
@@ -81,7 +90,8 @@ class InventoryService:
                 "category": "Sugar"
             },
             "prod_000100": {
-                "name": "Dettol Original Soap",
+                "name": "Dettol Original Soap Pack of 4",
+                "image": None,
                 "quantity": 1.0,
                 "unit": "pack",
                 "daily_consumption": 0.03,
@@ -89,7 +99,8 @@ class InventoryService:
                 "category": "Soap"
             },
             "prod_000110": {
-                "name": "Harpic Power Plus 750ml",
+                "name": "Harpic Power Plus Toilet Cleaner 1L",
+                "image": None,
                 "quantity": 0.4,
                 "unit": "bottle",
                 "daily_consumption": 0.025,
@@ -98,6 +109,7 @@ class InventoryService:
             },
             "prod_000120": {
                 "name": "Head & Shoulders Shampoo 340ml",
+                "image": None,
                 "quantity": 0.1,
                 "unit": "bottle",
                 "daily_consumption": 0.025,
@@ -113,6 +125,7 @@ class InventoryService:
             items.append({
                 "product_id": pid,
                 "name": data["name"],
+                "image": data.get("image", ""),
                 "quantity": data["quantity"],
                 "unit": data["unit"],
                 "days_remaining": round(days_rem, 1),

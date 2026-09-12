@@ -1,96 +1,126 @@
+"use client";
+
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 
 interface ProductImageProps {
-  src?: string;
+  src?: string | null;
   alt: string;
   category?: string;
+  id?: string;
+  product?: {
+    id?: string;
+    name?: string;
+    title?: string;
+    imageUrl?: string | null;
+    image?: string | null;
+    images?: string[];
+    category?: string;
+  };
   className?: string;
   sizes?: string;
   fill?: boolean;
   width?: number;
   height?: number;
+  priority?: boolean;
 }
 
-export default function ProductImage({ 
-  src, 
-  alt, 
-  category = 'generic', 
-  className = '', 
+export default function ProductImage({
+  src,
+  alt,
+  category,
+  id,
+  product,
+  className = '',
   sizes,
   fill,
   width,
-  height
+  height,
+  priority = false,
 }: ProductImageProps) {
-  const fallbackCategory = category ? category.toLowerCase().replace(/[^a-z0-9]/g, '') : 'generic';
-  
-  const getFallbackUrl = () => {
-    const mapping: Record<string, string> = {
-      'rice': '/assets/fallbacks/rice.webp',
-      'milk': '/assets/fallbacks/milk.webp',
-      'oil': '/assets/fallbacks/oil.webp',
-      'noodles': '/assets/fallbacks/noodles.webp',
-      'tea': '/assets/fallbacks/tea.png',
-      'snacks': '/assets/fallbacks/snacks.png',
-      'atta': '/assets/fallbacks/atta.png',
-      'spices': '/assets/fallbacks/spices.png',
-      'detergent': '/assets/fallbacks/detergent.png',
-      'shampoo': '/assets/fallbacks/haircare.png',
-      'chocolates': '/assets/fallbacks/chocolates.png',
-      'drinks': '/assets/fallbacks/drinks.png',
-      'bath': '/assets/fallbacks/bath.png',
-      'haircare': '/assets/fallbacks/haircare.png',
-      'skincare': '/assets/fallbacks/skincare.png',
-      'biscuits': '/assets/fallbacks/biscuits.png',
-      'coffee': '/assets/fallbacks/coffee.png',
-      'dal': '/assets/fallbacks/dal.png',
-      'deodorant': '/assets/fallbacks/deodorant.png',
-      'dishwash': '/assets/fallbacks/dishwash.png',
-      'breakfast': '/assets/fallbacks/breakfast.png'
-    };
-    
-    for (const [key, url] of Object.entries(mapping)) {
-      if (fallbackCategory.includes(key)) {
-        return url;
-      }
-    }
-    
-    return `/assets/fallbacks/${fallbackCategory}.png`;
-  };
+  // Resolve genuine commerce image URL - NEVER fabricate or use category illustrations
+  const candidateSrc =
+    product?.imageUrl ||
+    product?.images?.[0] ||
+    product?.image ||
+    src ||
+    null;
 
-  const [imgSrc, setImgSrc] = useState<string>(src || getFallbackUrl());
-  const [loading, setLoading] = useState(true);
+  const isValidUrl =
+    typeof candidateSrc === 'string' &&
+    candidateSrc.trim().length > 0 &&
+    (candidateSrc.startsWith('http://') ||
+      candidateSrc.startsWith('https://') ||
+      candidateSrc.startsWith('/'));
+
+  const [hasError, setHasError] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    setImgSrc(src || getFallbackUrl());
-    setLoading(true);
-  }, [src, category]);
+    setHasError(false);
+    setIsLoaded(false);
+  }, [candidateSrc]);
+
+  // If no authentic image URL exists or load failed, render neutral UI placeholder
+  if (!isValidUrl || hasError) {
+    return (
+      <div
+        className={`flex flex-col items-center justify-center w-full h-full bg-neutral-50/80 text-neutral-400 p-4 border border-neutral-100 rounded select-none ${className}`}
+        aria-label="Image unavailable"
+      >
+        <svg
+          className="w-7 h-7 text-neutral-300 stroke-[1.5] mb-1"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+          />
+        </svg>
+        <span className="text-[11px] font-medium tracking-tight text-neutral-400">
+          Image unavailable
+        </span>
+      </div>
+    );
+  }
+
+  const commonProps = {
+    src: candidateSrc,
+    alt: alt || 'Product image',
+    className: `object-contain transition-opacity duration-200 ${
+      isLoaded ? 'opacity-100' : 'opacity-0'
+    } ${className}`,
+    onLoad: () => setIsLoaded(true),
+    onError: () => {
+      console.warn(`[Commerce Image Load Error] Could not load image from commerce CDN for product:`, {
+        id: id || product?.id,
+        name: alt || product?.name || product?.title,
+        url: candidateSrc,
+      });
+      setHasError(true);
+    },
+    priority,
+    sizes,
+  };
 
   return (
-    <div className={`relative flex items-center justify-center bg-neutral-50 overflow-hidden ${className}`}>
-      {loading && (
-        <div className="absolute inset-0 bg-neutral-100 animate-pulse flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-neutral-300 border-t-neutral-400 rounded-full animate-spin"></div>
-        </div>
+    <div className="relative w-full h-full flex items-center justify-center bg-white overflow-hidden rounded">
+      {!isLoaded && !hasError && (
+        <div className="absolute inset-0 bg-neutral-100 animate-pulse" />
       )}
-      <Image
-        src={imgSrc}
-        alt={alt}
-        fill={fill}
-        width={width}
-        height={height}
-        className={`object-contain transition-opacity duration-300 ${loading ? 'opacity-0' : 'opacity-100'}`}
-        sizes={sizes}
-        onLoadingComplete={() => setLoading(false)}
-        onError={() => {
-          setLoading(false);
-          if (imgSrc !== getFallbackUrl()) {
-            setImgSrc(getFallbackUrl());
-          } else if (imgSrc !== '/assets/fallbacks/snacks.png') {
-            setImgSrc('/assets/fallbacks/snacks.png');
-          }
-        }}
-      />
+
+      {fill ? (
+        <Image {...commonProps} fill sizes={sizes || '100vw'} />
+      ) : (
+        <Image
+          {...commonProps}
+          width={width || 400}
+          height={height || 400}
+        />
+      )}
     </div>
   );
 }

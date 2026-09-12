@@ -16,9 +16,8 @@ class AssetRepository:
     def get_asset_for_product(self, product_id: str) -> Optional[Dict[str, Any]]:
         return self.manifest.get(product_id)
         
-    def get_fallback_for_category(self, category: str) -> str:
-        cat_lower = category.lower() if category else ""
-        return f"/assets/fallbacks/{cat_lower}.webp"
+    def get_fallback_for_category(self, category: str) -> Optional[str]:
+        return None
         
-    def get_generic_fallback(self) -> str:
-        return "/assets/fallbacks/generic.webp"
+    def get_generic_fallback(self) -> Optional[str]:
+        return None

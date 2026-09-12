@@ -1,9 +1,9 @@
 import './globals.css';
-import Navbar from '@/components/Navbar';
+import Header from '@/components/Header';
 
 export const metadata = {
-  title: 'NOVA — Your autonomous layer over Amazon',
-  description: 'NOVA learns how your household shops, predicts what you need, prepares your Amazon shopping plan, watches prices, and acts within rules you define.',
+  title: 'NOVA — Household Shopping & Autopilot',
+  description: 'NOVA is your household commerce companion. Shop groceries, household supplies, and personal care while NOVA intelligently manages your household inventory and autopilot decisions.',
 };
 
 export default function RootLayout({
@@ -13,8 +13,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="antialiased text-neutral-900">
-        <Navbar />
+      <body className="antialiased text-neutral-900 bg-[#f3f3f3]">
+        <Header />
         {children}
       </body>
     </html>

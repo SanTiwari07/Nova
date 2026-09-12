@@ -22,12 +22,15 @@ class RequirementSchema(BaseModel):
 class GeminiProvider(AIProvider):
     def __init__(self):
         api_key = os.environ.get("GEMINI_API_KEY")
+        self.has_key = bool(api_key)
         if api_key:
             genai.configure(api_key=api_key)
         
         self.model_name = os.environ.get("GEMINI_MODEL", "gemini-2.5-pro")
         
     async def understand_intent(self, user_request: str, context: Dict[str, Any]) -> Dict[str, Any]:
+        if not self.has_key:
+            raise ValueError("GEMINI_API_KEY is not configured")
         prompt = f"""
         You are NOVA's intent understanding engine.
         User request: '{user_request}'
@@ -49,6 +52,8 @@ class GeminiProvider(AIProvider):
             raise
 
     async def generate_response(self, user_request: str, decision: str, evidence: Dict[str, Any]) -> str:
+        if not self.has_key:
+            raise ValueError("GEMINI_API_KEY is not configured")
         prompt = f"""
         You are NOVA, the intelligence layer for everyday life.
         User said: "{user_request}"
@@ -72,6 +77,8 @@ class GeminiProvider(AIProvider):
             raise
             
     async def generate_requirements(self, intent: Dict[str, Any]) -> List[Dict[str, Any]]:
+        if not self.has_key:
+            raise ValueError("GEMINI_API_KEY is not configured")
         prompt = f"""
         Convert this intent into a list of generic product requirements.
         Intent: {json.dumps(intent)}

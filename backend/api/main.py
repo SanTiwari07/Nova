@@ -1,5 +1,5 @@
-# pyrefly: ignore [missing-import]
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException, Request
+from fastapi.responses import RedirectResponse, HTMLResponse
 # pyrefly: ignore [missing-import]
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -8,7 +8,8 @@ import os
 
 from ai.ai_service import AIService
 from decision.decision_service import DecisionEngine
-from commerce.mock_adapter import MockCommerceAdapter
+from commerce.swiggy_adapter import SwiggyInstamartAdapter
+from commerce.swiggy_oauth import oauth_manager
 from inventory.inventory_service import InventoryService
 from budget.budget_service import BudgetService
 from policy.policy_service import PolicyService
@@ -39,7 +40,7 @@ ai_service = AIService()
 budget_service = BudgetService()
 policy_service = PolicyService()
 inventory_service = InventoryService()
-commerce_adapter = MockCommerceAdapter()
+commerce_adapter = SwiggyInstamartAdapter()
 audit_service = AuditService()
 session_service = UserSessionService()
 
@@ -100,6 +101,77 @@ async def logout():
     session_service.logout()
     return {"status": "ok"}
 
+# ── SWIGGY INSTAMART OAUTH 2.1 + PKCE ENDPOINTS ──────────────────────────────
+
+class SelectAddressRequest(BaseModel):
+    address_id: str
+
+@app.get("/api/auth/swiggy/login")
+async def swiggy_login(redirect: bool = False):
+    """Initiates Swiggy OAuth 2.1 + PKCE authorization flow."""
+    flow = oauth_manager.start_auth_flow()
+    if redirect:
+        return RedirectResponse(url=flow["auth_url"], status_code=307)
+    return flow
+
+@app.get("/api/auth/swiggy/callback")
+async def swiggy_callback(code: str = Query(...), state: str = Query(...)):
+    """Exchanges Swiggy authorization code for access token and pre-fetches addresses."""
+    try:
+        oauth_manager.exchange_code(code, state)
+        await commerce_adapter.get_addresses()
+        return RedirectResponse(url="http://localhost:3000/?swiggy_connected=true", status_code=307)
+    except Exception as e:
+        print(f"[Swiggy Auth] Callback error: {e}")
+        return HTMLResponse(
+            content=f"""
+            <html>
+                <body style="font-family:sans-serif;padding:40px;text-align:center;">
+                    <h2>Swiggy Instamart Connection Error</h2>
+                    <p style="color:red;">{str(e)}</p>
+                    <a href="http://localhost:3000" style="color:#FC8019;">Return to Nova</a>
+                </body>
+            </html>
+            """,
+            status_code=400
+        )
+
+@app.get("/api/auth/swiggy/status")
+async def swiggy_auth_status():
+    """Returns Swiggy Instamart connection and active delivery address status."""
+    return {
+        "authenticated": commerce_adapter.is_live,
+        "mode": commerce_adapter.commerce_mode,
+        "active_address": oauth_manager.get_active_address(),
+        "active_address_id": oauth_manager.get_active_address_id(),
+        "session": oauth_manager.get_session()
+    }
+
+@app.get("/api/auth/swiggy/addresses")
+async def swiggy_addresses():
+    """Lists saved addresses for authenticated Swiggy user."""
+    if not commerce_adapter.is_live:
+        raise HTTPException(status_code=401, detail="Swiggy Instamart is not connected")
+    addresses = await commerce_adapter.get_addresses()
+    return {"addresses": addresses, "active_address_id": oauth_manager.get_active_address_id()}
+
+@app.post("/api/auth/swiggy/select-address")
+async def swiggy_select_address(req: SelectAddressRequest):
+    """Sets active delivery address ID for Swiggy Instamart searches."""
+    addresses = await commerce_adapter.get_addresses()
+    matching = next((a for a in addresses if str(a.get("id") or a.get("addressId")) == str(req.address_id)), None)
+    if matching:
+        oauth_manager.set_active_address(matching)
+        return {"status": "ok", "active_address": matching}
+    oauth_manager.set_active_address({"id": req.address_id, "label": "Selected Address"})
+    return {"status": "ok", "active_address_id": req.address_id}
+
+@app.post("/api/auth/swiggy/disconnect")
+async def swiggy_disconnect():
+    """Disconnects Swiggy account and clears OAuth session."""
+    oauth_manager.clear_session()
+    return {"status": "ok", "authenticated": False}
+
 @app.post("/api/onboarding/services")
 async def connect_service(req: ConnectRequest):
     session_service.connect_service(req.provider)
@@ -150,29 +222,54 @@ async def get_activity():
 
 @app.get("/api/products")
 async def get_products(skip: int = Query(0, ge=0), limit: int = Query(20, ge=1, le=100)):
-    return product_repo.get_all(skip=skip, limit=limit)
+    items = await commerce_adapter.search_products("")
+    return items[skip:skip+limit]
 
 @app.get("/api/products/search")
 async def search_products(q: str, skip: int = Query(0, ge=0), limit: int = Query(20, ge=1, le=100)):
-    return product_repo.search(query=q, skip=skip, limit=limit)
+    items = await commerce_adapter.search_products(q)
+    return items[skip:skip+limit]
+
+@app.get("/api/commerce/status")
+async def get_commerce_status():
+    return {
+        "retailer": "swiggy_instamart",
+        "retailerName": "Swiggy Instamart",
+        "is_live": commerce_adapter.is_live,
+        "mode": commerce_adapter.commerce_mode,
+        "mcp_url": commerce_adapter.mcp_url,
+        "active_address": oauth_manager.get_active_address(),
+        "active_address_id": oauth_manager.get_active_address_id(),
+        "label": "Swiggy Instamart (Live MCP)" if commerce_adapter.is_live else "Swiggy Instamart (Not Connected - OAuth Required)"
+    }
 
 @app.get("/api/products/categories")
 async def get_categories():
-    return product_repo.get_categories()
+    return [
+        "Milk & Dairy",
+        "Instant Noodles",
+        "Cleaning & Toiletries",
+        "Cooking Oils",
+        "Atta & Rice",
+        "Tea & Staples"
+    ]
 
 @app.get("/api/products/{product_id}")
 async def get_product(product_id: str):
-    product = product_repo.get_by_id(product_id)
+    product = await commerce_adapter.get_product(product_id)
+    if not product:
+        product = product_repo.get_by_id(product_id)
     if product:
         return product
-    return {"error": "Not found"}, 404
+    raise HTTPException(status_code=404, detail="Product not found")
 
 @app.get("/api/commerce/compare/{product_id}")
 async def compare_commerce_options(product_id: str):
-    import random
-    product = product_repo.get_by_id(product_id)
+    product = await commerce_adapter.get_product(product_id)
     if not product:
-        return {"error": "Product not found"}, 404
+        product = product_repo.get_by_id(product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
         
     offers = await commerce_adapter.compare_options(product_id)
     
@@ -214,16 +311,17 @@ async def compare_commerce_options(product_id: str):
 
 @app.get("/api/products/{product_id}/assets")
 async def get_product_assets(product_id: str):
-    asset = asset_repo.get_asset_for_product(product_id)
-    if asset:
-        return asset
-    
-    product = product_repo.get_by_id(product_id)
-    cat = product.get("category", "") if product else ""
+    product = await commerce_adapter.get_product(product_id)
+    if product and product.get("imageUrl"):
+        return {
+            "thumbnail": product["imageUrl"],
+            "medium": product["imageUrl"],
+            "status": "live"
+        }
     return {
-        "thumbnail": asset_repo.get_fallback_for_category(cat) or asset_repo.get_generic_fallback(),
-        "medium": asset_repo.get_fallback_for_category(cat) or asset_repo.get_generic_fallback(),
-        "status": "fallback"
+        "thumbnail": None,
+        "medium": None,
+        "status": "unavailable"
     }
 
 class CartRequest(BaseModel):
@@ -245,6 +343,22 @@ async def add_to_cart(req: CartRequest):
         cart_id = list(commerce_adapter.carts.keys())[0]
     await commerce_adapter.add_to_cart(cart_id, req.product_id)
     return {"cart_id": cart_id, "items": commerce_adapter.carts[cart_id]}
+
+@app.post("/api/cart/remove")
+async def remove_from_cart(req: CartRequest):
+    if not commerce_adapter.carts:
+        return {"items": []}
+    cart_id = list(commerce_adapter.carts.keys())[0]
+    commerce_adapter.carts[cart_id] = [p for p in commerce_adapter.carts[cart_id] if p.get("id") != req.product_id]
+    return {"cart_id": cart_id, "items": commerce_adapter.carts[cart_id]}
+
+@app.post("/api/cart/clear")
+async def clear_cart():
+    if not commerce_adapter.carts:
+        return {"items": []}
+    cart_id = list(commerce_adapter.carts.keys())[0]
+    commerce_adapter.carts[cart_id] = []
+    return {"cart_id": cart_id, "items": []}
 
 @app.post("/api/checkout")
 async def checkout():
