@@ -47,25 +47,47 @@ export default function BudgetModal({
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setStatusMessage(null);
+
+    // Validation
+    const mNum = Number(monthly);
+    const aNum = Number(autoLimit);
+
+    if (isNaN(mNum) || mNum <= 0) {
+      setStatusMessage("Please enter a valid monthly budget amount (greater than ₹0).");
+      return;
+    }
+    if (isNaN(aNum) || aNum <= 0) {
+      setStatusMessage("Please enter a valid auto-buy limit (greater than ₹0).");
+      return;
+    }
+    if (aNum > mNum) {
+      setStatusMessage("Auto-buy limit per order cannot exceed total monthly budget.");
+      return;
+    }
+
+    setSaving(true);
 
     try {
       const res = await fetch("/api/budget", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          monthly: Number(monthly),
-          auto_limit: Number(autoLimit),
+          monthly: mNum,
+          auto_limit: aNum,
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to update budget");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || "Failed to update budget");
+      }
       const updated = await res.json();
 
       // Trigger global update events across all open components
       window.dispatchEvent(new Event("household-updated"));
       window.dispatchEvent(new Event("budget-updated"));
+      window.dispatchEvent(new Event("activity-updated"));
 
       if (onSaved) {
         onSaved(updated);
@@ -74,10 +96,10 @@ export default function BudgetModal({
       setStatusMessage("Budget updated successfully!");
       setTimeout(() => {
         onClose();
-      }, 700);
-    } catch (err) {
+      }, 600);
+    } catch (err: any) {
       console.error(err);
-      setStatusMessage("Failed to save budget settings.");
+      setStatusMessage(err.message || "Failed to save budget settings.");
     } finally {
       setSaving(false);
     }

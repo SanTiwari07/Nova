@@ -331,6 +331,27 @@ class NovaAgent:
                     res = pol_tool(action="whitelist_auto", category=matched_cat.title())
                     traces.append({"tool": "update_household_policy", "input": {"action": "whitelist_auto", "category": matched_cat}, "status": "success", "summary": f"Whitelisted category {matched_cat.title()}"})
                     return {"response": f"Policy updated: **{matched_cat.title()}** is now permitted for autonomous replenishment within your ₹500 auto-buy limit.", "tool_trace": traces, "mode": "STRANDS_TOOLS_DETERMINISTIC", "provider": "STRANDS_FALLBACK", "status": "success"}
+                elif "budget" in req_lower and any(c.isdigit() for c in user_request):
+                    import re
+                    nums = re.findall(r"\d+", user_request)
+                    val = float(nums[0]) if nums else 3000.0
+                    old_b = self.budget.monthly_budget
+                    self.budget.set_budget(val)
+                    rem = await self.budget.get_remaining_budget()
+                    self.audit.log_event(
+                        event_type="BUDGET_CHANGED",
+                        title=f"Monthly Budget Changed: ₹{int(old_b):,} → ₹{int(val):,}",
+                        description=f"Household budget updated via conversational command to ₹{int(val):,}. Remaining: ₹{int(rem):,}.",
+                        entity_type="BUDGET",
+                        product="Household Budget",
+                        decision="AUTO",
+                        reasons=[
+                            f"Monthly budget adjusted from ₹{int(old_b):,} to ₹{int(val):,}.",
+                            f"Active purchasing headroom: ₹{int(rem):,}."
+                        ]
+                    )
+                    traces.append({"tool": "update_household_budget", "input": {"monthly_budget": val}, "status": "success", "summary": f"Set monthly budget to ₹{val}"})
+                    return {"response": f"Household monthly budget updated to **₹{int(val):,}** (previous: ₹{int(old_b):,}). You now have **₹{int(rem):,}** in active spending headroom for this cycle.", "tool_trace": traces, "mode": "STRANDS_TOOLS_DETERMINISTIC", "provider": "STRANDS_FALLBACK", "status": "success"}
                 elif "limit" in req_lower:
                     import re
                     nums = re.findall(r"\d+", user_request)

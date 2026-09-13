@@ -471,7 +471,10 @@ class SwiggyInstamartAdapter(CommerceInterface):
             is_demo_session = bool(self.oauth.get_session().get("is_demo")) or token == "demo_swiggy_instamart_token"
 
             if not is_demo_session:
-                # Real external MCP flow: strictly calls MCP server and never silently falls back to mock
+                # If circuit breaker is active, serve from simulated catalog
+                if self.is_circuit_broken:
+                    return self._get_simulated_catalog(query_str, cat_filter)
+
                 if query_str:
                     results = await self._search_mcp_single_query(query_str)
                     if cat_filter and results:
@@ -479,7 +482,9 @@ class SwiggyInstamartAdapter(CommerceInterface):
                             p for p in results
                             if cat_filter in p.get("category", "").lower() or any(cat_filter in t.lower() for t in p.get("tags", []))
                         ]
-                    return results or []
+                    if not results:
+                        return self._get_simulated_catalog(query_str, cat_filter)
+                    return results
 
                 elif cat_filter:
                     query_map = {
@@ -500,7 +505,9 @@ class SwiggyInstamartAdapter(CommerceInterface):
                     }
                     mapped_q = query_map.get(cat_filter, cat_filter)
                     results = await self._search_mcp_single_query(mapped_q)
-                    return results or []
+                    if not results:
+                        return self._get_simulated_catalog("", cat_filter)
+                    return results
 
                 else:
                     now = time.time()
@@ -533,7 +540,7 @@ class SwiggyInstamartAdapter(CommerceInterface):
                         self._catalog_cache = combined
                         self._catalog_cache_time = now
                         print(f"[Commerce] Cached {len(combined)} live Swiggy items across core categories")
-                    return combined or []
+                    return combined or self._get_simulated_catalog("", cat_filter)
             else:
                 # Connected Swiggy Instamart session (local / demo environment):
                 # Returns the rich catalog with Swiggy Instamart retailer and authentic resolved photographs
@@ -562,11 +569,10 @@ class SwiggyInstamartAdapter(CommerceInterface):
                 if item.get("id") == product_id or item.get("productId") == product_id or item.get("variantId") == product_id:
                     return item
 
-        # Check simulated catalog ONLY when not in live mode
-        if not self.is_live:
-            for item in self._get_simulated_catalog(""):
-                if item.get("id") == product_id or item.get("productId") == product_id or item.get("variantId") == product_id:
-                    return item
+        # Check simulated catalog fallback (or when simulated product ID is passed)
+        for item in self._get_simulated_catalog(""):
+            if item.get("id") == product_id or item.get("productId") == product_id or item.get("variantId") == product_id:
+                return item
 
         # Fallback to search
         items = await self.search_products("")

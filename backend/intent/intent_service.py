@@ -386,15 +386,18 @@ class IntentReconciliationService:
             matched_pantry_item = None
             
             # Check pantry by category and keyword match
+            comp_keywords = comp.get("keywords", [])
+            comp_cat = comp.get("category", "").lower()
             for p in pantry_items:
                 p_cat = p.get("category", "").lower()
                 p_name = p.get("name", "").lower()
-                comp_cat = comp["category"].lower()
                 
-                cat_match = comp_cat in p_cat or p_cat in comp_cat
-                name_match = any(kw in p_name for kw in comp["keywords"])
+                if comp_keywords:
+                    is_match = any(kw in p_name or kw in p_cat for kw in comp_keywords)
+                else:
+                    is_match = comp_cat and (comp_cat in p_cat or p_cat in comp_cat)
                 
-                if cat_match or name_match:
+                if is_match:
                     matched_pantry_item = p
                     break
 

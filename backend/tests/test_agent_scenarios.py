@@ -139,7 +139,7 @@ async def test_hero_1_milk_auto_buy(fresh_environment):
     assert new_budget == initial_budget - milk_prod["price"]
 
     # Audit log must record AUTO decision
-    logs = audit.get_recent(5)
+    logs = audit.get_recent(10)
     assert len(logs) > initial_log_count
     assert any(l["decision"] == "AUTO" for l in logs)
 

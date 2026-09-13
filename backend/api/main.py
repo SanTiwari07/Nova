@@ -393,19 +393,47 @@ async def update_budget(req: BudgetUpdateRequest):
     monthly = req.monthly if req.monthly is not None else req.monthly_budget
     auto_limit = req.auto_limit if req.auto_limit is not None else req.auto_buy_limit
 
-    if monthly is not None:
-        budget_service.set_budget(float(monthly))
-    if auto_limit is not None:
-        budget_service.set_auto_limit(float(auto_limit))
+    old_monthly = budget_service.monthly_budget
+    old_auto = budget_service.auto_limit
 
-    audit_service.log_decision(
-        "Household Budget",
-        "BUDGET_UPDATED",
-        [
-            f"Monthly budget: ₹{budget_service.monthly_budget}",
-            f"Auto limit: ₹{budget_service.auto_limit}",
-            f"Remaining: ₹{await budget_service.get_remaining_budget()}",
+    if monthly is not None:
+        try:
+            val = float(monthly)
+            if val < 0:
+                raise HTTPException(status_code=400, detail="Monthly budget cannot be negative.")
+            budget_service.set_budget(val)
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=400, detail="Invalid monthly budget amount.")
+
+    if auto_limit is not None:
+        try:
+            val = float(auto_limit)
+            if val < 0:
+                raise HTTPException(status_code=400, detail="Auto-buy limit cannot be negative.")
+            budget_service.set_auto_limit(val)
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=400, detail="Invalid auto-buy limit amount.")
+
+    remaining = await budget_service.get_remaining_budget()
+
+    audit_service.log_event(
+        event_type="BUDGET_CHANGED",
+        title=f"Monthly Budget: ₹{int(old_monthly):,} → ₹{int(budget_service.monthly_budget):,}",
+        description=f"Household budget updated. Monthly ceiling: ₹{int(budget_service.monthly_budget):,}, Auto-limit: ₹{int(budget_service.auto_limit):,}, Remaining: ₹{int(remaining):,}.",
+        entity_type="BUDGET",
+        product="Household Budget",
+        decision="AUTO",
+        reasons=[
+            f"Monthly budget adjusted from ₹{int(old_monthly):,} to ₹{int(budget_service.monthly_budget):,}.",
+            f"Per-transaction autonomous purchase ceiling: ₹{int(budget_service.auto_limit):,}.",
+            f"Active household spending headroom: ₹{int(remaining):,}."
         ],
+        metadata={
+            "old_monthly": old_monthly,
+            "new_monthly": budget_service.monthly_budget,
+            "auto_limit": budget_service.auto_limit,
+            "remaining": remaining
+        }
     )
     return await get_budget()
 
@@ -461,8 +489,111 @@ async def get_pending_orders():
     return {"pending": pending, "count": len(pending)}
 
 @app.get("/api/audit/activity")
-async def get_activity():
-    return audit_service.get_recent()
+async def get_activity(
+    filter: Optional[str] = Query(None),
+    limit: int = Query(50, ge=1, le=200)
+):
+    """Retrieve recent household audit & activity timeline events."""
+    return audit_service.get_recent(limit=limit, filter_type=filter)
+
+@app.get("/api/search")
+async def unified_search(
+    q: str = Query(""),
+    category: Optional[str] = Query(None),
+    limit: int = Query(20, ge=1, le=100)
+):
+    """
+    Unified multi-entity household search:
+    1. Household & Pantry context for staples (Milk, Oil, Rice, etc.)
+    2. Household meal plans & recipes (Maggi, Chai, Dal Rice, etc.)
+    3. Product catalog matches from commerce adapter
+    4. Matching recent orders
+    """
+    query_clean = q.strip().lower()
+
+    # 1. Household / Pantry Context
+    household_context = None
+    if query_clean:
+        pantry_items = inventory_service.get_all()
+        matched_pantry = None
+        for item in pantry_items:
+            name_lower = item.get("name", "").lower()
+            cat_lower = item.get("category", "").lower()
+            if query_clean in name_lower or query_clean in cat_lower or any(word in name_lower for word in query_clean.split()):
+                matched_pantry = item
+                break
+
+        if matched_pantry:
+            qty = matched_pantry.get("quantity", 0)
+            unit = matched_pantry.get("unit", "")
+            daily = matched_pantry.get("daily_consumption", 0.1)
+            days_left = round(qty / daily, 1) if daily > 0 else 99
+            status = matched_pantry.get("status", "HEALTHY")
+            urgency = "URGENT" if days_left <= 2 else ("UPCOMING" if days_left <= 7 else "COMFORTABLE")
+
+            if days_left <= 2:
+                action_text = f"Running low (~{days_left} days left) — NOVA recommends autonomous restock"
+            elif days_left <= 7:
+                action_text = f"Upcoming restock needed in ~{int(days_left)} days"
+            else:
+                action_text = f"Healthy supply (~{int(days_left)} days remaining) — NOVA recommends holding off purchase"
+
+            household_context = {
+                "item_name": matched_pantry.get("name"),
+                "category": matched_pantry.get("category"),
+                "quantity": qty,
+                "unit": unit,
+                "daily_consumption": daily,
+                "days_remaining": days_left,
+                "status": status,
+                "urgency": urgency,
+                "suggested_action": action_text
+            }
+
+    # 2. Matching Household Plans / Recipes
+    plans = []
+    if query_clean:
+        try:
+            from intent.intent_service import MEAL_RECIPES
+            for key, recipe in MEAL_RECIPES.items():
+                keywords = recipe.get("keywords", [])
+                if any(k in query_clean for k in keywords) or key in query_clean or recipe.get("name", "").lower() in query_clean:
+                    plans.append({
+                        "plan_id": f"plan_{key}",
+                        "title": f"Make {recipe['name']} tonight",
+                        "meal": recipe["name"],
+                        "description": f"Recipe requirement plan with {len(recipe.get('components', []))} components",
+                        "components": [
+                            {"item": c["item"], "essential": c.get("essential", False), "category": c.get("category")}
+                            for c in recipe.get("components", [])
+                        ]
+                    })
+        except Exception as e:
+            logger.debug(f"Plan matching skipped: {e}")
+
+    # 3. Product Catalog Search
+    product_results = await commerce_adapter.search_products(query=q, category=category)
+
+    # 4. Matching Recent Orders
+    matching_orders = []
+    if query_clean:
+        try:
+            all_orders = commerce_adapter.get_orders()
+            for ord_item in all_orders:
+                items_str = " ".join([i.get("name", "") for i in ord_item.get("items", [])]).lower()
+                if query_clean in items_str or query_clean in ord_item.get("id", "").lower():
+                    matching_orders.append(ord_item)
+        except Exception:
+            pass
+
+    return {
+        "query": q,
+        "household_context": household_context,
+        "plans": plans[:3],
+        "products": product_results[:limit],
+        "total_products": len(product_results),
+        "recent_orders": matching_orders[:3]
+    }
 
 from catalog.taxonomy import CANONICAL_CATEGORIES, SECTION_DEFINITIONS, is_product_allowed_in_section, classify_product
 

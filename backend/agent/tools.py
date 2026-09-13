@@ -329,8 +329,6 @@ def create_nova_tools(
         decision, reasons = await decision_engine.evaluate(product_eval, {"confidence": eval_confidence})
         
         # 3. Log decision to audit trail
-        audit_service.log_decision(product["name"], decision, reasons)
-        
         if decision == "AUTO":
             # Execute simulated transaction
             try:
@@ -349,6 +347,25 @@ def create_nova_tools(
                     float(quantity),
                     product.get("unit", "pack")
                 )
+                rem_budget = await budget_service.get_remaining_budget()
+                audit_service.log_event(
+                    event_type="PURCHASE_COMPLETED",
+                    title=f"NOVA ordered {quantity}x {product['name']}",
+                    description=f"Auto-approved and ordered for ₹{total_price}. Inventory replenished, budget updated (₹{int(rem_budget):,} remaining).",
+                    entity_type="PRODUCT",
+                    entity_id=product_id,
+                    product=product["name"],
+                    decision="AUTO",
+                    cost=total_price,
+                    reasons=reasons,
+                    metadata={
+                        "order_id": order.get("id"),
+                        "retailer": order.get("retailerName", "Swiggy Instamart"),
+                        "quantity": quantity,
+                        "unit": product.get("unit", "pack"),
+                        "remaining_budget": rem_budget
+                    }
+                )
                 return {
                     "verdict": "AUTO",
                     "executed": True,
@@ -361,6 +378,18 @@ def create_nova_tools(
                     "message": f"Successfully simulated purchase of {quantity}x {product['name']} for ₹{total_price}. Inventory and budget updated."
                 }
             except Exception as e:
+                audit_service.log_event(
+                    event_type="PURCHASE_WAITING_APPROVAL",
+                    title=f"Checkout Review: {product['name']}",
+                    description=f"Automated checkout encountered an issue: {str(e)}",
+                    entity_type="PRODUCT",
+                    entity_id=product_id,
+                    product=product["name"],
+                    decision="ASK",
+                    cost=total_price,
+                    status="PENDING",
+                    reasons=reasons + [f"Checkout notice: {str(e)}"]
+                )
                 return {
                     "verdict": "ASK",
                     "executed": False,
@@ -371,6 +400,18 @@ def create_nova_tools(
                 }
         
         elif decision == "ASK":
+            audit_service.log_event(
+                event_type="PURCHASE_WAITING_APPROVAL",
+                title=f"Needs Your Input: {product['name']}",
+                description=f"Purchase of ₹{total_price} requires explicit approval: {reasons[0] if reasons else ''}",
+                entity_type="PRODUCT",
+                entity_id=product_id,
+                product=product["name"],
+                decision="ASK",
+                cost=total_price,
+                status="PENDING",
+                reasons=reasons
+            )
             return {
                 "verdict": "ASK",
                 "executed": False,
@@ -381,6 +422,18 @@ def create_nova_tools(
                 "message": f"Purchase requires explicit user confirmation. Reasons: {', '.join(reasons)}"
             }
         elif decision == "BLOCKED":
+            audit_service.log_event(
+                event_type="PURCHASE_BLOCKED",
+                title=f"Blocked by Policy: {product['name']}",
+                description=f"Purchase prohibited under your household rules: {reasons[0] if reasons else ''}",
+                entity_type="PRODUCT",
+                entity_id=product_id,
+                product=product["name"],
+                decision="BLOCKED",
+                cost=total_price,
+                status="BLOCKED",
+                reasons=reasons
+            )
             return {
                 "verdict": "BLOCKED",
                 "executed": False,
@@ -389,6 +442,17 @@ def create_nova_tools(
                 "message": f"Purchase blocked by safety policy. Reasons: {', '.join(reasons)}"
             }
         elif decision == "WAIT":
+            audit_service.log_event(
+                event_type="AUTONOMOUS_ACTION",
+                title=f"Price Watch — Waiting: {product['name']}",
+                description=f"Current price is elevated. Recommended to wait for price drop or deal.",
+                entity_type="PRODUCT",
+                entity_id=product_id,
+                product=product["name"],
+                decision="WAIT",
+                cost=0,
+                reasons=reasons
+            )
             return {
                 "verdict": "WAIT",
                 "executed": False,
@@ -397,6 +461,17 @@ def create_nova_tools(
                 "message": f"Purchase deferred. Recommendation is to wait for price drop or deal. Reasons: {', '.join(reasons)}"
             }
         elif decision == "DO_NOTHING":
+            audit_service.log_event(
+                event_type="AUTONOMOUS_ACTION",
+                title=f"No Action Needed: {product['name']}",
+                description=f"Household already has sufficient inventory. NOVA applied spending restraint.",
+                entity_type="PANTRY",
+                entity_id=product_id,
+                product=product["name"],
+                decision="DO_NOTHING",
+                cost=0,
+                reasons=reasons
+            )
             return {
                 "verdict": "DO_NOTHING",
                 "executed": False,

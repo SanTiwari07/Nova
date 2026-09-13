@@ -232,6 +232,8 @@ class InventoryService:
     # ── Persistence ────────────────────────────────────────────────────────────
 
     def _load_persisted(self):
+        if "PYTEST_CURRENT_TEST" in os.environ or os.environ.get("NOVA_TEST_MODE") == "1":
+            return
         try:
             if os.path.exists(PERSISTENCE_PATH):
                 with open(PERSISTENCE_PATH, "r", encoding="utf-8") as f:
@@ -246,6 +248,8 @@ class InventoryService:
             pass  # If persistence fails, continue with seed data
 
     def _persist(self):
+        if "PYTEST_CURRENT_TEST" in os.environ or os.environ.get("NOVA_TEST_MODE") == "1":
+            return
         try:
             os.makedirs(os.path.dirname(PERSISTENCE_PATH), exist_ok=True)
             with open(PERSISTENCE_PATH, "w", encoding="utf-8") as f:
@@ -262,8 +266,8 @@ class InventoryService:
             confidence = _compute_confidence(data)
             urgency = _compute_urgency(days_rem, confidence)
 
-            # Derive status from real days remaining
-            derived_status = "LOW" if days_rem <= 3 else "HEALTHY"
+            # Derive status: respect explicit LOW status or days <= 3
+            derived_status = "LOW" if (data.get("status") == "LOW" or days_rem <= 3) else "HEALTHY"
             data["status"] = derived_status
 
             items.append({
@@ -333,8 +337,10 @@ class InventoryService:
                 data["category"].lower() in cat
                 or cat in data["category"].lower()
             ):
+                if data.get("status") == "LOW":
+                    return True
                 days = _compute_days_remaining(data)
-                return days <= 3  # needs replenishment if ≤ 3 days left
+                return days <= 7  # needs replenishment if ≤ 7 days left
 
         # Item not in pantry at all — treat as needed
         return True

@@ -27,6 +27,8 @@ class BudgetService:
     # ── Persistence ─────────────────────────────────────────────────────────
 
     def _load_persisted(self):
+        if "PYTEST_CURRENT_TEST" in os.environ or os.environ.get("NOVA_TEST_MODE") == "1":
+            return
         try:
             if os.path.exists(PERSISTENCE_PATH):
                 with open(PERSISTENCE_PATH, "r", encoding="utf-8") as f:
@@ -39,6 +41,8 @@ class BudgetService:
             pass
 
     def _persist(self):
+        if "PYTEST_CURRENT_TEST" in os.environ or os.environ.get("NOVA_TEST_MODE") == "1":
+            return
         try:
             os.makedirs(os.path.dirname(PERSISTENCE_PATH), exist_ok=True)
             with open(PERSISTENCE_PATH, "w", encoding="utf-8") as f:
