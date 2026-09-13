@@ -347,18 +347,18 @@ export default function Storefront() {
               </h2>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {[
-                  { name: "Atta & Flour", href: "/catalog?category=Atta%20%26%20Rice", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/172/512/1747/1.400.jpg" },
-                  { name: "Basmati Rice", href: "/catalog?category=Atta%20%26%20Rice", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/356/007/083/7984/1.400.jpg" },
-                  { name: "Cooking Oils", href: "/catalog?category=Cooking%20Oils", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/600/728/0242/1.400.jpg" },
-                  { name: "Dals & Pulses", href: "/catalog?category=Dal%20%26%20Pulses", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/869/098/210/1714/1.400.jpg" },
+                  { name: "Atta & Flour", href: "/catalog?category=Atta%20%26%20Rice", imageUrl: "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/3/9/805a02b1-e08b-4d4b-aa8f-ab05cabb1e37_1780_1.png" },
+                  { name: "Basmati Rice", href: "/catalog?category=Atta%20%26%20Rice", imageUrl: "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/7/21/ed973afb-e397-4df3-8a23-6153474d93b0_450_1.png" },
+                  { name: "Cooking Oils", href: "/catalog?category=Cooking%20Oils", imageUrl: "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/d0fe0c1c-2142-43d3-bf49-3fe02eb1a7dd_PUHXM33U8E_MN_18022026.png" },
+                  { name: "Dals & Pulses", href: "/catalog?category=Dal%20%26%20Pulses", imageUrl: "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/16/eda40bda-ba3b-4fab-97ba-ccbd28c106cf_K71D7X8L8P_MN_15122025.png" },
                 ].map((item) => (
                   <Link
                     key={item.name}
                     href={item.href}
                     className="group flex flex-col items-center text-center p-2 rounded-lg border border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50 transition-all bg-white"
                   >
-                    <div className="w-16 h-16 rounded-lg flex items-center justify-center mb-1.5 p-1 bg-white border border-neutral-200/80 group-hover:scale-105 transition-transform overflow-hidden shadow-xs">
-                      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain" />
+                    <div className="w-16 h-16 rounded-lg flex items-center justify-center mb-1.5 p-1 bg-white border border-neutral-200/80 group-hover:scale-105 transition-transform overflow-hidden shadow-xs relative">
+                      <ProductImage src={item.imageUrl} alt={item.name} fill sizes="64px" className="object-contain p-1" />
                     </div>
                     <span className="text-[11px] font-semibold text-neutral-700 group-hover:text-[#C7511F] truncate w-full">
                       {item.name}
@@ -386,18 +386,18 @@ export default function Storefront() {
               </div>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {[
-                  { name: "Amul Milk 1L", tag: "Due Tomorrow", color: "bg-red-50 text-red-700", productId: "prod_000109", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/126/226/0091/1.400.jpg" },
-                  { name: "Tata Tea 500g", tag: "Due in 5d", color: "bg-orange-50 text-orange-700", productId: "prod_000080", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/200/0807/1.400.jpg" },
-                  { name: "Cooking Oil 1L", tag: "Stock Good", color: "bg-green-50 text-green-700", productId: "prod_000031", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/600/728/0242/1.400.jpg" },
-                  { name: "Surf Excel 1kg", tag: "Due in 8d", color: "bg-blue-50 text-blue-700", productId: "prod_000091", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/103/084/3150/1.400.jpg" },
+                  { name: "Amul Milk 1L", tag: "Due Tomorrow", color: "bg-red-50 text-red-700", productId: "JKFJW8ZUYW", imageUrl: "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/17/b42b731e-b555-4536-913a-265af70ec9e4_SKS75T1GV1_MN_16122025.png" },
+                  { name: "Tata Tea 500g", tag: "Due in 5d", color: "bg-orange-50 text-orange-700", productId: "prod_tea", imageUrl: "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/bf79f8d0-dfcb-4ebb-be63-b3e291656666_Q5AIG72TKQ_MN_18022026.png" },
+                  { name: "Cooking Oil 1L", tag: "Stock Good", color: "bg-green-50 text-green-700", productId: "32ZI2GS5HZ", imageUrl: "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/d0fe0c1c-2142-43d3-bf49-3fe02eb1a7dd_PUHXM33U8E_MN_18022026.png" },
+                  { name: "Tata Salt Lite 1kg", tag: "Due in 8d", color: "bg-blue-50 text-blue-700", productId: "prod_salt", imageUrl: "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/219b05ab-1b6b-468b-807c-d4fdd353dc89_883CSP2S79_MN_18122025.png" },
                 ].map((item) => (
                   <Link
                     key={item.name}
-                    href={`/catalog/${item.productId}`}
+                    href={`/catalog`}
                     className="group flex flex-col items-center text-center p-2 rounded-lg border border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50 cursor-pointer transition-all bg-white"
                   >
-                    <div className="w-16 h-16 rounded-lg flex items-center justify-center mb-1.5 p-1 bg-white border border-neutral-200/80 group-hover:scale-105 transition-transform overflow-hidden shadow-xs">
-                      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain" />
+                    <div className="w-16 h-16 rounded-lg flex items-center justify-center mb-1.5 p-1 bg-white border border-neutral-200/80 group-hover:scale-105 transition-transform overflow-hidden shadow-xs relative">
+                      <ProductImage src={item.imageUrl} alt={item.name} fill sizes="64px" className="object-contain p-1" />
                     </div>
                     <span className="text-[11px] font-semibold text-neutral-800 truncate w-full group-hover:text-[#C7511F]">
                       {item.name}
@@ -425,18 +425,18 @@ export default function Storefront() {
               </h2>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {[
-                  { name: "Biscuits", href: "/catalog?category=Snacks%20%26%20Biscuits", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/171/913/4845/1.400.jpg" },
-                  { name: "Noodles", href: "/catalog?category=Instant%20Noodles", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/885/1298/1.400.jpg" },
-                  { name: "Cookies", href: "/catalog?category=Snacks%20%26%20Biscuits", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/106/313/9329/1.400.jpg" },
-                  { name: "Cold Drinks", href: "/catalog?category=Beverages", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/544/900/000/0996/1.400.jpg" },
+                  { name: "Biscuits", href: "/catalog?category=Snacks%20%26%20Biscuits", imageUrl: "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/f32e2bf5-96eb-472e-b732-70153306008c_HEDSJ4MV73_MN_17122025.png" },
+                  { name: "Noodles", href: "/catalog?category=Instant%20Noodles", imageUrl: "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png" },
+                  { name: "Cold Drinks", href: "/catalog?category=Beverages", imageUrl: "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2025/11/28/28d03859-da45-4e2f-bb4a-4c3079700855_204.png" },
+                  { name: "Chips & Snacks", href: "/catalog?category=Snacks%20%26%20Biscuits", imageUrl: "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/3/18/684c1fe7-260e-41c1-b0b5-2af8499f1fb8_297695_1.png" },
                 ].map((item) => (
                   <Link
                     key={item.name}
                     href={item.href}
                     className="group flex flex-col items-center text-center p-2 rounded-lg border border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50 transition-all bg-white"
                   >
-                    <div className="w-16 h-16 rounded-lg flex items-center justify-center mb-1.5 p-1 bg-white border border-neutral-200/80 group-hover:scale-105 transition-transform overflow-hidden shadow-xs">
-                      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain" />
+                    <div className="w-16 h-16 rounded-lg flex items-center justify-center mb-1.5 p-1 bg-white border border-neutral-200/80 group-hover:scale-105 transition-transform overflow-hidden shadow-xs relative">
+                      <ProductImage src={item.imageUrl} alt={item.name} fill sizes="64px" className="object-contain p-1" />
                     </div>
                     <span className="text-[11px] font-semibold text-neutral-700 group-hover:text-[#C7511F] truncate w-full">
                       {item.name}

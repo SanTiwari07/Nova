@@ -93,8 +93,15 @@ export default function ProductCard({ product }: { product: Product }) {
         setResolvedImageUrl(null);
         setImageSource("unavailable");
       })
-      .finally(() => setImageResolving(false));
-  }, [imageResolving, resolvedImageUrl, product]);
+      .finally(() => {
+        setImageResolving(false);
+        if (process.env.NODE_ENV === "development") {
+          console.log(
+            `PRODUCT CARD\nProduct: ${product.name}\nInitial imageUrl: ${initialImageUrl}\nResolved imageUrl: ${resolvedImageUrl}\nImage source: ${imageSource}\nImage status: ${resolvedImageUrl ? "available" : "unavailable"}`
+          );
+        }
+      });
+  }, [imageResolving, resolvedImageUrl, product, initialImageUrl, imageSource]);
 
   // ── Commerce data ───────────────────────────────────────────────────────────
   const isAvailable = product.availability ?? product.in_stock ?? true;

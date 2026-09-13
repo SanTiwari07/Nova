@@ -103,6 +103,11 @@ class ImageCache:
     def clear(self) -> None:
         """Flush the entire cache."""
         self._store.clear()
+        try:
+            from .image_validator import clear_validation_cache
+            clear_validation_cache()
+        except Exception:
+            pass
         print("[ImageCache] CLEARED")
 
     def stats(self) -> Dict[str, Any]:

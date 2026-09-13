@@ -58,14 +58,16 @@ class SwiggyInstamartAdapter(CommerceInterface):
 
     @property
     def is_live(self) -> bool:
-        """True if authenticated with a valid Swiggy OAuth access token and not in mock mode."""
-        return self.oauth.is_authenticated() and COMMERCE_MODE != "mock"
+        """True if authenticated with a real Swiggy OAuth access token and not in mock mode."""
+        token = self.oauth.get_access_token()
+        return bool(token) and not token.startswith("demo_") and COMMERCE_MODE not in ("mock",)
 
     def is_authenticated(self) -> bool:
-        return self.oauth.is_authenticated()
+        token = self.oauth.get_access_token()
+        return bool(token)
 
     def is_connected(self) -> bool:
-        return self.oauth.is_authenticated()
+        return self.is_authenticated()
 
     @property
     def commerce_mode(self) -> str:
@@ -86,8 +88,8 @@ class SwiggyInstamartAdapter(CommerceInterface):
             print(f"[Swiggy MCP] Tool: {tool_name} Authenticated: False (No active token)")
             return None
 
-        # Demo connected session: skip remote external MCP call to prevent 401 token invalidation
-        if token.startswith("demo_") or self.oauth.get_session().get("is_demo"):
+        # Only skip if explicit mock token is provided
+        if token.startswith("demo_"):
             return None
 
         # Circuit breaker: if live MCP server recently glitched or rate limited, skip remote HTTP call
@@ -467,92 +469,75 @@ class SwiggyInstamartAdapter(CommerceInterface):
 
         # 1. Live Commerce Search
         if self.is_live:
-            token = self.oauth.get_access_token()
-            is_demo_session = bool(self.oauth.get_session().get("is_demo")) or token == "demo_swiggy_instamart_token"
+            if self.is_circuit_broken:
+                print(f"[Commerce] Swiggy MCP circuit breaker is active. Live search unavailable.")
+                return []
 
-            if not is_demo_session:
-                # If circuit breaker is active, serve from simulated catalog
-                if self.is_circuit_broken:
-                    return self._get_simulated_catalog(query_str, cat_filter)
-
-                if query_str:
-                    results = await self._search_mcp_single_query(query_str)
-                    if cat_filter and results:
-                        results = [
-                            p for p in results
-                            if cat_filter in p.get("category", "").lower() or any(cat_filter in t.lower() for t in p.get("tags", []))
-                        ]
-                    if not results:
-                        return self._get_simulated_catalog(query_str, cat_filter)
-                    return results
-
-                elif cat_filter:
-                    query_map = {
-                        "milk": "milk curd paneer",
-                        "dairy": "milk curd paneer",
-                        "noodles": "maggi noodles pasta",
-                        "cleaning": "detergent cleaner soap",
-                        "household": "detergent cleaner soap",
-                        "oil": "sunflower cooking oil",
-                        "grains": "atta basmati rice",
-                        "atta": "atta whole wheat flour",
-                        "rice": "basmati rice",
-                        "dal": "toor dal pulses",
-                        "staples": "tea coffee sugar salt",
-                        "tea": "tea chai coffee",
-                        "snacks": "biscuits namkeen chips",
-                        "beverages": "cold drinks juice",
-                    }
-                    mapped_q = query_map.get(cat_filter, cat_filter)
-                    results = await self._search_mcp_single_query(mapped_q)
-                    if not results:
-                        return self._get_simulated_catalog("", cat_filter)
-                    return results
-
-                else:
-                    now = time.time()
-                    if self._catalog_cache and (now - self._catalog_cache_time < 600):
-                        print(f"[Commerce] Returning cached live catalog ({len(self._catalog_cache)} items)")
-                        return self._catalog_cache
-
-                    core_queries = [
-                        "milk", "curd", "atta", "basmati rice", "sunflower oil", "toor dal",
-                        "tea", "coffee", "maggi noodles", "biscuits", "namkeen", "cold drink",
-                        "surf excel detergent", "vim dishwash", "harpic cleaner"
+            if query_str:
+                results = await self._search_mcp_single_query(query_str)
+                if cat_filter and results:
+                    results = [
+                        p for p in results
+                        if cat_filter in p.get("category", "").lower() or any(cat_filter in t.lower() for t in p.get("tags", []))
                     ]
-                    tasks = [self._search_mcp_single_query(q) for q in core_queries]
-                    batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+                return results
 
-                    combined: List[Dict[str, Any]] = []
-                    seen_ids = set()
-                    valid_lists = [res for res in batch_results if isinstance(res, list)]
-                    max_len = max((len(l) for l in valid_lists), default=0)
-                    for idx in range(max_len):
-                        for res_list in valid_lists:
-                            if idx < len(res_list):
-                                item = res_list[idx]
-                                item_id = item.get("id") or item.get("variantId")
-                                if item_id and item_id not in seen_ids:
-                                    seen_ids.add(item_id)
-                                    combined.append(item)
+            elif cat_filter:
+                query_map = {
+                    "milk": "milk curd paneer",
+                    "dairy": "milk curd paneer",
+                    "noodles": "maggi noodles pasta",
+                    "cleaning": "detergent cleaner soap",
+                    "household": "detergent cleaner soap",
+                    "oil": "sunflower cooking oil",
+                    "grains": "atta basmati rice",
+                    "atta": "atta whole wheat flour",
+                    "rice": "basmati rice",
+                    "dal": "toor dal pulses",
+                    "staples": "tea coffee sugar salt",
+                    "tea": "tea chai coffee",
+                    "snacks": "biscuits namkeen chips",
+                    "beverages": "cold drinks juice",
+                }
+                mapped_q = query_map.get(cat_filter, cat_filter)
+                results = await self._search_mcp_single_query(mapped_q)
+                return results
 
-                    if combined:
-                        self._catalog_cache = combined
-                        self._catalog_cache_time = now
-                        print(f"[Commerce] Cached {len(combined)} live Swiggy items across core categories")
-                    return combined or self._get_simulated_catalog("", cat_filter)
             else:
-                # Connected Swiggy Instamart session (local / demo environment):
-                # Returns the rich catalog with Swiggy Instamart retailer and authentic resolved photographs
-                items = self._get_simulated_catalog(query_str, cat_filter)
-                for item in items:
-                    item["retailer"] = "swiggy_instamart"
-                    item["retailerName"] = "Swiggy Instamart"
-                    item["is_demo"] = False
-                return items
+                now = time.time()
+                if self._catalog_cache and (now - self._catalog_cache_time < 600):
+                    print(f"[Commerce] Returning cached live catalog ({len(self._catalog_cache)} items)")
+                    return self._catalog_cache
+
+                core_queries = [
+                    "milk", "curd", "atta", "basmati rice", "sunflower oil", "toor dal",
+                    "tea", "coffee", "maggi noodles", "biscuits", "namkeen", "cold drink",
+                    "surf excel detergent", "vim dishwash", "harpic cleaner"
+                ]
+                tasks = [self._search_mcp_single_query(q) for q in core_queries]
+                batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+
+                combined: List[Dict[str, Any]] = []
+                seen_ids = set()
+                valid_lists = [res for res in batch_results if isinstance(res, list)]
+                max_len = max((len(l) for l in valid_lists), default=0)
+                for idx in range(max_len):
+                    for res_list in valid_lists:
+                        if idx < len(res_list):
+                            item = res_list[idx]
+                            item_id = item.get("id") or item.get("variantId")
+                            if item_id and item_id not in seen_ids:
+                                seen_ids.add(item_id)
+                                combined.append(item)
+
+                if combined:
+                    self._catalog_cache = combined
+                    self._catalog_cache_time = now
+                    print(f"[Commerce] Cached {len(combined)} live Swiggy items across core categories")
+                return combined
 
         # 2. If unauthenticated or COMMERCE_MODE == "mock", return clearly labeled simulated catalog
-        print("[Commerce] Returning simulated catalog (Demo Mode)")
+        print("[Commerce] Returning simulated catalog (Mock / Unauthenticated)")
         return self._get_simulated_catalog(query_str, cat_filter)
 
     async def get_product(self, product_id: str) -> Optional[Dict[str, Any]]:
@@ -779,9 +764,16 @@ class SwiggyInstamartAdapter(CommerceInterface):
                     if raw_img and str(raw_img).startswith("/assets/fallbacks/"):
                         raw_img = None
                     if raw_img and (str(raw_img).startswith("http://") or str(raw_img).startswith("https://")):
-                        img = raw_img
-                        img_status = "found"
-                        img_source = "catalog"
+                        from images.image_validator import validate_image_url
+                        valid, _, _ = validate_image_url(str(raw_img))
+                        if valid:
+                            img = raw_img
+                            img_status = "found"
+                            img_source = "catalog"
+                        else:
+                            img = None
+                            img_status = "unavailable"
+                            img_source = None
                     else:
                         img = None
                         img_status = "unavailable"
