@@ -1,23 +1,21 @@
-import { useState, useEffect } from 'react';
-import { 
-  Sparkles, 
-  Terminal, 
-  ShieldCheck, 
-  CheckCircle2, 
-  ArrowRight, 
-  AlertCircle, 
-  Clock, 
-  ShieldAlert, 
-  RefreshCw,
-  Cpu,
-  Layers,
-  Milk,
-  Droplets,
-  Utensils,
+"use client";
+
+import { useState, useEffect } from "react";
+import {
+  Sparkles,
+  Send,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  ShieldCheck,
+  RotateCcw,
   ChevronDown,
   ChevronUp,
-  Bot
-} from 'lucide-react';
+  Terminal,
+  Cpu,
+  Layers,
+  ArrowRight,
+} from "lucide-react";
 
 interface ToolTraceItem {
   tool: string;
@@ -28,28 +26,32 @@ interface ToolTraceItem {
 }
 
 interface CommandBoxProps {
-  onScenarioDispatched?: (scenarioNum: number) => void;
+  onScenarioDispatched?: (scenarioNum?: number) => void;
   className?: string;
   compact?: boolean;
   id?: string;
 }
 
-export default function CommandBox({ onScenarioDispatched, className = "", compact = false, id = "nova-copilot" }: CommandBoxProps) {
-  const [command, setCommand] = useState('');
-  const [response, setResponse] = useState('');
-  const [mode, setMode] = useState<string>('');
-  const [provider, setProvider] = useState<string>('');
+export default function CommandBox({
+  onScenarioDispatched,
+  className = "",
+  compact = false,
+  id = "today-command-box",
+}: CommandBoxProps) {
+  const [command, setCommand] = useState("");
+  const [response, setResponse] = useState("");
+  const [mode, setMode] = useState<string>("");
+  const [provider, setProvider] = useState<string>("");
   const [toolTrace, setToolTrace] = useState<ToolTraceItem[]>([]);
   const [decisionVerdict, setDecisionVerdict] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [activeScenario, setActiveScenario] = useState<number | null>(null);
-  const [showTelemetry, setShowTelemetry] = useState(true);
+  const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
 
   // Check agent provider on mount
   useEffect(() => {
-    fetch('/api/agent/provider')
-      .then(res => res.json())
-      .then(data => {
+    fetch("/api/agent/provider")
+      .then((res) => res.json())
+      .then((data) => {
         if (data.provider) setProvider(data.provider);
       })
       .catch(() => {});
@@ -59,64 +61,61 @@ export default function CommandBox({ onScenarioDispatched, className = "", compa
   useEffect(() => {
     const handleRunScenario = (e: any) => {
       if (e?.detail?.prompt) {
-        runCommand(e.detail.prompt, e.detail.scenarioNum);
+        runPrompt(e.detail.prompt, e.detail.scenarioNum);
       }
     };
-    window.addEventListener('nova-run-scenario', handleRunScenario);
-    return () => window.removeEventListener('nova-run-scenario', handleRunScenario);
+    window.addEventListener("nova-run-scenario", handleRunScenario);
+    return () => window.removeEventListener("nova-run-scenario", handleRunScenario);
   }, []);
 
-  const runCommand = async (promptText: string, scenarioNum?: number) => {
+  const runPrompt = async (promptText: string, scenarioNum?: number) => {
     if (loading || !promptText.trim()) return;
     setLoading(true);
     setCommand(promptText);
-    setResponse('');
+    setResponse("");
     setToolTrace([]);
-    setMode('');
+    setMode("");
     setDecisionVerdict(null);
-    if (scenarioNum !== undefined) setActiveScenario(scenarioNum);
 
     try {
-      const res = await fetch('/api/command', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: promptText })
+      const res = await fetch("/api/command", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: promptText }),
       });
       const data = await res.json();
-      const respText = data.response || 'Executed successfully.';
+      const respText = data.response || "Executed successfully.";
       setResponse(respText);
-      setMode(data.mode || 'STRANDS_AGENT');
+      setMode(data.mode || "STRANDS_AGENT");
       if (data.provider) setProvider(data.provider);
 
       if (Array.isArray(data.tool_trace)) {
         setToolTrace(data.tool_trace);
-        
-        // Extract decision verdict from tool traces or response
         for (const t of data.tool_trace) {
-          if (t.summary && t.summary.includes('Verdict: AUTO')) setDecisionVerdict('AUTO');
-          else if (t.summary && t.summary.includes('Verdict: DO_NOTHING')) setDecisionVerdict('DO_NOTHING');
-          else if (t.summary && t.summary.includes('Verdict: ASK')) setDecisionVerdict('ASK');
-          else if (t.summary && t.summary.includes('Verdict: BLOCKED')) setDecisionVerdict('BLOCKED');
-          else if (t.summary && t.summary.includes('Verdict: WAIT')) setDecisionVerdict('WAIT');
-          else if (t.tool === 'record_restraint_decision') setDecisionVerdict('DO_NOTHING');
+          if (t.summary && t.summary.includes("Verdict: AUTO")) setDecisionVerdict("AUTO");
+          else if (t.summary && t.summary.includes("Verdict: DO_NOTHING")) setDecisionVerdict("DO_NOTHING");
+          else if (t.summary && t.summary.includes("Verdict: ASK")) setDecisionVerdict("ASK");
+          else if (t.summary && t.summary.includes("Verdict: BLOCKED")) setDecisionVerdict("BLOCKED");
+          else if (t.summary && t.summary.includes("Verdict: WAIT")) setDecisionVerdict("WAIT");
+          else if (t.tool === "record_restraint_decision") setDecisionVerdict("DO_NOTHING");
         }
       }
 
       if (!decisionVerdict) {
-        if (respText.includes('AUTO')) setDecisionVerdict('AUTO');
-        else if (respText.includes('DO_NOTHING') || respText.includes('Restraint')) setDecisionVerdict('DO_NOTHING');
-        else if (respText.includes('ASK') || respText.includes('confirmation')) setDecisionVerdict('ASK');
-        else if (respText.includes('BLOCKED')) setDecisionVerdict('BLOCKED');
+        if (respText.includes("AUTO")) setDecisionVerdict("AUTO");
+        else if (respText.includes("DO_NOTHING") || respText.includes("Restraint")) setDecisionVerdict("DO_NOTHING");
+        else if (respText.includes("ASK") || respText.includes("confirmation")) setDecisionVerdict("ASK");
+        else if (respText.includes("BLOCKED")) setDecisionVerdict("BLOCKED");
       }
 
-      // Notify other views that household state changed (pantry, budget, cart)
-      window.dispatchEvent(new Event('household-updated'));
-      window.dispatchEvent(new Event('cart-updated'));
-      if (onScenarioDispatched && scenarioNum !== undefined) {
+      window.dispatchEvent(new Event("household-updated"));
+      window.dispatchEvent(new Event("cart-updated"));
+      window.dispatchEvent(new Event("budget-updated"));
+      if (onScenarioDispatched) {
         onScenarioDispatched(scenarioNum);
       }
     } catch (err) {
-      setResponse('Error communicating with NOVA Strands agent backend.');
+      setResponse("NOVA is momentarily unavailable. Please check your connection.");
     } finally {
       setLoading(false);
     }
@@ -125,305 +124,180 @@ export default function CommandBox({ onScenarioDispatched, className = "", compa
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!command.trim()) return;
-    runCommand(command);
+    runPrompt(command);
   };
 
-  const getVerdictBadge = () => {
-    switch (decisionVerdict) {
-      case 'AUTO':
-        return (
-          <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-full text-xs font-bold uppercase tracking-wider">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-            Decision: AUTO (Autonomous Action Authorized)
-          </span>
-        );
-      case 'DO_NOTHING':
-        return (
-          <span className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-800 border border-blue-300 rounded-full text-xs font-bold uppercase tracking-wider">
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-            Decision: DO_NOTHING (Restraint Applied · Stock Healthy)
-          </span>
-        );
-      case 'ASK':
-        return (
-          <span className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-800 border border-amber-300 rounded-full text-xs font-bold uppercase tracking-wider">
-            <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
-            Decision: ASK (Human Confirmation Required)
-          </span>
-        );
-      case 'WAIT':
-        return (
-          <span className="flex items-center gap-1.5 px-3 py-1 bg-purple-50 text-purple-800 border border-purple-300 rounded-full text-xs font-bold uppercase tracking-wider">
-            <Clock className="w-3.5 h-3.5 text-purple-600" />
-            Decision: WAIT (Price Signal Deferred)
-          </span>
-        );
-      case 'BLOCKED':
-        return (
-          <span className="flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-rose-800 border border-rose-300 rounded-full text-xs font-bold uppercase tracking-wider">
-            <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
-            Decision: BLOCKED (Policy Restriction Enforced)
-          </span>
-        );
-      default:
-        return null;
-    }
-  };
-
-  const getProviderBadge = () => {
-    const p = provider || mode;
-    if (p.includes('BEDROCK')) {
-      return (
-        <span className="flex items-center gap-1 text-[11px] bg-[#232F3E] text-[#FF9900] px-2.5 py-1 rounded-md font-mono font-medium border border-[#FF9900]/30 shadow-xs">
-          <Cpu className="w-3 h-3 text-[#FF9900]" />
-          AWS Bedrock (Claude 3.5)
-        </span>
-      );
-    }
-    if (p.includes('GEMINI')) {
-      return (
-        <span className="flex items-center gap-1 text-[11px] bg-neutral-900 text-blue-400 px-2.5 py-1 rounded-md font-mono font-medium border border-blue-500/30 shadow-xs">
-          <Sparkles className="w-3 h-3 text-blue-400" />
-          Google Gemini (2.5 Flash)
-        </span>
-      );
-    }
-    return (
-      <span className="flex items-center gap-1 text-[11px] bg-neutral-100 text-neutral-700 px-2.5 py-1 rounded-md font-mono font-medium border border-neutral-300">
-        <Layers className="w-3 h-3 text-neutral-500" />
-        Strands Tools Engine
-      </span>
-    );
-  };
+  const samplePrompts = [
+    "I want to make Maggi tonight",
+    "Do I need milk?",
+    "What's running low?",
+    "Why did you buy oil?",
+  ];
 
   return (
     <div id={id} className={`w-full ${className}`}>
-      {/* Console Card */}
-      <div className="bg-white border-2 border-amber-400/40 rounded-2xl shadow-md p-4 md:p-5 transition-all hover:border-amber-400/70 hover:shadow-lg">
+      <div className="bg-white rounded-3xl border border-neutral-200/90 shadow-sm p-6 sm:p-7">
         
-        {/* Header Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-3.5 pb-3 border-b border-neutral-100">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#FF9900] text-white flex items-center justify-center font-bold text-sm shadow-xs">
-              N
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-neutral-900 text-base">NOVA Autonomous Copilot</span>
-                <span className="px-2 py-0.5 bg-orange-50 border border-orange-200 text-orange-800 text-[10px] font-bold rounded-full uppercase tracking-wider">
-                  AWS Strands SDK
-                </span>
-              </div>
-              <p className="text-xs text-neutral-500">
-                Confidence-aware household decision autopilot &middot; Zero-cost simulated commerce
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {getProviderBadge()}
-          </div>
-        </div>
-
-        {/* 1-Click Hero Scenario Buttons */}
-        <div className="mb-3.5">
-          <div className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-            <Sparkles className="w-3 h-3 text-[#FF9900]" />
-            Live Strands Hackathon Hero Scenarios (Click to Execute):
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => runCommand("I need milk.", 1)}
-              disabled={loading}
-              className={`text-left p-2.5 rounded-xl border text-xs transition-all flex flex-col justify-between ${
-                activeScenario === 1
-                  ? "bg-emerald-50/90 border-emerald-400 ring-2 ring-emerald-400/20 shadow-xs"
-                  : "bg-neutral-50 hover:bg-neutral-100/90 border-neutral-200"
-              }`}
-            >
-              <div className="flex items-center justify-between w-full mb-1">
-                <span className="font-bold text-neutral-900 flex items-center gap-1.5">
-                  <Milk className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Scenario 1: Milk Auto-Buy</span>
-                </span>
-                <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-semibold">
-                  AUTO
-                </span>
-              </div>
-              <p className="text-[11px] text-neutral-600 line-clamp-1">
-                Low pantry stock (0.3L) &rarr; Search &rarr; Auto-order
-              </p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => runCommand("Should I buy oil?", 2)}
-              disabled={loading}
-              className={`text-left p-2.5 rounded-xl border text-xs transition-all flex flex-col justify-between ${
-                activeScenario === 2
-                  ? "bg-blue-50/90 border-blue-400 ring-2 ring-blue-400/20 shadow-xs"
-                  : "bg-neutral-50 hover:bg-neutral-100/90 border-neutral-200"
-              }`}
-            >
-              <div className="flex items-center justify-between w-full mb-1">
-                <span className="font-bold text-neutral-900 flex items-center gap-1.5">
-                  <Droplets className="w-4 h-4 text-blue-600 shrink-0" />
-                  <span>Scenario 2: Oil Restraint</span>
-                </span>
-                <span className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded font-semibold">
-                  RESTRAINT
-                </span>
-              </div>
-              <p className="text-[11px] text-neutral-600 line-clamp-1">
-                2.1L in stock (~30 days left) &rarr; DO_NOTHING
-              </p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => runCommand("I want to make Maggi tonight.", 3)}
-              disabled={loading}
-              className={`text-left p-2.5 rounded-xl border text-xs transition-all flex flex-col justify-between ${
-                activeScenario === 3
-                  ? "bg-purple-50/90 border-purple-400 ring-2 ring-purple-400/20 shadow-xs"
-                  : "bg-neutral-50 hover:bg-neutral-100/90 border-neutral-200"
-              }`}
-            >
-              <div className="flex items-center justify-between w-full mb-1">
-                <span className="font-bold text-neutral-900 flex items-center gap-1.5">
-                  <Utensils className="w-4 h-4 text-purple-600 shrink-0" />
-                  <span>Scenario 3: Maggi Plan</span>
-                </span>
-                <span className="text-[10px] bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded font-semibold">
-                  INTENT
-                </span>
-              </div>
-              <p className="text-[11px] text-neutral-600 line-clamp-1">
-                Reconcile: Oil/Salt in pantry &rarr; Order noodles only
-              </p>
-            </button>
-          </div>
+        {/* Title */}
+        <div className="mb-4">
+          <h3 className="text-xl font-bold text-neutral-950 tracking-tight">
+            What can I take care of?
+          </h3>
+          <p className="text-neutral-500 text-xs mt-0.5">
+            Ask about your pantry, plan a meal, or let NOVA take care of routine restocks.
+          </p>
         </div>
 
         {/* Natural Language Prompt Input */}
-        <form onSubmit={handleSubmit} className="relative group">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Sparkles className="text-[#FF9900] w-4 h-4" />
-          </div>
-          <input 
-            type="text" 
-            value={command}
-            onChange={(e) => setCommand(e.target.value)}
-            placeholder="Type or click a scenario: 'I need milk', 'Should I buy oil?', 'What is running low?'..."
-            disabled={loading}
-            className="w-full pl-11 pr-32 py-3.5 rounded-xl bg-neutral-50 border border-neutral-200 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all placeholder:text-neutral-400"
-          />
-          <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
-            <button 
-              type="submit" 
-              disabled={loading || !command.trim()}
-              className="px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 disabled:opacity-50 text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-xs"
-            >
-              {loading ? (
-                <>
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Reasoning...</span>
-                </>
-              ) : (
-                <>
-                  <span>Dispatch</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </>
-              )}
-            </button>
+        <form onSubmit={handleSubmit} className="relative mb-3">
+          <div className="relative rounded-2xl border border-neutral-300 focus-within:border-neutral-900 focus-within:ring-2 focus-within:ring-neutral-900/10 transition-all bg-white shadow-inner overflow-hidden">
+            <textarea
+              value={command}
+              onChange={(e) => setCommand(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (command.trim() && !loading) runPrompt(command);
+                }
+              }}
+              rows={compact ? 2 : 3}
+              placeholder="Tell NOVA what you need..."
+              disabled={loading}
+              className="w-full px-4 pt-3.5 pb-12 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none resize-none bg-transparent"
+            />
+            
+            <div className="absolute right-3 bottom-3 flex items-center gap-2">
+              <button
+                type="submit"
+                disabled={loading || !command.trim()}
+                className="px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 disabled:opacity-40 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+              >
+                {loading ? (
+                  <>
+                    <RotateCcw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Thinking…</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Send</span>
+                    <Send className="w-3.5 h-3.5" />
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
 
-        {/* Loading State */}
-        {loading && (
-          <div className="mt-4 bg-orange-50/50 border border-orange-200/60 rounded-xl p-3.5 flex items-center gap-3 text-neutral-700 text-xs animate-pulse">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#FF9900] animate-ping" />
-            <div className="flex flex-col">
-              <span className="font-semibold text-neutral-900">
-                Strands Agent Loop Running ({provider || "AWS Strands Agents SDK"})
-              </span>
-              <span className="text-[11px] text-neutral-500">
-                Inspecting pantry &middot; Checking budget limits &middot; Running deterministic safety gates...
-              </span>
-            </div>
-          </div>
-        )}
+        {/* Suggestion Chips */}
+        <div className="flex items-center gap-1.5 flex-wrap text-xs text-neutral-500">
+          <span className="font-semibold text-neutral-400 mr-1">Try:</span>
+          {samplePrompts.map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => runPrompt(p)}
+              disabled={loading}
+              className="px-3 py-1.5 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-medium transition-colors cursor-pointer"
+            >
+              &ldquo;{p}&rdquo;
+            </button>
+          ))}
+        </div>
 
-        {/* Results Presentation */}
+        {/* Response Presentation */}
         {response && (
-          <div className="mt-5 bg-gradient-to-b from-neutral-50 to-orange-50/20 border border-neutral-200 rounded-xl p-5 shadow-xs relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1.5 h-full bg-[#FF9900]"></div>
-
-            {/* Verdict and Status Header */}
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2.5 border-b border-neutral-200/70">
+          <div className="mt-5 bg-[#F9F9F8] border border-neutral-200 rounded-2xl p-5 shadow-xs transition-all">
+            {/* Status / Verdict Badge */}
+            <div className="flex items-center justify-between gap-2 mb-3 pb-3 border-b border-neutral-200/80">
               <div className="flex items-center gap-2">
-                {getVerdictBadge()}
+                {decisionVerdict === "AUTO" && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    Done for you
+                  </span>
+                )}
+                {decisionVerdict === "DO_NOTHING" && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
+                    <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+                    All sorted · No action needed
+                  </span>
+                )}
+                {decisionVerdict === "ASK" && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+                    <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                    Needs your input
+                  </span>
+                )}
+                {!decisionVerdict && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-neutral-200 text-neutral-800">
+                    <Sparkles className="w-3.5 h-3.5 text-neutral-600" />
+                    Assistant
+                  </span>
+                )}
               </div>
 
-              <div className="flex items-center gap-1.5 text-[11px] text-neutral-500 font-mono">
-                <span>Traces: {toolTrace.length} tools executed</span>
-              </div>
+              {/* Technical details toggle for judges / dev mode */}
+              <button
+                type="button"
+                onClick={() => setShowTechnicalDetails(!showTechnicalDetails)}
+                className="text-xs text-neutral-400 hover:text-neutral-700 flex items-center gap-1 transition-colors"
+              >
+                <span>{showTechnicalDetails ? "Hide technical details" : "Technical details"}</span>
+                {showTechnicalDetails ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </button>
             </div>
 
-            {/* Real Strands Tool Traces */}
-            {toolTrace.length > 0 && (
-              <div className="mb-4 bg-white border border-neutral-200 rounded-lg p-3 text-xs">
-                <div 
-                  className="flex items-center justify-between cursor-pointer select-none"
-                  onClick={() => setShowTelemetry(!showTelemetry)}
-                >
-                  <div className="flex items-center gap-1.5 text-neutral-700 font-semibold text-[11px]">
-                    <Terminal className="w-3.5 h-3.5 text-[#FF9900]" />
-                    <span>AWS Strands Tool Telemetry ({toolTrace.length})</span>
+            {/* Conversational Assistant Explanation */}
+            <div className="text-sm text-neutral-800 leading-relaxed font-sans whitespace-pre-wrap">
+              {response}
+            </div>
+
+            {/* Optional Technical Details for Judges & Architecture Review */}
+            {showTechnicalDetails && (
+              <div className="mt-4 pt-3.5 border-t border-neutral-200 text-xs">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1.5 font-bold text-neutral-700">
+                    <Terminal className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Agent Telemetry &amp; Tool Traces ({toolTrace.length})</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-neutral-400 font-mono hidden sm:inline">
-                      Deterministic Guardrails
+                  {provider && (
+                    <span className="text-[10px] font-mono bg-neutral-200 text-neutral-700 px-2 py-0.5 rounded">
+                      {provider}
                     </span>
-                    {showTelemetry ? (
-                      <ChevronUp className="w-3.5 h-3.5 text-neutral-400" />
-                    ) : (
-                      <ChevronDown className="w-3.5 h-3.5 text-neutral-400" />
-                    )}
-                  </div>
+                  )}
                 </div>
-                {showTelemetry && (
-                  <div className="space-y-1.5 mt-2.5 pt-2 border-t border-neutral-100">
+
+                {toolTrace.length > 0 ? (
+                  <div className="space-y-1.5">
                     {toolTrace.map((t, idx) => (
-                      <div 
-                        key={idx} 
-                        className="flex items-start justify-between bg-neutral-50/80 rounded p-2 border border-neutral-100 text-[11px]"
+                      <div
+                        key={idx}
+                        className="bg-white border border-neutral-200 rounded-lg p-2.5 flex items-start justify-between gap-2"
                       >
-                        <div className="flex items-start gap-2">
-                          <span className="font-mono text-neutral-900 font-bold bg-neutral-200/70 px-1.5 py-0.5 rounded text-[10px]">
+                        <div>
+                          <span className="font-mono font-bold text-neutral-900 bg-neutral-100 px-1.5 py-0.5 rounded text-[11px]">
                             {t.tool}()
                           </span>
                           {t.summary && (
-                            <span className="text-neutral-700 mt-0.5">{t.summary}</span>
+                            <p className="text-neutral-600 text-xs mt-1">{t.summary}</p>
                           )}
                         </div>
                         {t.duration !== undefined && (
-                          <span className="text-[10px] text-neutral-400 font-mono shrink-0 ml-2">
+                          <span className="text-[10px] font-mono text-neutral-400 shrink-0">
                             {t.duration}s
                           </span>
                         )}
                       </div>
                     ))}
                   </div>
+                ) : (
+                  <p className="text-neutral-500 text-[11px]">
+                    Direct intent reconciliation without separate tool invocations.
+                  </p>
                 )}
               </div>
             )}
 
-            {/* Final Agent Explanation */}
-            <div className="text-sm text-neutral-800 leading-relaxed whitespace-pre-wrap font-sans bg-white/70 p-3.5 rounded-lg border border-neutral-100">
-              {response}
-            </div>
           </div>
         )}
 

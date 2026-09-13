@@ -66,13 +66,13 @@ export default function FloatingCopilotDrawer() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-white">NOVA Copilot</span>
-                <span className="text-[9px] bg-amber-400/20 text-amber-300 border border-amber-400/40 px-1.5 py-0.5 rounded font-mono uppercase">
-                  AWS Strands
+                <span className="text-sm font-bold text-white">Ask NOVA</span>
+                <span className="text-[9px] bg-amber-400/20 text-amber-300 border border-amber-400/40 px-1.5 py-0.5 rounded font-medium uppercase">
+                  Household Assistant
                 </span>
               </div>
               <p className="text-[11px] text-neutral-400">
-                Autonomous Household Decision Engine
+                Ready to help with pantry, meals, and restocks
               </p>
             </div>
           </div>

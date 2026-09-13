@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import ProductShelf from "@/components/ProductShelf";
 import CategoryCard from "@/components/CategoryCard";
+import ProductImage from "@/components/ProductImage";
 import CommandBox from "@/components/CommandBox";
 import BudgetModal from "@/components/BudgetModal";
 import {
