@@ -310,6 +310,39 @@ function CatalogContent() {
             </div>
           )}
 
+          {commerceState === "CONNECTED_CATALOG_EMPTY" && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-50 border border-amber-300 p-3 rounded mb-3 text-xs text-amber-950">
+              <div className="flex items-center gap-2.5">
+                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+                <div>
+                  <span className="font-bold text-sm">Swiggy Instamart is currently unavailable.</span>
+                  <p className="text-amber-800 text-[11px] mt-0.5">
+                    Live dark store inventory could not be retrieved from the Swiggy Instamart MCP service. As per real-mode safety rules, NOVA will not silently substitute mock products.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                <button
+                  onClick={loadCatalog}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#FC8019] hover:bg-[#e07014] text-white text-xs font-bold rounded shadow-xs transition-colors"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Retry Connection
+                </button>
+                <button
+                  onClick={async () => {
+                    await fetch("/api/auth/swiggy/disconnect", { method: "POST" });
+                    window.dispatchEvent(new Event("swiggy-updated"));
+                    loadCatalog();
+                  }}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-800 text-xs font-semibold rounded shadow-xs transition-colors"
+                >
+                  Switch to Demo Mode
+                </button>
+              </div>
+            </div>
+          )}
+
           {commerceState === "DISCONNECTED" && (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-50 border border-amber-200 p-3 rounded mb-3 text-xs text-amber-900">
               <div className="flex items-center gap-2.5">
@@ -407,6 +440,37 @@ function CatalogContent() {
           <div className="bg-white p-16 rounded-sm border border-neutral-200 text-center">
             <div className="w-8 h-8 border-4 border-neutral-200 border-t-[#FF9900] rounded-full animate-spin mx-auto mb-3" />
             <p className="text-sm font-medium text-neutral-600">Loading catalog items...</p>
+          </div>
+        ) : commerceState === "CONNECTED_CATALOG_EMPTY" ? (
+          <div className="bg-white p-12 sm:p-16 rounded-sm border border-neutral-200 text-center max-w-xl mx-auto my-6 shadow-xs">
+            <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-6 h-6 text-amber-600" />
+            </div>
+            <h2 className="text-lg font-bold text-neutral-900 mb-2">
+              Swiggy Instamart is currently unavailable.
+            </h2>
+            <p className="text-xs text-neutral-600 mb-6 leading-relaxed">
+              We connected to your Swiggy Instamart profile, but live store inventory could not be loaded from the MCP dark store endpoint. As per real-mode safety policy, simulated products are not silently mixed into real orders.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                onClick={loadCatalog}
+                className="w-full sm:w-auto px-5 py-2 bg-[#FC8019] hover:bg-[#e07014] text-xs font-bold rounded-full text-white transition-colors shadow-xs flex items-center justify-center gap-1.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Retry Swiggy Connection
+              </button>
+              <button
+                onClick={async () => {
+                  await fetch("/api/auth/swiggy/disconnect", { method: "POST" });
+                  window.dispatchEvent(new Event("swiggy-updated"));
+                  loadCatalog();
+                }}
+                className="w-full sm:w-auto px-5 py-2 bg-neutral-100 hover:bg-neutral-200 text-xs font-semibold rounded-full text-neutral-800 border border-neutral-300 transition-colors shadow-xs"
+              >
+                Switch to Demo Catalog
+              </button>
+            </div>
           </div>
         ) : filtered.length === 0 ? (
           <div className="bg-white p-16 rounded-sm border border-neutral-200 text-center">

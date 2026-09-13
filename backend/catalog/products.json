@@ -8,8 +8,10 @@
     "category": "Atta",
     "subcategory": "Whole Wheat",
     "description": "100% whole wheat flour ground from MP golden grains.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/172/512/1747/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/172/512/1747/1.400.jpg"
+    ],
     "price": 289,
     "mrp": 325,
     "currency": "INR",
@@ -24,8 +26,10 @@
       "staple"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/172/512/1747/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901725121747"
   },
   {
     "id": "prod_000002",
@@ -36,8 +40,10 @@
     "category": "Atta",
     "subcategory": "Whole Wheat",
     "description": "Convenient 1kg pack of 100% whole wheat flour.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/172/512/1747/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/172/512/1747/1.400.jpg"
+    ],
     "price": 65,
     "mrp": 75,
     "currency": "INR",
@@ -50,8 +56,10 @@
       "staple"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/172/512/1747/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901725121747"
   },
   {
     "id": "prod_000003",
@@ -62,8 +70,10 @@
     "category": "Atta",
     "subcategory": "Whole Wheat",
     "description": "Economy 10kg sack of MP Sharbati whole wheat flour.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/172/512/1747/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/172/512/1747/1.400.jpg"
+    ],
     "price": 520,
     "mrp": 590,
     "currency": "INR",
@@ -77,8 +87,10 @@
       "value"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/172/512/1747/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901725121747"
   },
   {
     "id": "prod_000004",
@@ -103,8 +115,9 @@
       "staple"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000010",
@@ -115,8 +128,10 @@
     "category": "Rice",
     "subcategory": "Basmati",
     "description": "Aged long grain aromatic classic basmati rice.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/356/007/083/7984/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/356/007/083/7984/1.400.jpg"
+    ],
     "price": 469,
     "mrp": 540,
     "currency": "INR",
@@ -131,8 +146,10 @@
       "staple"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/356/007/083/7984/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "3560070837984"
   },
   {
     "id": "prod_000011",
@@ -143,8 +160,10 @@
     "category": "Rice",
     "subcategory": "Basmati",
     "description": "Standard 1kg pouch of aromatic premium basmati rice.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/356/007/083/7984/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/356/007/083/7984/1.400.jpg"
+    ],
     "price": 160,
     "mrp": 185,
     "currency": "INR",
@@ -157,8 +176,10 @@
       "staple"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/356/007/083/7984/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "3560070837984"
   },
   {
     "id": "prod_000012",
@@ -169,8 +190,10 @@
     "category": "Rice",
     "subcategory": "Basmati",
     "description": "Mega 10kg pantry bag of aged classic basmati rice.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/356/007/083/7984/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/356/007/083/7984/1.400.jpg"
+    ],
     "price": 999,
     "mrp": 1150,
     "currency": "INR",
@@ -184,8 +207,10 @@
       "value"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/356/007/083/7984/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "3560070837984"
   },
   {
     "id": "prod_000013",
@@ -210,8 +235,9 @@
       "staple"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000014",
@@ -237,8 +263,9 @@
       "bestseller"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000015",
@@ -249,8 +276,10 @@
     "category": "Rice",
     "subcategory": "Basmati",
     "description": "Medium long basmati grain ideal for everyday meals.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/356/007/083/7984/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/356/007/083/7984/1.400.jpg"
+    ],
     "price": 399,
     "mrp": 480,
     "currency": "INR",
@@ -264,8 +293,10 @@
       "staple"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/356/007/083/7984/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "3560070837984"
   },
   {
     "id": "prod_000016",
@@ -276,8 +307,10 @@
     "category": "Rice",
     "subcategory": "Basmati",
     "description": "Extra long authentic Himalayan aged basmati rice.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/356/007/083/7984/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/356/007/083/7984/1.400.jpg"
+    ],
     "price": 179,
     "mrp": 210,
     "currency": "INR",
@@ -290,8 +323,10 @@
       "premium"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/356/007/083/7984/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "3560070837984"
   },
   {
     "id": "prod_000030",
@@ -302,8 +337,10 @@
     "category": "Oil",
     "subcategory": "Sunflower",
     "description": "Refined sunflower oil enriched with vitamins A & D.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/600/728/0242/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/600/728/0242/1.400.jpg"
+    ],
     "price": 762,
     "mrp": 850,
     "currency": "INR",
@@ -318,8 +355,10 @@
       "staple"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/600/728/0242/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8906007280242"
   },
   {
     "id": "prod_000031",
@@ -330,8 +369,10 @@
     "category": "Oil",
     "subcategory": "Sunflower",
     "description": "Standard 1L pouch bottle of refined sunflower cooking oil.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/600/728/0242/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/600/728/0242/1.400.jpg"
+    ],
     "price": 155,
     "mrp": 175,
     "currency": "INR",
@@ -345,8 +386,10 @@
       "staple"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/600/728/0242/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8906007280242"
   },
   {
     "id": "prod_000032",
@@ -372,8 +415,9 @@
       "staple"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000033",
@@ -399,8 +443,9 @@
       "value"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000034",
@@ -425,8 +470,9 @@
       "traditional"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000050",
@@ -437,8 +483,10 @@
     "category": "Salt",
     "subcategory": "Iodized",
     "description": "Desh Ka Namak vacuum evaporated iodized table salt.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/201/0233/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/201/0233/1.400.jpg"
+    ],
     "price": 25,
     "mrp": 30,
     "currency": "INR",
@@ -452,8 +500,10 @@
       "staple"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/201/0233/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901052010233"
   },
   {
     "id": "prod_000051",
@@ -464,8 +514,10 @@
     "category": "Salt",
     "subcategory": "Low Sodium",
     "description": "15% low sodium formulation designed for healthy blood pressure.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/201/0233/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/201/0233/1.400.jpg"
+    ],
     "price": 40,
     "mrp": 48,
     "currency": "INR",
@@ -478,8 +530,10 @@
       "healthy"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/201/0233/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901052010233"
   },
   {
     "id": "prod_000070",
@@ -505,8 +559,9 @@
       "bestseller"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000071",
@@ -531,8 +586,9 @@
       "staple"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000060",
@@ -543,8 +599,10 @@
     "category": "Dal",
     "subcategory": "Toor Dal",
     "description": "Unpolished toor dal rich in natural protein and wholesome taste.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/869/098/210/1714/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/869/098/210/1714/1.400.jpg"
+    ],
     "price": 142,
     "mrp": 175,
     "currency": "INR",
@@ -559,8 +617,10 @@
       "staple"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/869/098/210/1714/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8690982101714"
   },
   {
     "id": "prod_000061",
@@ -571,8 +631,10 @@
     "category": "Dal",
     "subcategory": "Moong Dal",
     "description": "Nutritious unpolished yellow split moong dal.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/869/098/210/1714/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/869/098/210/1714/1.400.jpg"
+    ],
     "price": 138,
     "mrp": 165,
     "currency": "INR",
@@ -585,8 +647,10 @@
       "staple"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/869/098/210/1714/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8690982101714"
   },
   {
     "id": "prod_000062",
@@ -597,8 +661,10 @@
     "category": "Dal",
     "subcategory": "Chana Dal",
     "description": "Fiber-rich unpolished bengal gram chana dal.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/869/098/210/1714/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/869/098/210/1714/1.400.jpg"
+    ],
     "price": 99,
     "mrp": 125,
     "currency": "INR",
@@ -611,8 +677,10 @@
       "staple"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/869/098/210/1714/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8690982101714"
   },
   {
     "id": "prod_000075",
@@ -623,8 +691,10 @@
     "category": "Ghee",
     "subcategory": "Cow Ghee",
     "description": "Rich aroma and golden texture made from pure cow milk.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/126/203/0151/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/126/203/0151/1.400.jpg"
+    ],
     "price": 575,
     "mrp": 650,
     "currency": "INR",
@@ -639,8 +709,10 @@
       "staple"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/126/203/0151/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901262030151"
   },
   {
     "id": "prod_000076",
@@ -665,8 +737,9 @@
       "staple"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000077",
@@ -691,8 +764,9 @@
       "staple"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000140",
@@ -703,8 +777,10 @@
     "category": "Noodles",
     "subcategory": "Instant Noodles",
     "description": "India's favorite masala spice mix instant noodles.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/885/1298/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/885/1298/1.400.jpg"
+    ],
     "price": 14,
     "mrp": 15,
     "currency": "INR",
@@ -718,8 +794,10 @@
       "snack"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/885/1298/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901058851298"
   },
   {
     "id": "prod_000141",
@@ -730,8 +808,10 @@
     "category": "Noodles",
     "subcategory": "Instant Noodles",
     "description": "Family saver multipack with 4 individual packs.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/885/1298/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/885/1298/1.400.jpg"
+    ],
     "price": 54,
     "mrp": 60,
     "currency": "INR",
@@ -746,8 +826,10 @@
       "snack"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/885/1298/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901058851298"
   },
   {
     "id": "prod_000142",
@@ -772,8 +854,9 @@
       "snack"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000143",
@@ -784,8 +867,10 @@
     "category": "Biscuits",
     "subcategory": "Glucose",
     "description": "The quintessential chai partner packed with milk & wheat nutrition.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/171/913/4845/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/171/913/4845/1.400.jpg"
+    ],
     "price": 22,
     "mrp": 25,
     "currency": "INR",
@@ -799,8 +884,10 @@
       "snack"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/171/913/4845/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901719134845"
   },
   {
     "id": "prod_000144",
@@ -811,8 +898,10 @@
     "category": "Biscuits",
     "subcategory": "Cookies",
     "description": "Rich butter cookies garnished with crunchy cashew nut chunks.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/106/313/9329/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/106/313/9329/1.400.jpg"
+    ],
     "price": 38,
     "mrp": 45,
     "currency": "INR",
@@ -825,8 +914,10 @@
       "snack"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/106/313/9329/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901063139329"
   },
   {
     "id": "prod_000145",
@@ -837,8 +928,10 @@
     "category": "Biscuits",
     "subcategory": "Cream",
     "description": "Sugar-sprinkled dark chocolate biscuits with decadent chocolate creme.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/106/313/9329/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/106/313/9329/1.400.jpg"
+    ],
     "price": 30,
     "mrp": 35,
     "currency": "INR",
@@ -851,8 +944,10 @@
       "snack"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/106/313/9329/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901063139329"
   },
   {
     "id": "prod_000146",
@@ -863,8 +958,10 @@
     "category": "Biscuits",
     "subcategory": "Cream",
     "description": "Rich dark cocoa sandwich biscuits with smooth vanilla creme.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/762/230/033/6738/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/762/230/033/6738/1.400.jpg"
+    ],
     "price": 35,
     "mrp": 40,
     "currency": "INR",
@@ -877,8 +974,10 @@
       "snack"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/762/230/033/6738/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "7622300336738"
   },
   {
     "id": "prod_000147",
@@ -889,8 +988,10 @@
     "category": "Snacks",
     "subcategory": "Chips",
     "description": "Crisp thinly sliced potato chips infused with spicy aromatic masala.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/149/110/1844/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/149/110/1844/1.400.jpg"
+    ],
     "price": 20,
     "mrp": 20,
     "currency": "INR",
@@ -904,8 +1005,10 @@
       "snack"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/149/110/1844/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901491101844"
   },
   {
     "id": "prod_000148",
@@ -916,8 +1019,10 @@
     "category": "Snacks",
     "subcategory": "Namkeen",
     "description": "Tedha hai par mera hai crunch with authentic tadka spices.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/149/110/0519/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/149/110/0519/1.400.jpg"
+    ],
     "price": 20,
     "mrp": 20,
     "currency": "INR",
@@ -930,8 +1035,10 @@
       "snack"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/149/110/0519/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901491100519"
   },
   {
     "id": "prod_000149",
@@ -942,8 +1049,10 @@
     "category": "Snacks",
     "subcategory": "Namkeen",
     "description": "Crispy spicy gram flour noodles with tepary bean and mint.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/149/110/0519/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/149/110/0519/1.400.jpg"
+    ],
     "price": 110,
     "mrp": 130,
     "currency": "INR",
@@ -957,8 +1066,10 @@
       "staple"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/149/110/0519/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901491100519"
   },
   {
     "id": "prod_000150",
@@ -969,8 +1080,10 @@
     "category": "Snacks",
     "subcategory": "Namkeen",
     "description": "Zesty potato and pulse crisps seasoned with red chilli and dry mango.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/149/110/0519/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/149/110/0519/1.400.jpg"
+    ],
     "price": 112,
     "mrp": 130,
     "currency": "INR",
@@ -983,8 +1096,10 @@
       "snack"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/149/110/0519/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901491100519"
   },
   {
     "id": "prod_000151",
@@ -1011,8 +1126,9 @@
       "treat"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000109",
@@ -1023,8 +1139,10 @@
     "category": "Milk",
     "subcategory": "Toned Milk",
     "description": "UHT treated long life toned milk with zero preservatives.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/126/226/0091/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/126/226/0091/1.400.jpg"
+    ],
     "price": 66,
     "mrp": 72,
     "currency": "INR",
@@ -1038,8 +1156,10 @@
       "daily_essential"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/126/226/0091/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901262260091"
   },
   {
     "id": "prod_000108",
@@ -1050,8 +1170,10 @@
     "category": "Milk",
     "subcategory": "Full Cream Milk",
     "description": "Thick wholesome full cream milk rich in natural butterfat.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/126/226/0091/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/126/226/0091/1.400.jpg"
+    ],
     "price": 74,
     "mrp": 80,
     "currency": "INR",
@@ -1064,8 +1186,10 @@
       "daily_essential"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/126/226/0091/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901262260091"
   },
   {
     "id": "prod_000080",
@@ -1076,8 +1200,10 @@
     "category": "Tea",
     "subcategory": "Black Tea",
     "description": "Exquisite blend of strong Assam CTC tea and gentle aromatic long leaves.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/200/0807/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/200/0807/1.400.jpg"
+    ],
     "price": 209,
     "mrp": 260,
     "currency": "INR",
@@ -1092,8 +1218,10 @@
       "staple"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/200/0807/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901052000807"
   },
   {
     "id": "prod_000081",
@@ -1104,8 +1232,10 @@
     "category": "Tea",
     "subcategory": "Black Tea",
     "description": "Pioneering blend of medium and large grains for unmatched body and aroma.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/200/0807/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/200/0807/1.400.jpg"
+    ],
     "price": 415,
     "mrp": 490,
     "currency": "INR",
@@ -1119,8 +1249,10 @@
       "staple"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/200/0807/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901052000807"
   },
   {
     "id": "prod_000082",
@@ -1145,8 +1277,9 @@
       "staple"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000085",
@@ -1157,8 +1290,10 @@
     "category": "Coffee",
     "subcategory": "Instant Coffee",
     "description": "100% pure robusta coffee beans slow roasted for signature richness.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/841/010/002/0563/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/841/010/002/0563/1.400.jpg"
+    ],
     "price": 295,
     "mrp": 340,
     "currency": "INR",
@@ -1172,8 +1307,10 @@
       "bestseller"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/841/010/002/0563/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8410100020563"
   },
   {
     "id": "prod_000086",
@@ -1184,8 +1321,10 @@
     "category": "Coffee",
     "subcategory": "Chicory Mix",
     "description": "South Indian favorite roasted coffee chicory granule blend.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/841/010/002/0563/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/841/010/002/0563/1.400.jpg"
+    ],
     "price": 195,
     "mrp": 230,
     "currency": "INR",
@@ -1198,8 +1337,10 @@
       "coffee"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/841/010/002/0563/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8410100020563"
   },
   {
     "id": "prod_000087",
@@ -1210,8 +1351,10 @@
     "category": "Beverages",
     "subcategory": "Fruit Juice",
     "description": "Blend of 9 wholesome fruits packed with vitamin C.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/842/217/402/5016/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/842/217/402/5016/1.400.jpg"
+    ],
     "price": 105,
     "mrp": 130,
     "currency": "INR",
@@ -1225,8 +1368,10 @@
       "beverage"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/842/217/402/5016/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8422174025016"
   },
   {
     "id": "prod_000088",
@@ -1237,8 +1382,10 @@
     "category": "Beverages",
     "subcategory": "Soft Drinks",
     "description": "The crisp and refreshing sparkling cola soda.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/544/900/000/0996/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/544/900/000/0996/1.400.jpg"
+    ],
     "price": 40,
     "mrp": 45,
     "currency": "INR",
@@ -1251,8 +1398,10 @@
       "beverage"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/544/900/000/0996/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "5449000000996"
   },
   {
     "id": "prod_000090",
@@ -1263,8 +1412,10 @@
     "category": "Detergent",
     "subcategory": "Matic Front Load",
     "description": "Engineered for high water level washing machines with optical brighteners.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/103/084/3150/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/103/084/3150/1.400.jpg"
+    ],
     "price": 435,
     "mrp": 490,
     "currency": "INR",
@@ -1279,8 +1430,10 @@
       "household"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/103/084/3150/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901030843150"
   },
   {
     "id": "prod_000091",
@@ -1291,8 +1444,10 @@
     "category": "Detergent",
     "subcategory": "Hand Wash",
     "description": "Super fine powder dissolves quickly to remove stubborn grease & collar stains.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/103/084/3150/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/103/084/3150/1.400.jpg"
+    ],
     "price": 125,
     "mrp": 145,
     "currency": "INR",
@@ -1305,8 +1460,10 @@
       "household"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/103/084/3150/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901030843150"
   },
   {
     "id": "prod_000092",
@@ -1331,8 +1488,9 @@
       "household"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000093",
@@ -1343,8 +1501,10 @@
     "category": "Dishwash",
     "subcategory": "Liquid",
     "description": "1 spoon of Vim gel cuts through burnt grease on 1 sink full of utensils.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/910/600/7123/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/910/600/7123/1.400.jpg"
+    ],
     "price": 105,
     "mrp": 125,
     "currency": "INR",
@@ -1358,8 +1518,10 @@
       "household"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/910/600/7123/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8909106007123"
   },
   {
     "id": "prod_000094",
@@ -1370,8 +1532,10 @@
     "category": "Dishwash",
     "subcategory": "Bar",
     "description": "Polycoated green dishwash bar lasts longer without soggy wastage.",
-    "image": null,
-    "images": [],
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/910/600/7123/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/910/600/7123/1.400.jpg"
+    ],
     "price": 26,
     "mrp": 30,
     "currency": "INR",
@@ -1384,8 +1548,10 @@
       "household"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/910/600/7123/1.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8909106007123"
   },
   {
     "id": "prod_000095",
@@ -1410,8 +1576,9 @@
       "household"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000110",
@@ -1438,8 +1605,9 @@
       "household"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000096",
@@ -1464,8 +1632,9 @@
       "household"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000097",
@@ -1490,8 +1659,9 @@
       "household"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000100",
@@ -1502,8 +1672,10 @@
     "category": "Soap",
     "subcategory": "Antiseptic",
     "description": "Classic pine-fragranced germ protection antibacterial bath bar.",
-    "image": null,
-    "images": [],
+    "image": "https://images.openbeautyfacts.org/images/products/600/110/610/8991/front_fr.16.400.jpg",
+    "images": [
+      "https://images.openbeautyfacts.org/images/products/600/110/610/8991/front_fr.16.400.jpg"
+    ],
     "price": 139,
     "mrp": 165,
     "currency": "INR",
@@ -1518,8 +1690,10 @@
       "personal_care"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://images.openbeautyfacts.org/images/products/600/110/610/8991/front_fr.16.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_beauty_facts",
+    "barcode": "6001106108991"
   },
   {
     "id": "prod_000101",
@@ -1530,8 +1704,10 @@
     "category": "Soap",
     "subcategory": "Moisturizing",
     "description": "1/4 moisturising milk cream bar gently cleanses and nourishes soft skin.",
-    "image": null,
-    "images": [],
+    "image": "https://images.openbeautyfacts.org/images/products/871/160/080/4357/front_en.5.400.jpg",
+    "images": [
+      "https://images.openbeautyfacts.org/images/products/871/160/080/4357/front_en.5.400.jpg"
+    ],
     "price": 199,
     "mrp": 240,
     "currency": "INR",
@@ -1544,8 +1720,10 @@
       "personal_care"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://images.openbeautyfacts.org/images/products/871/160/080/4357/front_en.5.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_beauty_facts",
+    "barcode": "8711600804357"
   },
   {
     "id": "prod_000120",
@@ -1556,8 +1734,10 @@
     "category": "Shampoo",
     "subcategory": "Anti-Dandruff",
     "description": "Clinically proven flake-free scalp cleansing with fresh scent technology.",
-    "image": null,
-    "images": [],
+    "image": "https://images.openbeautyfacts.org/images/products/000/001/410/0765/front_en.26.400.jpg",
+    "images": [
+      "https://images.openbeautyfacts.org/images/products/000/001/410/0765/front_en.26.400.jpg"
+    ],
     "price": 279,
     "mrp": 330,
     "currency": "INR",
@@ -1572,8 +1752,10 @@
       "personal_care"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://images.openbeautyfacts.org/images/products/000/001/410/0765/front_en.26.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_beauty_facts",
+    "barcode": "0000014100765"
   },
   {
     "id": "prod_000121",
@@ -1584,8 +1766,10 @@
     "category": "Shampoo",
     "subcategory": "Shine",
     "description": "Enriched with amla and pearl extracts for lustrous long-lasting black shine.",
-    "image": null,
-    "images": [],
+    "image": "https://images.openbeautyfacts.org/images/products/628/100/654/7322/front_en.9.400.jpg",
+    "images": [
+      "https://images.openbeautyfacts.org/images/products/628/100/654/7322/front_en.9.400.jpg"
+    ],
     "price": 235,
     "mrp": 280,
     "currency": "INR",
@@ -1598,8 +1782,10 @@
       "personal_care"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://images.openbeautyfacts.org/images/products/628/100/654/7322/front_en.9.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_beauty_facts",
+    "barcode": "6281006547322"
   },
   {
     "id": "prod_000125",
@@ -1610,8 +1796,10 @@
     "category": "Toothpaste",
     "subcategory": "Complete Care",
     "description": "12-hour antibacterial defense against cavities, enamel wear & bad breath.",
-    "image": null,
-    "images": [],
+    "image": "https://images.openbeautyfacts.org/images/products/628/100/111/2013/front_en.5.400.jpg",
+    "images": [
+      "https://images.openbeautyfacts.org/images/products/628/100/111/2013/front_en.5.400.jpg"
+    ],
     "price": 119,
     "mrp": 140,
     "currency": "INR",
@@ -1625,8 +1813,10 @@
       "personal_care"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://images.openbeautyfacts.org/images/products/628/100/111/2013/front_en.5.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_beauty_facts",
+    "barcode": "6281001112013"
   },
   {
     "id": "prod_000126",
@@ -1637,8 +1827,10 @@
     "category": "Toothpaste",
     "subcategory": "Fresh Gel",
     "description": "Infused with cooling cooling crystals for an explosion of freshness.",
-    "image": null,
-    "images": [],
+    "image": "https://images.openbeautyfacts.org/images/products/628/100/111/2013/front_en.5.400.jpg",
+    "images": [
+      "https://images.openbeautyfacts.org/images/products/628/100/111/2013/front_en.5.400.jpg"
+    ],
     "price": 108,
     "mrp": 130,
     "currency": "INR",
@@ -1651,8 +1843,10 @@
       "personal_care"
     ],
     "preferred": false,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://images.openbeautyfacts.org/images/products/628/100/111/2013/front_en.5.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_beauty_facts",
+    "barcode": "6281001112013"
   },
   {
     "id": "prod_000127",
@@ -1677,8 +1871,9 @@
       "personal_care"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000128",
@@ -1689,8 +1884,10 @@
     "category": "Personal Care",
     "subcategory": "Handwash",
     "description": "100% better protection against illness-causing germs with moisturising formula.",
-    "image": null,
-    "images": [],
+    "image": "https://images.openbeautyfacts.org/images/products/600/110/610/8991/front_fr.16.400.jpg",
+    "images": [
+      "https://images.openbeautyfacts.org/images/products/600/110/610/8991/front_fr.16.400.jpg"
+    ],
     "price": 99,
     "mrp": 125,
     "currency": "INR",
@@ -1704,8 +1901,10 @@
       "bestseller"
     ],
     "preferred": true,
-    "asset_status": "verified",
-    "imageUrl": null
+    "imageUrl": "https://images.openbeautyfacts.org/images/products/600/110/610/8991/front_fr.16.400.jpg",
+    "imageStatus": "found",
+    "imageSource": "open_beauty_facts",
+    "barcode": "6001106108991"
   },
   {
     "id": "prod_000122",
@@ -1726,7 +1925,14 @@
       "butter"
     ],
     "preferred": true,
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/126/201/0023/1.400.jpg",
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/126/201/0023/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/126/201/0023/1.400.jpg"
+    ],
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901262010023"
   },
   {
     "id": "prod_000123",
@@ -1747,7 +1953,11 @@
       "cheese"
     ],
     "preferred": false,
-    "imageUrl": null
+    "imageUrl": null,
+    "image": null,
+    "images": [],
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000124",
@@ -1769,7 +1979,14 @@
       "deal"
     ],
     "preferred": false,
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/172/512/1747/1.400.jpg",
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/172/512/1747/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/172/512/1747/1.400.jpg"
+    ],
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901725121747"
   },
   {
     "id": "prod_000129",
@@ -1790,7 +2007,11 @@
       "premium_tea"
     ],
     "preferred": true,
-    "imageUrl": null
+    "imageUrl": null,
+    "image": null,
+    "images": [],
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000130",
@@ -1811,7 +2032,11 @@
       "cup_noodles"
     ],
     "preferred": false,
-    "imageUrl": null
+    "imageUrl": null,
+    "image": null,
+    "images": [],
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000131",
@@ -1832,7 +2057,14 @@
       "atta_noodles"
     ],
     "preferred": true,
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/885/1298/1.400.jpg",
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/885/1298/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/885/1298/1.400.jpg"
+    ],
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901058851298"
   },
   {
     "id": "prod_000132",
@@ -1854,7 +2086,11 @@
       "chocolate"
     ],
     "preferred": true,
-    "imageUrl": null
+    "imageUrl": null,
+    "image": null,
+    "images": [],
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   },
   {
     "id": "prod_000133",
@@ -1875,7 +2111,14 @@
       "tea_time"
     ],
     "preferred": true,
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/106/313/9329/1.400.jpg",
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/106/313/9329/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/106/313/9329/1.400.jpg"
+    ],
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901063139329"
   },
   {
     "id": "prod_000134",
@@ -1896,7 +2139,14 @@
       "snacks"
     ],
     "preferred": true,
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/149/110/1844/1.400.jpg",
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/149/110/1844/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/149/110/1844/1.400.jpg"
+    ],
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901491101844"
   },
   {
     "id": "prod_000135",
@@ -1917,7 +2167,14 @@
       "namkeen"
     ],
     "preferred": false,
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/149/110/1844/1.400.jpg",
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/149/110/1844/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/149/110/1844/1.400.jpg"
+    ],
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8901491101844"
   },
   {
     "id": "prod_000136",
@@ -1938,7 +2195,14 @@
       "cold_drinks"
     ],
     "preferred": true,
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/544/900/000/0996/1.400.jpg",
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/544/900/000/0996/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/544/900/000/0996/1.400.jpg"
+    ],
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "5449000000996"
   },
   {
     "id": "prod_000137",
@@ -1959,7 +2223,14 @@
       "cold_drinks"
     ],
     "preferred": true,
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/544/900/001/4535/1.400.jpg",
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/544/900/001/4535/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/544/900/001/4535/1.400.jpg"
+    ],
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "5449000014535"
   },
   {
     "id": "prod_000138",
@@ -1980,7 +2251,14 @@
       "juice"
     ],
     "preferred": true,
-    "imageUrl": null
+    "imageUrl": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/842/217/402/5016/1.400.jpg",
+    "image": "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/842/217/402/5016/1.400.jpg",
+    "images": [
+      "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/842/217/402/5016/1.400.jpg"
+    ],
+    "imageStatus": "found",
+    "imageSource": "open_food_facts",
+    "barcode": "8422174025016"
   },
   {
     "id": "prod_000139",
@@ -2001,6 +2279,10 @@
       "juice"
     ],
     "preferred": false,
-    "imageUrl": null
+    "imageUrl": null,
+    "image": null,
+    "images": [],
+    "imageStatus": "unavailable",
+    "imageSource": "unavailable"
   }
 ]

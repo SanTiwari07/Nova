@@ -264,8 +264,12 @@ class NovaAgent:
                     "status": "success"
                 }
             except Exception as e:
-                print(f"[NovaAgent] Strands invocation error: {e}. Falling back to tool dispatcher.")
-                traces.append({"tool": "strands_agent", "status": "error", "summary": str(e)})
+                err_msg = str(e)
+                print(f"[NovaAgent] Strands invocation error: {err_msg}. Falling back to tool dispatcher.")
+                if "API_KEY_INVALID" in err_msg or "INVALID_ARGUMENT" in err_msg or "API key not valid" in err_msg:
+                    print("[NovaAgent] Gemini API key is invalid or unconfigured. Disabling active agent.")
+                    self.agent = None
+                traces.append({"tool": "strands_agent", "status": "error", "summary": err_msg[:120]})
 
         # Deterministic Tool Dispatcher fallback (when LLM provider is unavailable)
         return await self._deterministic_tool_dispatch(user_request, traces)
@@ -393,6 +397,17 @@ class NovaAgent:
 
                 if missing_items and query and search_tool and purchase_tool:
                     products = await search_tool(query=query)
+                    if not products and len(suggested_queries) > 1:
+                        for alt_q in suggested_queries[1:]:
+                            products = await search_tool(query=alt_q)
+                            if products:
+                                query = alt_q
+                                break
+                    if not products and missing_items:
+                        first_word = missing_items[0]["item"].split()[0]
+                        if len(first_word) > 2:
+                            products = await search_tool(query=first_word)
+
                     traces.append({
                         "tool": "search_catalog",
                         "input": {"query": query},
@@ -424,6 +439,22 @@ class NovaAgent:
                             f"   - Identified missing requirement: **{selected['name']}** (₹{selected['price']})\n"
                             f"   - **Verdict:** **{res.get('verdict')}** ({res.get('message', 'Processed')})\n\n"
                             f"3. **Prudence Guaranteed:** Ingredients already present in your pantry were preserved; only missing supplies were ordered."
+                        )
+                        return {
+                            "response": resp,
+                            "tool_trace": traces,
+                            "mode": "STRANDS_TOOLS_DETERMINISTIC",
+                            "provider": "STRANDS_FALLBACK",
+                            "status": "success"
+                        }
+                    else:
+                        avail_desc = ", ".join([a.get("summary", a["item"]) for a in reconcile_res.get("available_in_pantry", [])])
+                        resp = (
+                            f"**Activity Reconciliation for '{reconcile_res.get('matched_activity', 'Meal/Activity')}':**\n\n"
+                            f"1. **Pantry Check:**\n"
+                            f"   - **Available in stock:** {avail_desc or 'None'}\n"
+                            f"   - **Missing from pantry:** {', '.join([m['item'] for m in missing_items])}\n\n"
+                            f"2. **Catalog Status:** No exact products matched '{query}' in the current catalog. Please check catalog inventory directly."
                         )
                         return {
                             "response": resp,
@@ -592,9 +623,11 @@ class NovaAgent:
         overview_tool = tools_map.get("get_household_overview")
         if overview_tool:
             ov = overview_tool()
+            low_count = ov.get("pantry_low_items_count", ov.get("low_stock_count", 0))
+            rem_budget = ov.get("budget_remaining", ov.get("remaining_budget", 0))
             traces.append({"tool": "get_household_overview", "input": {}, "status": "success", "summary": "Retrieved household status"})
             return {
-                "response": f"I am NOVA, your AWS Strands household autopilot. You currently have {ov.get('low_stock_count', 0)} items running low in your pantry and ₹{ov.get('remaining_budget', 0)} in your monthly budget. How can I help with your household today?",
+                "response": f"I am NOVA, your AWS Strands household autopilot. You currently have {low_count} items running low in your pantry and ₹{rem_budget} in your monthly budget. How can I help with your household today?",
                 "tool_trace": traces,
                 "mode": "STRANDS_TOOLS_DETERMINISTIC",
                 "provider": "STRANDS_FALLBACK",

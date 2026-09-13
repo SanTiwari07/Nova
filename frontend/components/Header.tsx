@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
+import BudgetModal from "@/components/BudgetModal";
+import { SlidersHorizontal, Sparkles, Bot } from "lucide-react";
 
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const [cartCount, setCartCount] = useState(0);
   const [budgetRemaining, setBudgetRemaining] = useState<number | null>(null);
+  const [budgetModalOpen, setBudgetModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchCategory, setSearchCategory] = useState("All");
   const [categories, setCategories] = useState<string[]>([]);
@@ -34,10 +37,44 @@ export default function Header() {
     });
   };
 
+  const handleConnectSwiggy = async () => {
+    try {
+      const res = await fetch("/api/auth/swiggy/connect-demo", { method: "POST" });
+      const data = await res.json();
+      if (data && data.authenticated) {
+        setSwiggyStatus(data);
+        window.dispatchEvent(new Event("swiggy-updated"));
+        router.refresh();
+      }
+    } catch (e) {
+      window.location.href = "/api/auth/swiggy/login?redirect=true";
+    }
+  };
+
   useEffect(() => {
+    const isSwiggyConnectedParam = typeof window !== "undefined" && window.location.search.includes("swiggy_connected");
+    if (isSwiggyConnectedParam) {
+      fetch("/api/auth/swiggy/status?auto_connect=true")
+        .then((r) => r.json())
+        .then((swiggy) => {
+          if (swiggy) setSwiggyStatus(swiggy);
+          window.dispatchEvent(new Event("swiggy-updated"));
+        })
+        .catch(() => {});
+    }
+
     fetchHeaderData();
     window.addEventListener("cart-updated", fetchHeaderData);
-    return () => window.removeEventListener("cart-updated", fetchHeaderData);
+    window.addEventListener("swiggy-updated", fetchHeaderData);
+    window.addEventListener("household-updated", fetchHeaderData);
+    window.addEventListener("budget-updated", fetchHeaderData);
+
+    return () => {
+      window.removeEventListener("cart-updated", fetchHeaderData);
+      window.removeEventListener("swiggy-updated", fetchHeaderData);
+      window.removeEventListener("household-updated", fetchHeaderData);
+      window.removeEventListener("budget-updated", fetchHeaderData);
+    };
   }, [pathname]);
 
   const handleDisconnectSwiggy = async () => {
@@ -97,7 +134,7 @@ export default function Header() {
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
               </svg>
               <span className="text-xs font-bold text-white truncate max-w-[130px]">
-                {swiggyStatus.active_address?.label || swiggyStatus.active_address?.addressCategory || (swiggyStatus.authenticated ? "Swiggy Home" : "Connect Swiggy")}
+                {swiggyStatus.active_address?.addressTag || swiggyStatus.active_address?.label || swiggyStatus.active_address?.addressCategory || (swiggyStatus.authenticated ? "Swiggy Home" : "Connect Swiggy")}
               </span>
             </div>
           </div>
@@ -165,24 +202,44 @@ export default function Header() {
               <span className="text-sm font-bold text-white leading-tight">& Orders</span>
             </Link>
 
-            {/* Budget indicator */}
+            {/* Budget indicator (Clickable to Edit) */}
             {budgetRemaining !== null && (
-              <div className="hidden lg:flex flex-col px-2 py-1 rounded hover:outline hover:outline-1 hover:outline-white/50 transition-all cursor-pointer">
-                <span className="text-[11px] text-neutral-300 leading-none">Budget left</span>
+              <button
+                type="button"
+                onClick={() => setBudgetModalOpen(true)}
+                title="Click to edit household budget & safety limits"
+                className="hidden lg:flex flex-col px-2 py-1 rounded hover:outline hover:outline-1 hover:outline-white/50 transition-all cursor-pointer text-left group"
+              >
+                <span className="text-[11px] text-neutral-300 leading-none flex items-center gap-1 group-hover:text-amber-300">
+                  Budget left
+                  <SlidersHorizontal className="w-2.5 h-2.5 text-[#FF9900]" />
+                </span>
                 <span className="text-sm font-bold text-[#FF9900] leading-tight">
                   ₹{budgetRemaining.toLocaleString("en-IN")}
                 </span>
-              </div>
+              </button>
             )}
 
-            {/* NOVA Autopilot */}
-            <Link
-              href="/autopilot"
-              className="hidden lg:flex flex-col px-2 py-1 rounded hover:outline hover:outline-1 hover:outline-white/50 transition-all"
+            {/* NOVA Copilot Quick Trigger */}
+            <a
+              href="#hero-copilot"
+              onClick={(e) => {
+                const el = document.getElementById("hero-copilot");
+                if (el) {
+                  e.preventDefault();
+                  el.scrollIntoView({ behavior: "smooth" });
+                  el.classList.add("ring-4", "ring-[#FF9900]/50");
+                  setTimeout(() => el.classList.remove("ring-4", "ring-[#FF9900]/50"), 1500);
+                }
+              }}
+              className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-400/50 hover:border-amber-400 hover:bg-amber-500/30 text-white transition-all shadow-xs cursor-pointer"
             >
-              <span className="text-[11px] text-neutral-300 leading-none">NOVA</span>
-              <span className="text-sm font-bold text-white leading-tight">Autopilot</span>
-            </Link>
+              <Sparkles className="w-3.5 h-3.5 text-[#FF9900] animate-pulse" />
+              <div className="flex flex-col text-left">
+                <span className="text-[9px] text-amber-300 leading-none font-bold uppercase tracking-wider">AI Layer</span>
+                <span className="text-xs font-bold text-white leading-tight">NOVA Copilot</span>
+              </div>
+            </a>
 
             {/* Cart */}
             <Link
@@ -265,14 +322,23 @@ export default function Header() {
                   <span className="hidden sm:inline">Demo Commerce — Active</span>
                   <span className="sm:hidden">Demo</span>
                 </span>
-                <a
-                  href="/api/auth/swiggy/login?redirect=true"
-                  className="flex items-center gap-1.5 px-3 py-1 bg-[#FC8019] hover:bg-[#e07014] text-white text-xs font-bold rounded shadow-sm transition-all"
-                  title="Authenticate with your Swiggy phone + OTP via official OAuth 2.1"
-                >
-                  <span className="w-2 h-2 rounded-full bg-white/80 animate-ping" />
-                  Connect Swiggy Instamart
-                </a>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={handleConnectSwiggy}
+                    className="flex items-center gap-1.5 px-3 py-1 bg-[#FC8019] hover:bg-[#e07014] text-white text-xs font-bold rounded shadow-sm transition-all cursor-pointer"
+                    title="Connect Swiggy Instamart"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-white/80 animate-ping" />
+                    Connect Swiggy Instamart
+                  </button>
+                  <a
+                    href="/api/auth/swiggy/login?redirect=true"
+                    className="text-[10px] text-neutral-400 hover:text-white underline hidden xl:inline"
+                    title="Authenticate via official Swiggy OAuth 2.1 OTP flow"
+                  >
+                    OAuth
+                  </a>
+                </div>
               </div>
             )}
 
@@ -289,6 +355,12 @@ export default function Header() {
 
       {/* Spacer: 14px primary + 9px secondary = 56px + 36px = 92px */}
       <div className="h-[92px]" />
+
+      {/* Header Budget Editor Modal */}
+      <BudgetModal
+        isOpen={budgetModalOpen}
+        onClose={() => setBudgetModalOpen(false)}
+      />
     </>
   );
 }

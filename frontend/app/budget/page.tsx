@@ -2,14 +2,16 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { CheckCircle2, AlertTriangle, Sparkles } from "lucide-react";
+import BudgetModal from "@/components/BudgetModal";
+import { CheckCircle2, AlertTriangle, Sparkles, SlidersHorizontal, Settings2 } from "lucide-react";
 
 export default function BudgetPage() {
   const [budget, setBudget] = useState<any>(null);
   const [savings, setSavings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
 
-  useEffect(() => {
+  const loadData = () => {
     Promise.all([
       fetch("/api/budget").then(r => r.json()).catch(() => null),
       fetch("/api/savings").then(r => r.json()).catch(() => null),
@@ -17,6 +19,18 @@ export default function BudgetPage() {
       setBudget(bud);
       setSavings(sav);
     }).finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadData();
+
+    const handleUpdate = () => loadData();
+    window.addEventListener("budget-updated", handleUpdate);
+    window.addEventListener("household-updated", handleUpdate);
+    return () => {
+      window.removeEventListener("budget-updated", handleUpdate);
+      window.removeEventListener("household-updated", handleUpdate);
+    };
   }, []);
 
   if (loading) {
@@ -58,7 +72,17 @@ export default function BudgetPage() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6">
             <div>
               <p className="text-sm text-neutral-500 mb-1">Monthly household budget</p>
-              <p className="text-5xl font-black text-neutral-900">₹{monthly.toLocaleString("en-IN")}</p>
+              <div className="flex items-center gap-3">
+                <p className="text-5xl font-black text-neutral-900">₹{monthly.toLocaleString("en-IN")}</p>
+                <button
+                  type="button"
+                  onClick={() => setIsBudgetModalOpen(true)}
+                  className="px-3.5 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-xs flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                >
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-[#FF9900]" />
+                  Edit Budget
+                </button>
+              </div>
             </div>
             <div className="flex gap-4">
               <div className="text-center">
@@ -87,9 +111,19 @@ export default function BudgetPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 p-3 bg-neutral-50 rounded-xl">
-            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-            <p className="text-xs text-neutral-600">Auto-buy limit per item: <strong>₹{autoLimit}</strong></p>
+          <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-xl">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+              <p className="text-xs text-neutral-600">Auto-buy limit per item: <strong>₹{autoLimit}</strong></p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsBudgetModalOpen(true)}
+              className="text-xs font-bold text-[#007185] hover:text-[#C7511F] hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <Settings2 className="w-3.5 h-3.5" />
+              Adjust Limits
+            </button>
           </div>
         </div>
 
@@ -167,6 +201,14 @@ export default function BudgetPage() {
           </div>
         )}
       </div>
+
+      {/* Interactive Budget and Limits Editor Modal */}
+      <BudgetModal
+        isOpen={isBudgetModalOpen}
+        onClose={() => setIsBudgetModalOpen(false)}
+        initialMonthly={monthly}
+        initialAutoLimit={autoLimit}
+      />
     </div>
   );
 }

@@ -10,7 +10,13 @@ import {
   ShieldAlert, 
   RefreshCw,
   Cpu,
-  Layers
+  Layers,
+  Milk,
+  Droplets,
+  Utensils,
+  ChevronDown,
+  ChevronUp,
+  Bot
 } from 'lucide-react';
 
 interface ToolTraceItem {
@@ -24,9 +30,11 @@ interface ToolTraceItem {
 interface CommandBoxProps {
   onScenarioDispatched?: (scenarioNum: number) => void;
   className?: string;
+  compact?: boolean;
+  id?: string;
 }
 
-export default function CommandBox({ onScenarioDispatched, className = "" }: CommandBoxProps) {
+export default function CommandBox({ onScenarioDispatched, className = "", compact = false, id = "nova-copilot" }: CommandBoxProps) {
   const [command, setCommand] = useState('');
   const [response, setResponse] = useState('');
   const [mode, setMode] = useState<string>('');
@@ -35,6 +43,7 @@ export default function CommandBox({ onScenarioDispatched, className = "" }: Com
   const [decisionVerdict, setDecisionVerdict] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeScenario, setActiveScenario] = useState<number | null>(null);
+  const [showTelemetry, setShowTelemetry] = useState(true);
 
   // Check agent provider on mount
   useEffect(() => {
@@ -188,12 +197,12 @@ export default function CommandBox({ onScenarioDispatched, className = "" }: Com
   };
 
   return (
-    <div className={`w-full ${className}`}>
+    <div id={id} className={`w-full ${className}`}>
       {/* Console Card */}
-      <div className="bg-white border border-neutral-200/90 rounded-2xl shadow-sm p-4 md:p-6 transition-all hover:border-neutral-300">
+      <div className="bg-white border-2 border-amber-400/40 rounded-2xl shadow-md p-4 md:p-5 transition-all hover:border-amber-400/70 hover:shadow-lg">
         
         {/* Header Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-neutral-100">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3.5 pb-3 border-b border-neutral-100">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-[#FF9900] text-white flex items-center justify-center font-bold text-sm shadow-xs">
               N
@@ -217,25 +226,26 @@ export default function CommandBox({ onScenarioDispatched, className = "" }: Com
         </div>
 
         {/* 1-Click Hero Scenario Buttons */}
-        <div className="mb-4">
+        <div className="mb-3.5">
           <div className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
             <Sparkles className="w-3 h-3 text-[#FF9900]" />
             Live Strands Hackathon Hero Scenarios (Click to Execute):
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             <button
               type="button"
               onClick={() => runCommand("I need milk.", 1)}
               disabled={loading}
-              className={`text-left p-3 rounded-xl border text-xs transition-all flex flex-col justify-between ${
+              className={`text-left p-2.5 rounded-xl border text-xs transition-all flex flex-col justify-between ${
                 activeScenario === 1
-                  ? "bg-emerald-50/80 border-emerald-400 ring-2 ring-emerald-400/20 shadow-xs"
-                  : "bg-neutral-50 hover:bg-neutral-100/80 border-neutral-200"
+                  ? "bg-emerald-50/90 border-emerald-400 ring-2 ring-emerald-400/20 shadow-xs"
+                  : "bg-neutral-50 hover:bg-neutral-100/90 border-neutral-200"
               }`}
             >
               <div className="flex items-center justify-between w-full mb-1">
                 <span className="font-bold text-neutral-900 flex items-center gap-1.5">
-                  <span>🥛</span> Scenario 1: Milk Auto-Buy
+                  <Milk className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Scenario 1: Milk Auto-Buy</span>
                 </span>
                 <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-semibold">
                   AUTO
@@ -250,15 +260,16 @@ export default function CommandBox({ onScenarioDispatched, className = "" }: Com
               type="button"
               onClick={() => runCommand("Should I buy oil?", 2)}
               disabled={loading}
-              className={`text-left p-3 rounded-xl border text-xs transition-all flex flex-col justify-between ${
+              className={`text-left p-2.5 rounded-xl border text-xs transition-all flex flex-col justify-between ${
                 activeScenario === 2
-                  ? "bg-blue-50/80 border-blue-400 ring-2 ring-blue-400/20 shadow-xs"
-                  : "bg-neutral-50 hover:bg-neutral-100/80 border-neutral-200"
+                  ? "bg-blue-50/90 border-blue-400 ring-2 ring-blue-400/20 shadow-xs"
+                  : "bg-neutral-50 hover:bg-neutral-100/90 border-neutral-200"
               }`}
             >
               <div className="flex items-center justify-between w-full mb-1">
                 <span className="font-bold text-neutral-900 flex items-center gap-1.5">
-                  <span>🛢️</span> Scenario 2: Oil Restraint
+                  <Droplets className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span>Scenario 2: Oil Restraint</span>
                 </span>
                 <span className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded font-semibold">
                   RESTRAINT
@@ -273,15 +284,16 @@ export default function CommandBox({ onScenarioDispatched, className = "" }: Com
               type="button"
               onClick={() => runCommand("I want to make Maggi tonight.", 3)}
               disabled={loading}
-              className={`text-left p-3 rounded-xl border text-xs transition-all flex flex-col justify-between ${
+              className={`text-left p-2.5 rounded-xl border text-xs transition-all flex flex-col justify-between ${
                 activeScenario === 3
-                  ? "bg-purple-50/80 border-purple-400 ring-2 ring-purple-400/20 shadow-xs"
-                  : "bg-neutral-50 hover:bg-neutral-100/80 border-neutral-200"
+                  ? "bg-purple-50/90 border-purple-400 ring-2 ring-purple-400/20 shadow-xs"
+                  : "bg-neutral-50 hover:bg-neutral-100/90 border-neutral-200"
               }`}
             >
               <div className="flex items-center justify-between w-full mb-1">
                 <span className="font-bold text-neutral-900 flex items-center gap-1.5">
-                  <span>🍜</span> Scenario 3: Maggi Reconciliation
+                  <Utensils className="w-4 h-4 text-purple-600 shrink-0" />
+                  <span>Scenario 3: Maggi Plan</span>
                 </span>
                 <span className="text-[10px] bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded font-semibold">
                   INTENT
@@ -362,37 +374,49 @@ export default function CommandBox({ onScenarioDispatched, className = "" }: Com
             {/* Real Strands Tool Traces */}
             {toolTrace.length > 0 && (
               <div className="mb-4 bg-white border border-neutral-200 rounded-lg p-3 text-xs">
-                <div className="flex items-center justify-between mb-2">
+                <div 
+                  className="flex items-center justify-between cursor-pointer select-none"
+                  onClick={() => setShowTelemetry(!showTelemetry)}
+                >
                   <div className="flex items-center gap-1.5 text-neutral-700 font-semibold text-[11px]">
                     <Terminal className="w-3.5 h-3.5 text-[#FF9900]" />
-                    <span>AWS Strands Tool Execution Telemetry:</span>
+                    <span>AWS Strands Tool Telemetry ({toolTrace.length})</span>
                   </div>
-                  <span className="text-[10px] text-neutral-400 font-mono">
-                    Deterministic Guardrails Active
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-neutral-400 font-mono hidden sm:inline">
+                      Deterministic Guardrails
+                    </span>
+                    {showTelemetry ? (
+                      <ChevronUp className="w-3.5 h-3.5 text-neutral-400" />
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5 text-neutral-400" />
+                    )}
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  {toolTrace.map((t, idx) => (
-                    <div 
-                      key={idx} 
-                      className="flex items-start justify-between bg-neutral-50/80 rounded p-2 border border-neutral-100 text-[11px]"
-                    >
-                      <div className="flex items-start gap-2">
-                        <span className="font-mono text-neutral-900 font-bold bg-neutral-200/70 px-1.5 py-0.5 rounded text-[10px]">
-                          {t.tool}()
-                        </span>
-                        {t.summary && (
-                          <span className="text-neutral-700 mt-0.5">{t.summary}</span>
+                {showTelemetry && (
+                  <div className="space-y-1.5 mt-2.5 pt-2 border-t border-neutral-100">
+                    {toolTrace.map((t, idx) => (
+                      <div 
+                        key={idx} 
+                        className="flex items-start justify-between bg-neutral-50/80 rounded p-2 border border-neutral-100 text-[11px]"
+                      >
+                        <div className="flex items-start gap-2">
+                          <span className="font-mono text-neutral-900 font-bold bg-neutral-200/70 px-1.5 py-0.5 rounded text-[10px]">
+                            {t.tool}()
+                          </span>
+                          {t.summary && (
+                            <span className="text-neutral-700 mt-0.5">{t.summary}</span>
+                          )}
+                        </div>
+                        {t.duration !== undefined && (
+                          <span className="text-[10px] text-neutral-400 font-mono shrink-0 ml-2">
+                            {t.duration}s
+                          </span>
                         )}
                       </div>
-                      {t.duration !== undefined && (
-                        <span className="text-[10px] text-neutral-400 font-mono shrink-0 ml-2">
-                          {t.duration}s
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

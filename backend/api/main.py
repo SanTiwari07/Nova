@@ -13,14 +13,15 @@ import random
 logger = logging.getLogger("nova.api")
 try:
     from dotenv import load_dotenv
+    # Load env files from parent paths, prioritizing project root
     for p in [
-        Path(__file__).resolve().parent / ".env",
+        Path(__file__).resolve().parent.parent.parent / ".env",
         Path(__file__).resolve().parent.parent / ".env",
-        Path(__file__).resolve().parent.parent.parent / ".env"
+        Path(__file__).resolve().parent / ".env",
     ]:
         if p.exists():
-            load_dotenv(dotenv_path=p)
-    load_dotenv()
+            load_dotenv(dotenv_path=p, override=True)
+    load_dotenv(override=True)
 except ImportError:
     pass
 
@@ -237,22 +238,56 @@ async def swiggy_callback(code: Optional[str] = None, state: Optional[str] = Non
     return RedirectResponse(url=target_url, status_code=307)
 
 @app.get("/api/auth/swiggy/status")
-async def swiggy_auth_status():
+async def swiggy_auth_status(auto_connect: bool = False):
     """Returns Swiggy Instamart connection and active delivery address status."""
+    if auto_connect and not oauth_manager.is_authenticated():
+        oauth_manager.connect_demo_session()
+
+    is_auth = oauth_manager.is_authenticated()
+    is_avail = not commerce_adapter.is_circuit_broken
+    err = None
+    if commerce_adapter.is_live and not is_avail:
+        err = commerce_adapter.last_error or "Swiggy Instamart is currently unavailable."
+    elif not is_auth and commerce_adapter.last_error:
+        err = commerce_adapter.last_error
+
     return {
-        "authenticated": commerce_adapter.is_live,
-        "mode": commerce_adapter.commerce_mode,
+        "authenticated": is_auth,
+        "is_live": commerce_adapter.is_live,
+        "is_available": is_avail,
+        "mode": "live" if is_auth else commerce_adapter.commerce_mode,
+        "error": err,
         "active_address": oauth_manager.get_active_address(),
         "active_address_id": oauth_manager.get_active_address_id(),
         "session": oauth_manager.get_session()
     }
 
+@app.api_route("/api/auth/swiggy/connect-demo", methods=["GET", "POST"])
+async def swiggy_connect_demo(return_to: str = "/store", redirect: bool = False):
+    """Connects a verified Swiggy Instamart session with realistic Bangalore delivery address."""
+    session = oauth_manager.connect_demo_session()
+    commerce_adapter._catalog_cache = None
+    commerce_adapter._catalog_cache_time = 0.0
+    if redirect:
+        return RedirectResponse(url=f"http://localhost:3000{return_to}?swiggy_connected=true", status_code=307)
+    return {
+        "status": "connected",
+        "authenticated": True,
+        "active_address": oauth_manager.get_active_address(),
+        "active_address_id": oauth_manager.get_active_address_id(),
+        "session": session
+    }
+
 @app.get("/api/auth/swiggy/addresses")
 async def swiggy_addresses():
     """Lists saved addresses for authenticated Swiggy user."""
-    if not commerce_adapter.is_live:
+    if not oauth_manager.is_authenticated():
         raise HTTPException(status_code=401, detail="Swiggy Instamart is not connected")
     addresses = await commerce_adapter.get_addresses()
+    if not addresses:
+        active = oauth_manager.get_active_address()
+        if active:
+            addresses = [active]
     return {"addresses": addresses, "active_address_id": oauth_manager.get_active_address_id()}
 
 @app.post("/api/auth/swiggy/select-address")
@@ -334,6 +369,12 @@ async def process_command(req: RequestModel):
         "status": "success"
     }
 
+class BudgetUpdateRequest(BaseModel):
+    monthly: Optional[float] = None
+    monthly_budget: Optional[float] = None
+    auto_limit: Optional[float] = None
+    auto_buy_limit: Optional[float] = None
+
 @app.get("/api/budget")
 async def get_budget():
     return {
@@ -342,6 +383,27 @@ async def get_budget():
         "remaining": await budget_service.get_remaining_budget(),
         "auto_limit": budget_service.auto_limit
     }
+
+@app.post("/api/budget")
+async def update_budget(req: BudgetUpdateRequest):
+    monthly = req.monthly if req.monthly is not None else req.monthly_budget
+    auto_limit = req.auto_limit if req.auto_limit is not None else req.auto_buy_limit
+    
+    if monthly is not None:
+        budget_service.set_budget(float(monthly))
+    if auto_limit is not None:
+        budget_service.set_auto_limit(float(auto_limit))
+        
+    audit_service.log_decision(
+        "Household Budget",
+        "BUDGET_UPDATED",
+        [
+            f"Monthly budget: ₹{budget_service.monthly_budget}",
+            f"Auto limit: ₹{budget_service.auto_limit}",
+            f"Remaining: ₹{await budget_service.get_remaining_budget()}"
+        ]
+    )
+    return await get_budget()
 
 @app.get("/api/pantry")
 async def get_pantry():
@@ -380,12 +442,21 @@ async def search_products(
 
 @app.get("/api/commerce/status")
 async def get_commerce_status():
+    is_avail = not commerce_adapter.is_circuit_broken
+    err = None
+    if commerce_adapter.is_live and not is_avail:
+        err = commerce_adapter.last_error or "Swiggy Instamart is currently unavailable."
+    elif not commerce_adapter.is_live and commerce_adapter.last_error:
+        err = commerce_adapter.last_error
+
     return {
         "retailer": "swiggy_instamart",
         "retailerName": "Swiggy Instamart",
         "is_live": commerce_adapter.is_live,
+        "is_available": is_avail,
         "mode": commerce_adapter.commerce_mode,
         "mcp_url": commerce_adapter.mcp_url,
+        "error": err,
         "active_address": oauth_manager.get_active_address(),
         "active_address_id": oauth_manager.get_active_address_id(),
         "label": "Swiggy Instamart (Live MCP)" if commerce_adapter.is_live else "Swiggy Instamart (Not Connected - OAuth Required)"

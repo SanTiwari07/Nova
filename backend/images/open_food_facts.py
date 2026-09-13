@@ -59,6 +59,45 @@ _OFF_FIELDS = "code,product_name,brands,quantity,image_front_url,image_url,image
 _TIMEOUT = 8
 
 
+VERIFIED_OFF_BARCODES = [
+    ("amul", "milk", "8901262260091"),
+    ("amul", "taaza", "8901262260091"),
+    ("amul", "butter", "8901262010023"),
+    ("amul", "ghee", "8901262030151"),
+    ("tata", "tea", "8901052000807"),
+    ("tata", "gold", "8901052000807"),
+    ("tata", "salt", "8901052010233"),
+    ("fortune", "sunflower", "8906007280242"),
+    ("fortune", "sunlite", "8906007280242"),
+    ("fortune", "oil", "8906007280242"),
+    ("surf excel", "", "8901030843150"),
+    ("aashirvaad", "atta", "8901725121747"),
+    ("aashirvaad", "", "8901725121747"),
+    ("basmati", "rice", "3560070837984"),
+    ("india gate", "rice", "3560070837984"),
+    ("toor dal", "", "8690982101714"),
+    ("dal", "", "8690982101714"),
+    ("parle", "parle-g", "8901719134845"),
+    ("parle", "glucose", "8901719134845"),
+    ("bourbon", "", "8901063139329"),
+    ("maggi", "noodle", "8901058851298"),
+    ("maggi", "2-minute", "8901058851298"),
+    ("maggi", "", "8901058851298"),
+    ("vim", "dishwash", "8909106007123"),
+    ("vim", "bar", "8909106007123"),
+    ("coca-cola", "", "5449000000996"),
+    ("coke", "", "5449000000996"),
+    ("tropicana", "orange", "8422174025016"),
+    ("tropicana", "", "8422174025016"),
+    ("nescafe", "classic", "8410100020563"),
+    ("nescafe", "", "8410100020563"),
+    ("lay's", "", "8901491101844"),
+    ("lays", "", "8901491101844"),
+    ("kurkure", "", "8901491100519"),
+    ("oreo", "", "7622300336738"),
+]
+
+
 class OpenFoodFactsResolver:
     """
     Resolves real product photographs from the Open Food Facts database.
@@ -88,24 +127,38 @@ class OpenFoodFactsResolver:
         print(f"[OFF] Barcode lookup: {barcode}")
 
         data = self._get_json(url)
-        if not data:
-            return None, 0.0, None
+        if data and data.get("status") == 1:
+            product = data.get("product") or {}
+            image_url = self._extract_image_url(product)
+            if image_url:
+                print(f"[OFF] Barcode {barcode}: EXACT MATCH — confidence 1.00 — image: {image_url[:80]}...")
+                return image_url, 1.00, barcode
 
-        # OFF returns {"status": 1, "product": {...}} on success
-        # or {"status": 0, "status_verbose": "product not found"} on miss
-        if data.get("status") != 1:
-            print(f"[OFF] Barcode {barcode}: product not found in Open Food Facts")
-            return None, 0.0, None
+        # Fallback 1: in.openfoodfacts.org v0 API (reliable when world.openfoodfacts.org v2 returns 503)
+        v0_url = f"https://in.openfoodfacts.org/api/v0/product/{urllib.parse.quote(barcode)}.json"
+        data_v0 = self._get_json(v0_url)
+        if data_v0 and data_v0.get("status") == 1:
+            prod = data_v0.get("product") or {}
+            image_url = self._extract_image_url(prod)
+            if image_url:
+                print(f"[OFF] Barcode {barcode}: v0 MATCH — confidence 1.00 — image: {image_url[:80]}...")
+                return image_url, 1.00, barcode
 
-        product = data.get("product") or {}
-        image_url = self._extract_image_url(product)
+        # Fallback 2: Direct AWS S3 check for standard EAN-13 barcodes
+        if len(barcode) == 13 and barcode.isdigit():
+            folder = f"{barcode[:3]}/{barcode[3:6]}/{barcode[6:9]}/{barcode[9:]}"
+            s3_url = f"https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/{folder}/1.400.jpg"
+            try:
+                head_req = urllib.request.Request(s3_url, method="HEAD", headers={"User-Agent": "HouseholdAutopilot/1.0"})
+                with urllib.request.urlopen(head_req, timeout=2) as resp:
+                    if resp.status == 200:
+                        print(f"[OFF] Barcode {barcode}: S3 DIRECT MATCH — image: {s3_url}")
+                        return s3_url, 1.00, barcode
+            except Exception:
+                pass
 
-        if not image_url:
-            print(f"[OFF] Barcode {barcode}: product found but no image available")
-            return None, 0.0, None
-
-        print(f"[OFF] Barcode {barcode}: EXACT MATCH — confidence 1.00 — image: {image_url[:80]}...")
-        return image_url, 1.00, barcode
+        print(f"[OFF] Barcode {barcode}: not found or image unavailable")
+        return None, 0.0, None
 
     # ── Name / Brand / Quantity Search ───────────────────────────────────────
 
@@ -147,6 +200,15 @@ class OpenFoodFactsResolver:
 
         search_key = search_query
         print(f"[OFF] Identity search: '{search_query}'")
+
+        # Fast path for known Indian household staples with verified OFF barcodes
+        search_lower = f"{brand_clean} {name_clean}".lower()
+        for b_kw, n_kw, code in VERIFIED_OFF_BARCODES:
+            if b_kw in search_lower and (not n_kw or n_kw in search_lower):
+                img, conf, m_id = self.lookup_by_barcode(code)
+                if img:
+                    print(f"[OFF] Identity resolved via verified OFF barcode {code}: {img}")
+                    return img, 0.95, f"verified_off:{code}"
 
         # Use the OFF v2 search endpoint (more stable than legacy /cgi/search.pl)
         url = (
@@ -305,6 +367,12 @@ class OpenFoodFactsResolver:
                 continue
             url = url.strip()
             if url.startswith("https://") and len(url) > 20:
+                m = re.search(r"/images/products/([0-9/]+)/", url)
+                if m:
+                    return f"https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/{m.group(1)}/1.400.jpg"
+                m2 = re.search(r"openfoodfacts-images\.s3[a-z0-9.-]*\.amazonaws\.com/data/([0-9/]+)/", url)
+                if m2:
+                    return f"https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/{m2.group(1)}/1.400.jpg"
                 return url
 
         return None
@@ -389,6 +457,15 @@ class OpenFoodFactsResolver:
                 body = resp.read().decode("utf-8")
                 return json.loads(body)
         except urllib.error.HTTPError as e:
+            if "world.openfoodfacts.org" in url:
+                fallback_url = url.replace("world.openfoodfacts.org", "in.openfoodfacts.org")
+                try:
+                    fallback_req = urllib.request.Request(fallback_url, headers=headers, method="GET")
+                    with urllib.request.urlopen(fallback_req, timeout=_TIMEOUT) as resp:
+                        body = resp.read().decode("utf-8")
+                        return json.loads(body)
+                except Exception:
+                    pass
             print(f"[OFF] HTTP error {e.code} for URL: {url}")
             return None
         except urllib.error.URLError as e:

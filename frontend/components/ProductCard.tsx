@@ -40,11 +40,10 @@ export default function ProductCard({ product }: { product: Product }) {
   // If no imageUrl was provided by Swiggy, we resolve it asynchronously from
   // Open Food Facts via the ImageResolver pipeline.
   const initialImageUrl = product.imageUrl || product.image || null;
-  const initialStatus = product.imageStatus || (initialImageUrl ? "found" : "pending");
 
   const [resolvedImageUrl, setResolvedImageUrl] = useState<string | null>(initialImageUrl);
   const [imageSource, setImageSource] = useState<string | null>(product.imageSource || null);
-  const [imageResolving, setImageResolving] = useState(initialStatus === "pending" && !initialImageUrl);
+  const [imageResolving, setImageResolving] = useState(!initialImageUrl);
   const resolveAttempted = useRef(false);
 
   useEffect(() => {
@@ -52,8 +51,7 @@ export default function ProductCard({ product }: { product: Product }) {
     const newUrl = product.imageUrl || product.image || null;
     setResolvedImageUrl(newUrl);
     setImageSource(product.imageSource || (newUrl ? "swiggy" : null));
-    const newStatus = product.imageStatus || (newUrl ? "found" : "pending");
-    setImageResolving(newStatus === "pending" && !newUrl);
+    setImageResolving(!newUrl);
     resolveAttempted.current = false;
   }, [product.id, product.imageUrl, product.image]);
 
@@ -144,6 +142,7 @@ export default function ProductCard({ product }: { product: Product }) {
             alt={product.name}
             category={product.category}
             id={product.id}
+            product={product}
             imageSource={imageSource}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"

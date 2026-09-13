@@ -1,5 +1,6 @@
 import './globals.css';
 import Header from '@/components/Header';
+import FloatingCopilotDrawer from '@/components/FloatingCopilotDrawer';
 
 export const metadata = {
   title: 'NOVA — Household Shopping & Autopilot',
@@ -16,6 +17,7 @@ export default function RootLayout({
       <body className="antialiased text-neutral-900 bg-[#f3f3f3]">
         <Header />
         {children}
+        <FloatingCopilotDrawer />
       </body>
     </html>
   );

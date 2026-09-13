@@ -231,7 +231,7 @@ class ImageResolver:
             url = url.strip()
             if not url or url.lower() in ("none", "null", "undefined"):
                 continue
-            if url.startswith("https://") or url.startswith("http://"):
+            if url.startswith("https://") or url.startswith("http://") or url.startswith("/"):
                 return url
             # Swiggy media-assets relative hash path
             if "/" in url or len(url) > 10:

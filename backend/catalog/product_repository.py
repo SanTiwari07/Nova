@@ -21,7 +21,23 @@ class ProductRepository:
                 item["subcategory"] = cls_info["subcategory"]
                 item["section"] = cls_info["section"]
                 item["keywords"] = cls_info["keywords"]
-                item["tags"] = list(set((item.get("tags") or []) + cls_info["keywords"]))
+                # Authenticate image URL — only genuine HTTP/HTTPS URLs are retained
+                raw_img = item.get("imageUrl") or item.get("image")
+                if raw_img and str(raw_img).startswith("/assets/fallbacks/"):
+                    raw_img = None
+
+                if raw_img and (str(raw_img).startswith("http://") or str(raw_img).startswith("https://")):
+                    item["imageUrl"] = raw_img
+                    item["image"] = raw_img
+                    item["images"] = [raw_img]
+                    item["imageStatus"] = "found"
+                    item["imageSource"] = "catalog"
+                else:
+                    item["imageUrl"] = None
+                    item["image"] = None
+                    item["images"] = []
+                    item["imageStatus"] = "unavailable"
+                    item["imageSource"] = None
                 self.products.append(item)
                 
     def get_all(self, skip: int = 0, limit: int = 250) -> List[Dict[str, Any]]:

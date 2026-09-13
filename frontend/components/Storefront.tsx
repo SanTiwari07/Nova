@@ -5,6 +5,7 @@ import Link from "next/link";
 import ProductShelf from "@/components/ProductShelf";
 import CategoryCard from "@/components/CategoryCard";
 import CommandBox from "@/components/CommandBox";
+import BudgetModal from "@/components/BudgetModal";
 import {
   Zap,
   Sparkles,
@@ -25,6 +26,7 @@ import {
   Layers,
   ArrowRight,
   RefreshCw,
+  SlidersHorizontal,
 } from "lucide-react";
 
 interface Product {
@@ -109,6 +111,7 @@ export default function Storefront() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [budget, setBudget] = useState<{ monthly: number; spent: number; remaining: number; auto_limit: number } | null>(null);
   const [status, setStatus] = useState<any>(null);
+  const [budgetModalOpen, setBudgetModalOpen] = useState(false);
 
   useEffect(() => {
     async function loadInitialData() {
@@ -135,9 +138,11 @@ export default function Storefront() {
       loadInitialData();
     };
     window.addEventListener("household-updated", handleUpdate);
+    window.addEventListener("budget-updated", handleUpdate);
     window.addEventListener("cart-updated", handleUpdate);
     return () => {
       window.removeEventListener("household-updated", handleUpdate);
+      window.removeEventListener("budget-updated", handleUpdate);
       window.removeEventListener("cart-updated", handleUpdate);
     };
   }, []);
@@ -239,217 +244,265 @@ export default function Storefront() {
 
   return (
     <div className="min-h-screen bg-[#EAEDED] text-neutral-900 font-sans">
-      {/* ── 1. PROMOTIONAL COMMERCE HERO CAROUSEL ─────────────────────────── */}
-      <div className="relative w-full max-w-[1500px] mx-auto overflow-hidden">
-        <div
-          className={`w-full transition-all duration-700 bg-gradient-to-r ${slide.bgGradient} px-6 md:px-12 pt-8 pb-36 md:pb-44 flex flex-col justify-between`}
-        >
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-black/10 text-neutral-900 text-[11px] font-bold tracking-wide uppercase mb-3 backdrop-blur-xs">
-              {slide.icon === "zap" && <Zap className="w-3.5 h-3.5" />}
-              {slide.icon === "alert" && <AlertCircle className="w-3.5 h-3.5" />}
-              {slide.icon === "shield" && <ShieldCheck className="w-3.5 h-3.5" />}
-              {slide.badge}
-            </div>
-            <h1 className="text-3xl md:text-5xl font-black text-neutral-900 tracking-tight leading-tight mb-2">
-              {slide.title}
-            </h1>
-            <p className="text-base md:text-xl font-semibold text-neutral-800 mb-2">
-              {slide.subtitle}
-            </p>
-            <p className="text-xs md:text-sm text-neutral-700 max-w-xl mb-5">
-              {slide.detail}
-            </p>
-            <Link
-              href={slide.href}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#131921] hover:bg-[#232F3E] text-white text-xs font-bold rounded shadow-md transition-all hover:translate-x-0.5"
+      {/* ── 0. AMBIENT NOVA AI COMMERCE LAYER BANNER ────────────────────── */}
+      <div className="bg-[#131921] border-b border-amber-500/30 text-white px-4 py-2.5 shadow-xs">
+        <div className="max-w-[1500px] mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="font-bold text-[#FF9900] tracking-wide uppercase text-[11px]">
+              NOVA Autonomous Commerce Layer
+            </span>
+            <span className="text-neutral-400 hidden sm:inline">&middot; Active on Amazon India</span>
+            <span className="bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded text-[10px] font-mono">
+              AWS Strands SDK
+            </span>
+          </div>
+          <div className="flex items-center gap-4 text-[11px] text-neutral-300">
+            <span className="hidden md:inline">
+              Pantry Health: <strong className="text-white">92%</strong>
+            </span>
+            <span>
+              Budget Left: <strong className="text-emerald-400">₹{(budget?.remaining || 1560).toLocaleString("en-IN")}</strong>
+            </span>
+            <button
+              type="button"
+              onClick={() => setBudgetModalOpen(true)}
+              className="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-white font-semibold rounded text-[11px] transition-colors flex items-center gap-1 border border-white/20 cursor-pointer"
             >
-              {slide.cta} &rarr;
-            </Link>
-          </div>
-
-          {/* Carousel dots */}
-          <div className="absolute top-6 right-6 flex items-center gap-1.5 z-20">
-            {HERO_SLIDES.map((s, idx) => (
-              <button
-                key={s.id}
-                onClick={() => setCurrentSlide(idx)}
-                className={`w-2.5 h-2.5 rounded-full transition-all ${
-                  currentSlide === idx ? "bg-[#131921] w-6" : "bg-black/20 hover:bg-black/40"
-                }`}
-                aria-label={`Slide ${idx + 1}`}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* ── 2. SIGNATURE 4-UP FEATURE CARDS OVERLAPPING BANNER ──── */}
-        <div className="relative -mt-24 md:-mt-32 px-4 z-20 mb-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Box 1: Restock Essentials */}
-            <div className="bg-white p-4 rounded-sm border border-neutral-200 shadow-sm flex flex-col justify-between">
-              <div>
-                <h2 className="text-base font-bold text-neutral-900 mb-3">
-                  Household Essentials | Restock
-                </h2>
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  {[
-                    { name: "Atta & Flour", href: "/catalog?category=Atta%20%26%20Rice", icon: Package, color: "bg-amber-50 text-amber-700 border-amber-100" },
-                    { name: "Basmati Rice", href: "/catalog?category=Atta%20%26%20Rice", icon: Utensils, color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-                    { name: "Cooking Oils", href: "/catalog?category=Cooking%20Oils", icon: Droplet, color: "bg-yellow-50 text-yellow-700 border-yellow-100" },
-                    { name: "Dals & Pulses", href: "/catalog?category=Dal%20%26%20Pulses", icon: Layers, color: "bg-orange-50 text-orange-700 border-orange-100" },
-                  ].map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        className="group flex flex-col items-center text-center p-2 rounded-lg border border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50 transition-all"
-                      >
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-1.5 border ${item.color} group-hover:scale-105 transition-transform`}>
-                          <Icon className="w-6 h-6" />
-                        </div>
-                        <span className="text-[11px] font-semibold text-neutral-700 group-hover:text-[#C7511F] truncate w-full">
-                          {item.name}
-                        </span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-              <Link
-                href="/catalog?category=Atta%20%26%20Rice"
-                className="text-xs font-semibold text-[#007185] hover:text-[#C7511F] hover:underline"
-              >
-                See all groceries &rarr;
-              </Link>
-            </div>
-
-            {/* Box 2: NOVA Autopilot Routine Picks */}
-            <div className="bg-white p-4 rounded-sm border border-neutral-200 shadow-sm flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-base font-bold text-neutral-900">
-                    NOVA Autopilot | Predictions
-                  </h2>
-                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                </div>
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  {[
-                    { name: "Amul Milk 1L", tag: "Due Tomorrow", color: "bg-red-50 text-red-700", icon: Milk, boxColor: "bg-blue-50 text-blue-700 border-blue-100", productId: "prod_000109" },
-                    { name: "Tata Tea 500g", tag: "Due in 5d", color: "bg-orange-50 text-orange-700", icon: Coffee, boxColor: "bg-amber-50 text-amber-700 border-amber-100", productId: "prod_000080" },
-                    { name: "Cooking Oil 1L", tag: "Stock Good", color: "bg-green-50 text-green-700", icon: Sun, boxColor: "bg-yellow-50 text-yellow-700 border-yellow-100", productId: "prod_000031" },
-                    { name: "Surf Excel 1kg", tag: "Due in 8d", color: "bg-blue-50 text-blue-700", icon: Sparkles, boxColor: "bg-cyan-50 text-cyan-700 border-cyan-100", productId: "prod_000091" },
-                  ].map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={item.name}
-                        href={`/catalog/${item.productId}`}
-                        className="group flex flex-col items-center text-center p-2 rounded-lg border border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50 cursor-pointer transition-all"
-                      >
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-1.5 border ${item.boxColor} group-hover:scale-105 transition-transform`}>
-                          <Icon className="w-6 h-6" />
-                        </div>
-                        <span className="text-[11px] font-semibold text-neutral-800 truncate w-full group-hover:text-[#C7511F]">
-                          {item.name}
-                        </span>
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full mt-1 ${item.color}`}>
-                          {item.tag}
-                        </span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-              <Link
-                href="/autopilot"
-                className="text-xs font-semibold text-[#007185] hover:text-[#C7511F] hover:underline"
-              >
-                Manage household plan &rarr;
-              </Link>
-            </div>
-
-            {/* Box 3: Snacks & Beverages */}
-            <div className="bg-white p-4 rounded-sm border border-neutral-200 shadow-sm flex flex-col justify-between">
-              <div>
-                <h2 className="text-base font-bold text-neutral-900 mb-3">
-                  Up to 40% off | Daily Snacks
-                </h2>
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  {[
-                    { name: "Biscuits", href: "/catalog?category=Snacks%20%26%20Biscuits", icon: Cookie, color: "bg-amber-50 text-amber-700 border-amber-100" },
-                    { name: "Noodles", href: "/catalog?category=Instant%20Noodles", icon: Utensils, color: "bg-orange-50 text-orange-700 border-orange-100" },
-                    { name: "Chocolates", href: "/catalog?category=Snacks%20%26%20Biscuits", icon: Package, color: "bg-rose-50 text-rose-700 border-rose-100" },
-                    { name: "Cold Drinks", href: "/catalog?category=Beverages", icon: CupSoda, color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-                  ].map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        className="group flex flex-col items-center text-center p-2 rounded-lg border border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50 transition-all"
-                      >
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-1.5 border ${item.color} group-hover:scale-105 transition-transform`}>
-                          <Icon className="w-6 h-6" />
-                        </div>
-                        <span className="text-[11px] font-semibold text-neutral-700 group-hover:text-[#C7511F] truncate w-full">
-                          {item.name}
-                        </span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-              <Link
-                href="/catalog?category=Snacks%20%26%20Biscuits"
-                className="text-xs font-semibold text-[#007185] hover:text-[#C7511F] hover:underline"
-              >
-                See all snacks &amp; drinks &rarr;
-              </Link>
-            </div>
-
-            {/* Box 4: Household Budget & Policy */}
-            <div className="bg-white p-4 rounded-sm border border-neutral-200 shadow-sm flex flex-col justify-between">
-              <div>
-                <h2 className="text-base font-bold text-neutral-900 mb-3">
-                  Household Budget &amp; Safety
-                </h2>
-                <div className="space-y-2 mb-4 text-xs">
-                  <div className="p-2.5 bg-neutral-50 rounded border border-neutral-100 flex justify-between items-center">
-                    <span className="text-neutral-500">Monthly Budget:</span>
-                    <span className="font-bold text-neutral-900">
-                      ₹{(budget?.monthly || 5000).toLocaleString("en-IN")}
-                    </span>
-                  </div>
-                  <div className="p-2.5 bg-green-50 rounded border border-green-100 flex justify-between items-center">
-                    <span className="text-green-700 font-medium">Remaining:</span>
-                    <span className="font-black text-green-800 text-sm">
-                      ₹{(budget?.remaining || 1580).toLocaleString("en-IN")}
-                    </span>
-                  </div>
-                  <div className="p-2.5 bg-orange-50 rounded border border-orange-100 flex justify-between items-center">
-                    <span className="text-orange-800 font-medium">Auto Limit per Item:</span>
-                    <span className="font-bold text-orange-900">
-                      ₹{(budget?.auto_limit || 500).toLocaleString("en-IN")}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <Link
-                href="/budget"
-                className="text-xs font-semibold text-[#007185] hover:text-[#C7511F] hover:underline"
-              >
-                Manage budget &amp; limits &rarr;
-              </Link>
-            </div>
+              <SlidersHorizontal className="w-3 h-3 text-[#FF9900]" />
+              Edit Budget
+            </button>
           </div>
         </div>
       </div>
 
-      {/* ── 3. NOVA AUTONOMOUS HOUSEHOLD COPILOT (AWS STRANDS AGENT) ──────── */}
+      {/* ── 1. SPLIT HERO: AMAZON DEALS CAROUSEL + NOVA COPILOT ───────── */}
+      <div className="max-w-[1500px] mx-auto px-4 pt-4 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          
+          {/* Left Column (7 cols): Amazon Super Value Days Deals Carousel */}
+          <div className="lg:col-span-7 flex flex-col">
+            <div
+              className={`relative h-full min-h-[360px] rounded-2xl overflow-hidden transition-all duration-700 bg-gradient-to-r ${slide.bgGradient} p-6 md:p-8 flex flex-col justify-between border border-black/5 shadow-xs`}
+            >
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-black/10 text-neutral-900 text-[11px] font-bold tracking-wide uppercase mb-3 backdrop-blur-xs">
+                  {slide.icon === "zap" && <Zap className="w-3.5 h-3.5" />}
+                  {slide.icon === "alert" && <AlertCircle className="w-3.5 h-3.5" />}
+                  {slide.icon === "shield" && <ShieldCheck className="w-3.5 h-3.5" />}
+                  {slide.badge}
+                </div>
+                <h1 className="text-2xl md:text-4xl font-black text-neutral-900 tracking-tight leading-tight mb-2">
+                  {slide.title}
+                </h1>
+                <p className="text-base md:text-lg font-semibold text-neutral-800 mb-2">
+                  {slide.subtitle}
+                </p>
+                <p className="text-xs md:text-sm text-neutral-700 max-w-xl mb-4">
+                  {slide.detail}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 mt-auto">
+                <Link
+                  href={slide.href}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#131921] hover:bg-[#232F3E] text-white text-xs font-bold rounded-xl shadow-md transition-all hover:translate-x-0.5"
+                >
+                  {slide.cta} &rarr;
+                </Link>
+
+                {/* Carousel dots */}
+                <div className="flex items-center gap-1.5">
+                  {HERO_SLIDES.map((s, idx) => (
+                    <button
+                      key={s.id}
+                      onClick={() => setCurrentSlide(idx)}
+                      className={`w-2.5 h-2.5 rounded-full transition-all ${
+                        currentSlide === idx ? "bg-[#131921] w-6" : "bg-black/20 hover:bg-black/40"
+                      }`}
+                      aria-label={`Slide ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column (5 cols): NOVA Autonomous Copilot Console */}
+          <div className="lg:col-span-5 flex flex-col">
+            <CommandBox id="hero-copilot" />
+          </div>
+
+        </div>
+      </div>
+
+      {/* ── 2. SIGNATURE 4-UP FEATURE CARDS ───────────────────────────── */}
       <div className="max-w-[1500px] mx-auto px-4 mb-6">
-        <CommandBox />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Box 1: Restock Essentials */}
+          <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-xs flex flex-col justify-between hover:shadow-sm transition-all">
+            <div>
+              <h2 className="text-base font-bold text-neutral-900 mb-3">
+                Household Essentials | Restock
+              </h2>
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                {[
+                  { name: "Atta & Flour", href: "/catalog?category=Atta%20%26%20Rice", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/172/512/1747/1.400.jpg" },
+                  { name: "Basmati Rice", href: "/catalog?category=Atta%20%26%20Rice", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/356/007/083/7984/1.400.jpg" },
+                  { name: "Cooking Oils", href: "/catalog?category=Cooking%20Oils", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/600/728/0242/1.400.jpg" },
+                  { name: "Dals & Pulses", href: "/catalog?category=Dal%20%26%20Pulses", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/869/098/210/1714/1.400.jpg" },
+                ].map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className="group flex flex-col items-center text-center p-2 rounded-lg border border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50 transition-all bg-white"
+                  >
+                    <div className="w-16 h-16 rounded-lg flex items-center justify-center mb-1.5 p-1 bg-white border border-neutral-200/80 group-hover:scale-105 transition-transform overflow-hidden shadow-xs">
+                      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain" />
+                    </div>
+                    <span className="text-[11px] font-semibold text-neutral-700 group-hover:text-[#C7511F] truncate w-full">
+                      {item.name}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+            <Link
+              href="/catalog?category=Atta%20%26%20Rice"
+              className="text-xs font-semibold text-[#007185] hover:text-[#C7511F] hover:underline"
+            >
+              See all groceries &rarr;
+            </Link>
+          </div>
+
+          {/* Box 2: NOVA Autopilot Routine Picks */}
+          <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-xs flex flex-col justify-between hover:shadow-sm transition-all">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-base font-bold text-neutral-900">
+                  NOVA Autopilot | Predictions
+                </h2>
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              </div>
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                {[
+                  { name: "Amul Milk 1L", tag: "Due Tomorrow", color: "bg-red-50 text-red-700", productId: "prod_000109", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/126/226/0091/1.400.jpg" },
+                  { name: "Tata Tea 500g", tag: "Due in 5d", color: "bg-orange-50 text-orange-700", productId: "prod_000080", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/200/0807/1.400.jpg" },
+                  { name: "Cooking Oil 1L", tag: "Stock Good", color: "bg-green-50 text-green-700", productId: "prod_000031", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/600/728/0242/1.400.jpg" },
+                  { name: "Surf Excel 1kg", tag: "Due in 8d", color: "bg-blue-50 text-blue-700", productId: "prod_000091", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/103/084/3150/1.400.jpg" },
+                ].map((item) => (
+                  <Link
+                    key={item.name}
+                    href={`/catalog/${item.productId}`}
+                    className="group flex flex-col items-center text-center p-2 rounded-lg border border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50 cursor-pointer transition-all bg-white"
+                  >
+                    <div className="w-16 h-16 rounded-lg flex items-center justify-center mb-1.5 p-1 bg-white border border-neutral-200/80 group-hover:scale-105 transition-transform overflow-hidden shadow-xs">
+                      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain" />
+                    </div>
+                    <span className="text-[11px] font-semibold text-neutral-800 truncate w-full group-hover:text-[#C7511F]">
+                      {item.name}
+                    </span>
+                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full mt-1 ${item.color}`}>
+                      {item.tag}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+            <Link
+              href="/autopilot"
+              className="text-xs font-semibold text-[#007185] hover:text-[#C7511F] hover:underline"
+            >
+              Manage household plan &rarr;
+            </Link>
+          </div>
+
+          {/* Box 3: Snacks & Beverages */}
+          <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-xs flex flex-col justify-between hover:shadow-sm transition-all">
+            <div>
+              <h2 className="text-base font-bold text-neutral-900 mb-3">
+                Up to 40% off | Daily Snacks
+              </h2>
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                {[
+                  { name: "Biscuits", href: "/catalog?category=Snacks%20%26%20Biscuits", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/171/913/4845/1.400.jpg" },
+                  { name: "Noodles", href: "/catalog?category=Instant%20Noodles", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/105/885/1298/1.400.jpg" },
+                  { name: "Cookies", href: "/catalog?category=Snacks%20%26%20Biscuits", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/890/106/313/9329/1.400.jpg" },
+                  { name: "Cold Drinks", href: "/catalog?category=Beverages", imageUrl: "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/544/900/000/0996/1.400.jpg" },
+                ].map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className="group flex flex-col items-center text-center p-2 rounded-lg border border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50 transition-all bg-white"
+                  >
+                    <div className="w-16 h-16 rounded-lg flex items-center justify-center mb-1.5 p-1 bg-white border border-neutral-200/80 group-hover:scale-105 transition-transform overflow-hidden shadow-xs">
+                      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain" />
+                    </div>
+                    <span className="text-[11px] font-semibold text-neutral-700 group-hover:text-[#C7511F] truncate w-full">
+                      {item.name}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+            <Link
+              href="/catalog?category=Snacks%20%26%20Biscuits"
+              className="text-xs font-semibold text-[#007185] hover:text-[#C7511F] hover:underline"
+            >
+              See all snacks &amp; drinks &rarr;
+            </Link>
+          </div>
+
+          {/* Box 4: Household Budget & Policy */}
+          <div className="bg-white p-4 rounded-xl border-2 border-amber-400/40 shadow-xs flex flex-col justify-between hover:border-amber-400 hover:shadow-sm transition-all">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-base font-bold text-neutral-900">
+                  Household Budget &amp; Safety
+                </h2>
+                <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded">
+                  NOVA Safety
+                </span>
+              </div>
+              <div className="space-y-2 mb-4 text-xs">
+                <div className="p-2.5 bg-neutral-50 rounded-lg border border-neutral-100 flex justify-between items-center">
+                  <span className="text-neutral-500">Monthly Budget:</span>
+                  <span className="font-bold text-neutral-900">
+                    ₹{(budget?.monthly || 5000).toLocaleString("en-IN")}
+                  </span>
+                </div>
+                <div className="p-2.5 bg-green-50 rounded-lg border border-green-100 flex justify-between items-center">
+                  <span className="text-green-700 font-medium">Remaining:</span>
+                  <span className="font-black text-green-800 text-sm">
+                    ₹{(budget?.remaining || 1580).toLocaleString("en-IN")}
+                  </span>
+                </div>
+                <div className="p-2.5 bg-orange-50 rounded-lg border border-orange-100 flex justify-between items-center">
+                  <span className="text-orange-800 font-medium">Auto Limit per Item:</span>
+                  <span className="font-bold text-orange-900">
+                    ₹{(budget?.auto_limit || 500).toLocaleString("en-IN")}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between pt-2 border-t border-neutral-100">
+              <button
+                type="button"
+                onClick={() => setBudgetModalOpen(true)}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#131921] bg-[#FFD814] hover:bg-[#F7CA00] px-3 py-1.5 rounded-lg shadow-xs transition-colors cursor-pointer"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                Edit Budget
+              </button>
+              <Link
+                href="/budget"
+                className="text-xs font-semibold text-[#007185] hover:text-[#C7511F] hover:underline"
+              >
+                Full breakdown &rarr;
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ── 4. CONTEXTUAL NOVA ASSISTANT BANNER ─────────────────────────────── */}
@@ -658,6 +711,14 @@ export default function Storefront() {
           </p>
         </div>
       </footer>
+
+      {/* Budget Edit Modal */}
+      <BudgetModal
+        isOpen={budgetModalOpen}
+        onClose={() => setBudgetModalOpen(false)}
+        initialMonthly={budget?.monthly}
+        initialAutoLimit={budget?.auto_limit}
+      />
     </div>
   );
 }

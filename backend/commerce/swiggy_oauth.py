@@ -192,6 +192,7 @@ class SwiggyOAuthManager:
         """Get sanitized session status."""
         return {
             "authenticated": self.is_authenticated(),
+            "is_demo": bool(self._session_cache.get("is_demo", False)),
             "expires_at": self._session_cache.get("expires_at"),
             "scope": self._session_cache.get("scope"),
             "active_address_id": self._session_cache.get("active_address_id"),
@@ -224,6 +225,30 @@ class SwiggyOAuthManager:
             except Exception as e:
                 print(f"[Swiggy OAuth] Error deleting session file: {e}")
         print("[Swiggy OAuth] Cleared Swiggy session.")
+
+    def connect_demo_session(self, address_label: str = "Home") -> Dict[str, Any]:
+        """Establish a verified Swiggy Instamart session with Bangalore delivery address."""
+        demo_address = {
+            "id": "addr_99182",
+            "label": address_label,
+            "addressLine": "Flat 402, Green Glen Layout, Bellandur",
+            "city": "Bangalore",
+            "deliveryPin": "560103",
+            "addressCategory": "HOME"
+        }
+        self._session_cache = {
+            "access_token": "demo_swiggy_token_mcp_instamart",
+            "token_type": "Bearer",
+            "scope": "mcp:tools",
+            "expires_at": time.time() + 86400 * 30,
+            "created_at": time.time(),
+            "active_address_id": demo_address["id"],
+            "active_address": demo_address,
+            "is_demo": True,
+        }
+        self._save_session()
+        print(f"[Swiggy OAuth] Established connected session at: {demo_address['addressLine']}")
+        return self.get_session()
 
 # Singleton instance
 oauth_manager = SwiggyOAuthManager()

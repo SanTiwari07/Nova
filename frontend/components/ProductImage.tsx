@@ -28,6 +28,14 @@ interface ProductImageProps {
   priority?: boolean;
 }
 
+/**
+ * @deprecated Hardcoded fallback assets are removed per Household Autopilot spec.
+ * Returns empty string so callers never receive synthetic or local fake assets.
+ */
+export function getProductFallbackImage(_name?: string, _category?: string): string {
+  return "";
+}
+
 export default function ProductImage({
   src,
   alt,
@@ -50,13 +58,11 @@ export default function ProductImage({
     product?.images?.[0] ||
     null;
 
-  // Validate the URL — must be a real HTTPS/HTTP/relative URL, not fabricated
+  // Validate the URL — must be a genuine HTTP/HTTPS remote URL, never local assets or placeholders
   const isValidUrl =
     typeof candidateSrc === 'string' &&
     candidateSrc.trim().length > 0 &&
-    (candidateSrc.startsWith('http://') ||
-      candidateSrc.startsWith('https://') ||
-      candidateSrc.startsWith('/'));
+    (candidateSrc.startsWith('http://') || candidateSrc.startsWith('https://'));
 
   const [hasError, setHasError] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -66,9 +72,8 @@ export default function ProductImage({
     setIsLoaded(false);
   }, [candidateSrc]);
 
-  // If no authentic image URL exists or load failed, render neutral UI placeholder.
-  // NEVER use emoji here. NEVER use AI-generated art here.
-  if (!isValidUrl || hasError) {
+  // When no authentic remote URL is present or image loading fails, render clean neutral placeholder
+  if (!isValidUrl || hasError || !candidateSrc) {
     return (
       <div
         className={`flex flex-col items-center justify-center w-full h-full bg-neutral-50/80 text-neutral-400 p-2 sm:p-4 border border-neutral-100 rounded select-none overflow-hidden ${className}`}
@@ -94,7 +99,7 @@ export default function ProductImage({
   }
 
   const commonProps = {
-    src: candidateSrc!,
+    src: candidateSrc,
     alt: alt || 'Product image',
     className: `object-contain transition-opacity duration-200 ${
       isLoaded ? 'opacity-100' : 'opacity-0'

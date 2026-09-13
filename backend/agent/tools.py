@@ -109,7 +109,7 @@ def create_nova_tools(
         Retrieve high-level overview of the household state: budget remaining, items running low,
         active reminders, and potential savings opportunities.
         """
-        recurring = history_service.get_recurring_products()
+        recurring = history_service.get_recurring_products() if history_service else []
         due_soon = [p for p in recurring if p.get("days_until_needed", 30) <= 7]
         pantry = inventory_service.get_all()
         low_pantry = [p for p in pantry if p.get("status") == "LOW"]
@@ -180,14 +180,12 @@ def create_nova_tools(
         """
         filters = {"category": category} if category else None
         try:
-            results = await commerce_adapter.search_products(query, filters)
-        except TypeError:
+            results = await commerce_adapter.search_products(query=query, category=category, filters=filters)
+        except Exception:
             try:
-                results = await commerce_adapter.search_products(query)
+                results = await commerce_adapter.search_products(query=query)
             except Exception as e:
                 return [{"error": str(e)}]
-        except Exception as e:
-            return [{"error": str(e)}]
 
         if not results:
             return []
