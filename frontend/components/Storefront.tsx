@@ -7,6 +7,7 @@ import CategoryCard from "@/components/CategoryCard";
 import ProductImage from "@/components/ProductImage";
 import CommandBox from "@/components/CommandBox";
 import BudgetModal from "@/components/BudgetModal";
+import ProductImage from "@/components/ProductImage";
 import {
   Zap,
   Sparkles,

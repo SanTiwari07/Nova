@@ -5,13 +5,19 @@ Prevents repeated Open Food Facts API calls for the same product.
 Cache records include source, confidence, matched identifier and expiry.
 
 No image files are stored locally — only remote URLs are cached.
+
+CRITICAL CACHING RULES:
+  - "found" results (real URL) → cache for 24 hours
+  - "unavailable" confirmed (product checked, truly no image) → cache for 1 hour
+  - Transient failures (429, 503, timeout) → NEVER stored as "unavailable"; caller
+    must handle retry instead of caching the failure.
 """
 
 import time
 import os
 from typing import Dict, Any, Optional
 
-# Default TTL: 24 hours for successful resolutions, 1 hour for "unavailable"
+# Default TTL: 24 hours for successful resolutions, 1 hour for "confirmed unavailable"
 CACHE_TTL_FOUND = int(os.environ.get("IMAGE_CACHE_TTL_FOUND", str(24 * 3600)))
 CACHE_TTL_UNAVAILABLE = int(os.environ.get("IMAGE_CACHE_TTL_UNAVAILABLE", str(3600)))
 
@@ -68,8 +74,15 @@ class ImageCache:
         matched_identifier: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Store a resolved image URL (or null / unavailable) in the cache.
-        TTL differs for successful vs unsuccessful resolutions.
+        Store a resolved image URL (or confirmed unavailable) in the cache.
+
+        TTL:
+          - found URL          → CACHE_TTL_FOUND (default 24h)
+          - confirmed unavail  → CACHE_TTL_UNAVAILABLE (default 1h)
+
+        NEVER call this with source="unavailable" when the cause was a transient
+        network failure (timeout, 429, 503). Only call when the product was actually
+        confirmed to have no usable image after exhausting all sources.
         """
         now = time.time()
         ttl = CACHE_TTL_FOUND if image_url else CACHE_TTL_UNAVAILABLE
@@ -109,6 +122,24 @@ class ImageCache:
         except Exception:
             pass
         print("[ImageCache] CLEARED")
+
+    def clear_unavailable(self) -> int:
+        """
+        Remove all cache entries where source='unavailable' and url=None.
+        Returns the number of entries removed.
+
+        Use this to invalidate stale failure records so products get a fresh
+        resolution attempt (e.g. after fixing the pipeline or on server restart).
+        """
+        to_remove = [
+            k for k, v in self._store.items()
+            if v.get("source") == "unavailable" and not v.get("imageUrl")
+        ]
+        for k in to_remove:
+            del self._store[k]
+        if to_remove:
+            print(f"[ImageCache] CLEARED {len(to_remove)} unavailable entries")
+        return len(to_remove)
 
     def stats(self) -> Dict[str, Any]:
         """Return cache statistics for observability."""

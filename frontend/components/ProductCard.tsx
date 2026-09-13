@@ -75,7 +75,7 @@ export default function ProductCard({ product }: { product: Product }) {
         unit: product.unit || null,
         pack_size: product.pack_size || null,
         barcode: product.barcode || null,
-        swiggy_image_url: null,
+        swiggy_image_url: initialImageUrl || null,
       }),
     })
       .then((r) => r.json())

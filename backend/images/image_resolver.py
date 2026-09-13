@@ -4,24 +4,34 @@ ImageResolver — orchestrates the full product image resolution pipeline.
 Resolution priority (strictly ordered):
 
   PRIORITY 1 — Genuine Swiggy CDN image URL
-    If the Swiggy MCP response contains a legitimate HTTPS image URL,
-    validate it and use it directly.
+    If the product already has a Swiggy CDN imageUrl, return it DIRECTLY
+    without any further validation or OFF lookup. The Swiggy CDN is always
+    authoritative. Trust it. Pass it straight to the frontend.
 
-  PRIORITY 2 — Open Food Facts barcode / GTIN match
-    If Swiggy provides an authentic barcode/GTIN/EAN/UPC, use it for an exact
-    OFF lookup. Confidence = 1.00.
+  PRIORITY 2 — Swiggy image URL present but not yet validated
+    If the Swiggy response contains an imageUrl field and it looks like a
+    real CDN URL, validate it and return it if valid. If validation fails
+    due to a TRANSIENT error (timeout, SSL, 429/503), still return the URL
+    to the browser — let the browser try fetching it directly instead of
+    burying the image in a server-side timeout.
 
-  PRIORITY 3 — Open Food Facts brand + name + quantity match
+  PRIORITY 3 — Open Food Facts barcode / GTIN match
+    Only attempted when Swiggy provides NO image at all.
+    If Swiggy provides an authentic barcode/GTIN/EAN/UPC, use it for an
+    exact OFF lookup. Confidence = 1.00.
+
+  PRIORITY 4 — Open Food Facts brand + name + quantity match
     Attempt a controlled identity search. Requires confidence >= threshold.
     Pack size mismatch = hard reject. Only curated front packaging accepted.
 
-  PRIORITY 4 — No confident match
+  PRIORITY 5 — No confident match
     Return imageUrl = None, imageStatus = "unavailable".
     The UI shows a clean neutral placeholder ("Image unavailable").
     Never substitute an emoji or an AI-generated image.
 
-Cache: successful and unavailable resolutions are cached to prevent
-repeated API calls for the same product.
+Cache: Only successful resolutions and CONFIRMED unavailable results are cached.
+TRANSIENT failures (timeout, 429, 503) are NEVER cached as permanent unavailable.
+On startup, any stale "unavailable" entries from previous failures are purged.
 """
 
 import asyncio
@@ -36,6 +46,9 @@ from .image_validator import validate_image_url
 IMAGE_MATCH_THRESHOLD = float(os.environ.get("IMAGE_MATCH_THRESHOLD", "0.90"))
 
 _off_resolver = OpenFoodFactsResolver()
+
+# Purge stale unavailable entries from any previous server run on module load
+image_cache.clear_unavailable()
 
 
 class ImageResolver:
@@ -58,6 +71,14 @@ class ImageResolver:
     async def resolve(self, product: Dict[str, Any]) -> Dict[str, Any]:
         """
         Resolve a real product image for the given product dict.
+
+        Priority:
+          1. Product already has a valid imageUrl (Swiggy CDN) → return directly
+          2. Extract and validate Swiggy CDN URL → validate, return if valid
+             (on transient failure, still return URL to let browser try directly)
+          3. OFF barcode lookup (only if Swiggy has NO image)
+          4. OFF identity search (only if Swiggy has NO image)
+          5. Confirmed unavailable
         """
         product_key = self._make_key(product)
 
@@ -66,26 +87,69 @@ class ImageResolver:
         if cached:
             return self._to_result(cached)
 
-        # ── Priority 1: Swiggy image URL ──────────────────────────────────────
-        swiggy_url = self._extract_swiggy_url(product)
-        if swiggy_url:
-            valid, reason, _ = validate_image_url(swiggy_url)
+        # ── Priority 1 & 2: Swiggy image URL (Primary Source) ─────────────────
+        # Swiggy real image → validate → ProductCard
+        existing_url = product.get("imageUrl") or product.get("image")
+        if not existing_url:
+            existing_url = self._extract_swiggy_url(product)
+
+        if existing_url and isinstance(existing_url, str) and existing_url.startswith("http"):
+            valid, reason, _ = validate_image_url(existing_url)
             if valid:
                 print(
                     f"[IMAGE RESOLVER] Product: {product.get('name', '?')} | "
-                    f"Source: Swiggy | Image: FOUND"
+                    f"Source: Swiggy (validated) | Image: FOUND"
                 )
                 record = self._cache.set(
-                    product_key, swiggy_url, source="swiggy", confidence=1.0,
+                    product_key, existing_url, source="swiggy", confidence=1.0,
                     matched_identifier="swiggy_cdn"
                 )
                 return self._to_result(record)
             else:
-                print(
-                    f"[IMAGE RESOLVER] Swiggy candidate failed validation ({reason}): {swiggy_url}"
+                is_transient = (
+                    "Connection error" in reason or
+                    "timed out" in reason.lower() or
+                    "timeout" in reason.lower() or
+                    "HTTP 429" in reason or
+                    "HTTP 502" in reason or
+                    "HTTP 503" in reason or
+                    "HTTP 504" in reason
                 )
+                if is_transient:
+                    # Transient reachability error from server: pass URL to browser anyway.
+                    print(
+                        f"[IMAGE RESOLVER] Product: {product.get('name', '?')} | "
+                        f"Source: Swiggy (transient validation note: {reason}) | "
+                        f"Passing URL to browser directly"
+                    )
+                    return {
+                        "imageUrl": existing_url,
+                        "imageSource": "swiggy",
+                        "imageConfidence": 0.85,
+                        "imageStatus": "found",
+                    }
+                else:
+                    print(
+                        f"[IMAGE RESOLVER] Swiggy candidate definitively failed validation ({reason}): {existing_url}. Falling back to Open Food Facts."
+                    )
 
-        # ── Priority 2: OFF barcode lookup ────────────────────────────────────
+        # ── Priority 2: Verified Product Image (Catalog fallback) ─────────────
+        # If product is in local verified catalog, use its verified genuine image.
+        verified_url = self._extract_verified_catalog_image(product)
+        if verified_url:
+            print(
+                f"[IMAGE RESOLVER] Product: {product.get('name', '?')} | "
+                f"Source: Verified Catalog | Image: FOUND"
+            )
+            record = self._cache.set(
+                product_key, verified_url, source="catalog",
+                confidence=1.0, matched_identifier="catalog_verified"
+            )
+            return self._to_result(record)
+
+        # ── No Swiggy / Verified image → fall through to Open Food Facts ──────
+
+        # ── Priority 3: OFF barcode lookup ────────────────────────────────────
         barcode = self._extract_barcode(product)
         if barcode:
             img_url, conf, match_id = await asyncio.get_running_loop().run_in_executor(
@@ -103,7 +167,7 @@ class ImageResolver:
                 )
                 return self._to_result(record)
 
-        # ── Priority 3: OFF identity search ───────────────────────────────────
+        # ── Priority 4: OFF identity search ───────────────────────────────────
         name = product.get("name") or ""
         brand = product.get("brand") or None
         quantity = product.get("quantity") or None
@@ -128,10 +192,25 @@ class ImageResolver:
                 )
                 return self._to_result(record)
 
-        # ── Priority 4: Unavailable ──────────────────────────────────────────
+        # ── Priority 5: Confirmed unavailable ──────────────────────────────────
+        # Check if an external transient error occurred (429, 503, timeout)
+        if getattr(_off_resolver, "last_error_is_transient", False):
+            print(
+                f"[IMAGE RESOLVER] Product: {product.get('name', '?')} | "
+                f"External service transient failure (OFF 429/503/timeout) — NOT caching unavailable."
+            )
+            return {
+                "imageUrl": None,
+                "imageSource": "unavailable",
+                "imageConfidence": 0.0,
+                "imageStatus": "unavailable",
+            }
+
+        # Only cache this if we actually searched and found nothing.
+        # This is a confirmed "no image exists" — not a transient failure.
         print(
             f"[IMAGE RESOLVER] Product: {product.get('name', '?')} | "
-            f"Image: UNAVAILABLE"
+            f"Image: CONFIRMED UNAVAILABLE (exhausted all sources)"
         )
         record = self._cache.set(
             product_key, None, source="unavailable",
@@ -185,42 +264,66 @@ class ImageResolver:
 
     def _extract_swiggy_url(self, product: Dict[str, Any]) -> Optional[str]:
         """
-        Extract a legitimate Swiggy CDN HTTPS image URL from the product.
+        Extract a legitimate Swiggy CDN HTTPS image URL from product or nested rawData fields.
         Returns None if no authentic URL is present.
         """
-        candidates = [
-            product.get("imageUrl"),
-            product.get("image"),
-        ]
-
         raw_data = product.get("rawData") or {}
         variation = raw_data.get("variation") or {}
         raw_product = raw_data.get("product") or {}
 
-        for obj in [variation, raw_product]:
+        candidates = []
+        for obj in [product, variation, raw_product]:
+            if not isinstance(obj, dict):
+                continue
             for field in [
-                "imageUrl", "imageURL", "image_url",
+                "images", "imageUrl", "imageURL", "image_url",
+                "imageId", "image_id", "cloudinaryImageId",
                 "thumbnail", "thumbnailUrl", "thumbnail_url",
                 "media", "mediaUrl", "media_url",
             ]:
                 val = obj.get(field)
-                if isinstance(val, list) and val:
-                    val = val[0]
-                if val and isinstance(val, str):
+                if val:
                     candidates.append(val)
 
-        for url in candidates:
-            if not url or not isinstance(url, str):
-                continue
-            url = url.strip()
-            if not url or url.lower() in ("none", "null", "undefined"):
-                continue
-            if url.startswith("https://") or url.startswith("http://"):
-                return url
-            # Genuine Swiggy relative asset hash
-            if "NI_CATALOG" in url or "rng/md" in url:
-                clean = url.lstrip("/")
-                return f"https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_500/{clean}"
+        def _resolve(raw: Any) -> Optional[str]:
+            if not raw:
+                return None
+            if isinstance(raw, list):
+                for item in raw:
+                    res = _resolve(item)
+                    if res:
+                        return res
+                return None
+            if isinstance(raw, dict):
+                for k in ("url", "imageUrl", "imageURL", "imageId", "image_id", "id", "path", "mediaUrl"):
+                    val = raw.get(k)
+                    if val:
+                        res = _resolve(val)
+                        if res:
+                            return res
+                return None
+            if not isinstance(raw, str):
+                return None
+            s = raw.strip()
+            if not s or s.lower() in ("none", "null", "undefined", ""):
+                return None
+            if s.startswith("//"):
+                return f"https:{s}"
+            if s.startswith("http://") or s.startswith("https://"):
+                return s
+            if s.startswith("media-assets.swiggy.com"):
+                return f"https://{s}"
+            clean = s.lstrip("/")
+            if clean.lower().startswith("ciw/"):
+                clean = f"NI_CATALOG/IMAGES/{clean}"
+            if "swiggy/image/upload" in clean:
+                return f"https://media-assets.swiggy.com/{clean}"
+            return f"https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_500/{clean}"
+
+        for cand in candidates:
+            res = _resolve(cand)
+            if res:
+                return res
 
         return None
 
@@ -242,6 +345,26 @@ class ImageResolver:
                     if barcode and barcode not in ("0", "null", "none", "undefined"):
                         return barcode
 
+        return None
+
+    def _extract_verified_catalog_image(self, product: Dict[str, Any]) -> Optional[str]:
+        """Check if local verified catalog contains a genuine image for this product."""
+        try:
+            from catalog.product_repository import ProductRepository
+            repo = ProductRepository()
+            pid = str(product.get("id") or product.get("productId") or product.get("product_key") or "")
+            clean_pid = pid.split(":")[-1] if pid else ""
+            if clean_pid:
+                item = repo.get_by_id(clean_pid)
+                if item and item.get("imageUrl"):
+                    return item.get("imageUrl")
+            name = (product.get("name") or "").strip().lower()
+            if name:
+                for p in repo.products:
+                    if p.get("imageUrl") and p.get("name", "").strip().lower() == name:
+                        return p.get("imageUrl")
+        except Exception as e:
+            print(f"[IMAGE RESOLVER] Catalog lookup exception: {e}")
         return None
 
     def _to_result(self, record: Dict[str, Any]) -> Dict[str, Any]:

@@ -63,12 +63,16 @@ class OpenFoodFactsResolver:
     Returns (image_url, confidence, matched_identifier) or (None, 0.0, None).
     """
 
+    def __init__(self):
+        self.last_error_is_transient = False
+
     # ── Barcode Lookup ────────────────────────────────────────────────────────
 
     def lookup_by_barcode(self, barcode: str) -> Tuple[Optional[str], float, Optional[str]]:
         """
         Look up a product by its genuine barcode/GTIN/EAN/UPC.
         """
+        self.last_error_is_transient = False
         barcode = str(barcode).strip()
         if not barcode:
             return None, 0.0, None
@@ -118,6 +122,7 @@ class OpenFoodFactsResolver:
         Returns:
             (image_url, confidence, matched_search_key) or (None, 0.0, None)
         """
+        self.last_error_is_transient = False
         if not name or not name.strip():
             return None, 0.0, None
 
@@ -130,7 +135,13 @@ class OpenFoodFactsResolver:
             search_query = name_clean
 
         qty_str = self._normalize_quantity_str(quantity, unit)
-        if qty_str:
+        qty_in_name = False
+        if quantity and str(quantity).strip().lower() in search_query.lower():
+            qty_in_name = True
+        elif unit and str(unit).strip().lower() in search_query.lower():
+            qty_in_name = True
+
+        if qty_str and not qty_in_name:
             search_query += f" {qty_str}"
 
         search_key = search_query
@@ -145,6 +156,18 @@ class OpenFoodFactsResolver:
         )
 
         data = self._get_json(url)
+        # Fallback to cgi/search.pl if v2 fails or returned transient error
+        if not data or self.last_error_is_transient:
+            cgi_url = (
+                f"https://in.openfoodfacts.org/cgi/search.pl"
+                f"?search_terms={urllib.parse.quote(search_query)}"
+                f"&search_simple=1&action=process&json=1&page_size=5"
+            )
+            cgi_data = self._get_json(cgi_url)
+            if cgi_data:
+                data = cgi_data
+                self.last_error_is_transient = False
+
         if not data:
             return None, 0.0, None
 
@@ -264,10 +287,21 @@ class OpenFoodFactsResolver:
 
     def _extract_image_url(self, product: Dict[str, Any]) -> Optional[str]:
         """
-        Extract a verified catalog packaging image from an Open Food Facts product.
-        Only accepts official front packaging shots that pass reachability & decode checks.
-        Never constructs or accepts raw /1.400.jpg user phone photos.
+        Extract a catalog front image URL from an Open Food Facts product.
+
+        Strategy:
+          - Prefer official curator-selected front images (selected_images.front.display)
+          - Fall back to image_front_url / image_front_small_url
+          - Reject raw /1.400.jpg crowdsourced user phone photos (handled by validator)
+          - If server-side validation has a transient failure (SSL timeout, connection
+            error), still return the URL — the browser can attempt to load it directly.
+            Only reject on DEFINITIVE permanent failures (404, HTML, tiny payload, etc.)
         """
+        _TRANSIENT_REASONS = ("Connection error", "timed out", "timeout", "HTTP 429", "HTTP 502", "HTTP 503", "HTTP 504")
+
+        def _is_transient(reason: str) -> bool:
+            return any(t in reason for t in _TRANSIENT_REASONS)
+
         # 1. Prefer official front display image chosen by Open Food Facts curators
         selected = product.get("selected_images", {}).get("front", {})
         display = selected.get("display", {})
@@ -275,21 +309,30 @@ class OpenFoodFactsResolver:
             for lang in ["en", "in", "fr", "es", "de"]:
                 if lang in display and display[lang]:
                     url = display[lang]
-                    valid, _, _ = validate_image_url(url)
+                    valid, reason, _ = validate_image_url(url)
                     if valid:
+                        return url
+                    if _is_transient(reason):
+                        print(f"[OFF] Transient validation error for {url[:60]} — returning URL for browser fetch")
                         return url
             for val in display.values():
                 if isinstance(val, str) and val.startswith("http"):
-                    valid, _, _ = validate_image_url(val)
+                    valid, reason, _ = validate_image_url(val)
                     if valid:
+                        return val
+                    if _is_transient(reason):
+                        print(f"[OFF] Transient validation error for {val[:60]} — returning URL for browser fetch")
                         return val
 
         # 2. Check image_front_url
         for field in ["image_front_url", "image_front_small_url"]:
             url = product.get(field)
             if url and isinstance(url, str):
-                valid, _, _ = validate_image_url(url)
+                valid, reason, _ = validate_image_url(url)
                 if valid:
+                    return url
+                if _is_transient(reason):
+                    print(f"[OFF] Transient validation error for {url[:60]} — returning URL for browser fetch")
                     return url
 
         return None
@@ -346,13 +389,14 @@ class OpenFoodFactsResolver:
     def _get_json(self, url: str) -> Optional[Dict[str, Any]]:
         """GET request returning parsed JSON with fallback and timeout."""
         headers = {
-            "User-Agent": "HouseholdAutopilot/1.0 (https://github.com/nova; contact@nova.household)",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "application/json",
         }
         req = urllib.request.Request(url, headers=headers, method="GET")
         try:
             with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:
                 body = resp.read().decode("utf-8")
+                self.last_error_is_transient = False
                 return json.loads(body)
         except urllib.error.HTTPError as e:
             if "world.openfoodfacts.org" in url:
@@ -361,11 +405,18 @@ class OpenFoodFactsResolver:
                     fallback_req = urllib.request.Request(fallback_url, headers=headers, method="GET")
                     with urllib.request.urlopen(fallback_req, timeout=_TIMEOUT) as resp:
                         body = resp.read().decode("utf-8")
+                        self.last_error_is_transient = False
                         return json.loads(body)
+                except urllib.error.HTTPError as fb_e:
+                    if fb_e.code in (429, 500, 502, 503, 504, 408):
+                        self.last_error_is_transient = True
                 except Exception:
-                    pass
+                    self.last_error_is_transient = True
             print(f"[OFF] HTTP error {e.code} for URL: {url}")
+            if e.code in (429, 500, 502, 503, 504, 408):
+                self.last_error_is_transient = True
             return None
         except Exception as e:
             print(f"[OFF] Error fetching JSON: {e}")
+            self.last_error_is_transient = True
             return None

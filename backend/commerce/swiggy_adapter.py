@@ -238,24 +238,50 @@ class SwiggyInstamartAdapter(CommerceInterface):
         Extracts genuine Swiggy CDN product image URL.
         Never fabricates, estimates, or synthesizes artwork.
         Returns None if no authentic image URL is present.
+        Handles strings, lists, dicts, relative asset paths, and CDN hashes.
         """
-        if isinstance(raw_url, list) and raw_url:
-            raw_url = raw_url[0]
+        if not raw_url:
+            return None
 
-        if not raw_url or not isinstance(raw_url, str):
+        # If raw_url is a list, inspect items in order
+        if isinstance(raw_url, list):
+            for item in raw_url:
+                res = self._resolve_image_url(item)
+                if res:
+                    return res
+            return None
+
+        # If raw_url is a dict, inspect image fields
+        if isinstance(raw_url, dict):
+            for k in ("url", "imageUrl", "imageURL", "imageId", "image_id", "id", "path", "mediaUrl", "media_url", "assetId", "image", "images", "key", "creativeId"):
+                val = raw_url.get(k)
+                if val:
+                    res = self._resolve_image_url(val)
+                    if res:
+                        return res
+            return None
+
+        if not isinstance(raw_url, str):
             return None
 
         url_str = raw_url.strip()
         if not url_str or url_str.lower() in ["none", "null", "undefined"]:
             return None
 
-        # Fully qualified CDN URL
+        # Fully qualified CDN URL or protocol-relative
+        if url_str.startswith("//"):
+            return f"https:{url_str}"
         if url_str.startswith("http://") or url_str.startswith("https://"):
             return url_str
+        if url_str.startswith("media-assets.swiggy.com"):
+            return f"https://{url_str}"
 
         # Swiggy media asset relative hash/path
-        # Format: media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_500/<hash>
         clean_path = url_str.lstrip("/")
+        if clean_path.lower().startswith("ciw/"):
+            clean_path = f"NI_CATALOG/IMAGES/{clean_path}"
+        if "swiggy/image/upload" in clean_path:
+            return f"https://media-assets.swiggy.com/{clean_path}"
         return f"https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_500/{clean_path}"
 
     def _normalize_variation(
@@ -322,22 +348,49 @@ class SwiggyInstamartAdapter(CommerceInterface):
         # ── Image URL resolution (Priority 1: Swiggy CDN) ─────────────────────
         # Inspect ALL known field names that the Swiggy MCP may use for images.
         # ONLY use a field if it is actually present in the response — never fabricate.
-        raw_img = (
-            variation.get("imageUrl")
-            or variation.get("imageURL")
-            or variation.get("image_url")
-            or variation.get("thumbnail")
-            or variation.get("thumbnailUrl")
-            or variation.get("thumbnail_url")
-            or variation.get("media")
-            or variation.get("mediaUrl")
-            or product.get("imageUrl")
-            or product.get("imageURL")
-            or product.get("image_url")
-            or product.get("thumbnail")
-            or product.get("thumbnailUrl")
-        )
-        image_url = self._resolve_image_url(raw_img)
+        raw_img_candidates = [
+            variation.get("image"),
+            variation.get("images"),
+            variation.get("imageUrl"),
+            variation.get("imageURL"),
+            variation.get("image_url"),
+            variation.get("imageId"),
+            variation.get("image_id"),
+            variation.get("imageIds"),
+            variation.get("cloudinaryImageId"),
+            variation.get("thumbnail"),
+            variation.get("thumbnailUrl"),
+            variation.get("thumbnail_url"),
+            variation.get("media"),
+            variation.get("mediaUrl"),
+            variation.get("media_url"),
+            variation.get("assets"),
+            variation.get("productImages"),
+            variation.get("spinImage"),
+            product.get("image"),
+            product.get("images"),
+            product.get("imageUrl"),
+            product.get("imageURL"),
+            product.get("image_url"),
+            product.get("imageId"),
+            product.get("image_id"),
+            product.get("imageIds"),
+            product.get("cloudinaryImageId"),
+            product.get("thumbnail"),
+            product.get("thumbnailUrl"),
+            product.get("media"),
+            product.get("mediaUrl"),
+            product.get("media_url"),
+            product.get("assets"),
+            product.get("productImages"),
+        ]
+        image_url = None
+        for cand in raw_img_candidates:
+            if cand:
+                resolved = self._resolve_image_url(cand)
+                if resolved:
+                    image_url = resolved
+                    break
 
         # ── Barcode fields (may be present in real Swiggy response) ──────────
         # Used by ImageResolver Priority 2 for exact Open Food Facts lookup.
@@ -760,23 +813,22 @@ class SwiggyInstamartAdapter(CommerceInterface):
                     sec_name = cls_info["section"]
                     tags = cls_info["keywords"]
                     prod_id = item.get("id")
-                    raw_img = item.get("imageUrl") or item.get("image")
+                    raw_img = (
+                        item.get("imageUrl")
+                        or item.get("image")
+                        or item.get("images")
+                        or item.get("imageId")
+                    )
                     if raw_img and str(raw_img).startswith("/assets/fallbacks/"):
                         raw_img = None
-                    if raw_img and (str(raw_img).startswith("http://") or str(raw_img).startswith("https://")):
-                        from images.image_validator import validate_image_url
-                        valid, _, _ = validate_image_url(str(raw_img))
-                        if valid:
-                            img = raw_img
-                            img_status = "found"
-                            img_source = "catalog"
-                        else:
-                            img = None
-                            img_status = "unavailable"
-                            img_source = None
+                    resolved_img = self._resolve_image_url(raw_img) if raw_img else None
+                    if resolved_img:
+                        img = resolved_img
+                        img_status = "found"
+                        img_source = "catalog"
                     else:
                         img = None
-                        img_status = "unavailable"
+                        img_status = "pending"
                         img_source = None
 
                     items.append({

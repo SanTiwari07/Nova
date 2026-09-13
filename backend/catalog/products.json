@@ -8,8 +8,10 @@
     "category": "Atta",
     "subcategory": "Whole Wheat",
     "description": "100% whole wheat flour ground from MP golden grains.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/3/9/805a02b1-e08b-4d4b-aa8f-ab05cabb1e37_1780_1.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/3/9/805a02b1-e08b-4d4b-aa8f-ab05cabb1e37_1780_1.png"
+    ],
     "price": 289,
     "mrp": 325,
     "currency": "INR",
@@ -24,10 +26,10 @@
       "staple"
     ],
     "preferred": true,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "8901725121747"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/3/9/805a02b1-e08b-4d4b-aa8f-ab05cabb1e37_1780_1.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000002",
@@ -38,8 +40,10 @@
     "category": "Atta",
     "subcategory": "Whole Wheat",
     "description": "Convenient 1kg pack of 100% whole wheat flour.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/3/9/805a02b1-e08b-4d4b-aa8f-ab05cabb1e37_1780_1.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/3/9/805a02b1-e08b-4d4b-aa8f-ab05cabb1e37_1780_1.png"
+    ],
     "price": 65,
     "mrp": 75,
     "currency": "INR",
@@ -52,10 +56,10 @@
       "staple"
     ],
     "preferred": false,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "8901725121747"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/3/9/805a02b1-e08b-4d4b-aa8f-ab05cabb1e37_1780_1.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000003",
@@ -66,8 +70,10 @@
     "category": "Atta",
     "subcategory": "Whole Wheat",
     "description": "Economy 10kg sack of MP Sharbati whole wheat flour.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/3/9/805a02b1-e08b-4d4b-aa8f-ab05cabb1e37_1780_1.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/3/9/805a02b1-e08b-4d4b-aa8f-ab05cabb1e37_1780_1.png"
+    ],
     "price": 520,
     "mrp": 590,
     "currency": "INR",
@@ -81,10 +87,10 @@
       "value"
     ],
     "preferred": true,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "8901725121747"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/3/9/805a02b1-e08b-4d4b-aa8f-ab05cabb1e37_1780_1.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000004",
@@ -122,8 +128,10 @@
     "category": "Rice",
     "subcategory": "Basmati",
     "description": "Aged long grain aromatic classic basmati rice.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/7/21/ed973afb-e397-4df3-8a23-6153474d93b0_450_1.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/7/21/ed973afb-e397-4df3-8a23-6153474d93b0_450_1.png"
+    ],
     "price": 469,
     "mrp": 540,
     "currency": "INR",
@@ -138,10 +146,10 @@
       "staple"
     ],
     "preferred": true,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "3560070837984"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/7/21/ed973afb-e397-4df3-8a23-6153474d93b0_450_1.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000011",
@@ -152,8 +160,10 @@
     "category": "Rice",
     "subcategory": "Basmati",
     "description": "Standard 1kg pouch of aromatic premium basmati rice.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/7/21/ed973afb-e397-4df3-8a23-6153474d93b0_450_1.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/7/21/ed973afb-e397-4df3-8a23-6153474d93b0_450_1.png"
+    ],
     "price": 160,
     "mrp": 185,
     "currency": "INR",
@@ -166,10 +176,10 @@
       "staple"
     ],
     "preferred": false,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "3560070837984"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/7/21/ed973afb-e397-4df3-8a23-6153474d93b0_450_1.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000012",
@@ -180,8 +190,10 @@
     "category": "Rice",
     "subcategory": "Basmati",
     "description": "Mega 10kg pantry bag of aged classic basmati rice.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/7/21/ed973afb-e397-4df3-8a23-6153474d93b0_450_1.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/7/21/ed973afb-e397-4df3-8a23-6153474d93b0_450_1.png"
+    ],
     "price": 999,
     "mrp": 1150,
     "currency": "INR",
@@ -195,10 +207,10 @@
       "value"
     ],
     "preferred": true,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "3560070837984"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/7/21/ed973afb-e397-4df3-8a23-6153474d93b0_450_1.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000013",
@@ -282,7 +294,7 @@
     "imageUrl": null,
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "3560070837984"
+    "barcode": null
   },
   {
     "id": "prod_000016",
@@ -310,7 +322,7 @@
     "imageUrl": null,
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "3560070837984"
+    "barcode": null
   },
   {
     "id": "prod_000030",
@@ -321,8 +333,10 @@
     "category": "Oil",
     "subcategory": "Sunflower",
     "description": "Refined sunflower oil enriched with vitamins A & D.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/d0fe0c1c-2142-43d3-bf49-3fe02eb1a7dd_PUHXM33U8E_MN_18022026.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/d0fe0c1c-2142-43d3-bf49-3fe02eb1a7dd_PUHXM33U8E_MN_18022026.png"
+    ],
     "price": 762,
     "mrp": 850,
     "currency": "INR",
@@ -337,10 +351,10 @@
       "staple"
     ],
     "preferred": true,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "8906007280242"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/d0fe0c1c-2142-43d3-bf49-3fe02eb1a7dd_PUHXM33U8E_MN_18022026.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000031",
@@ -351,8 +365,10 @@
     "category": "Oil",
     "subcategory": "Sunflower",
     "description": "Standard 1L pouch bottle of refined sunflower cooking oil.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/d0fe0c1c-2142-43d3-bf49-3fe02eb1a7dd_PUHXM33U8E_MN_18022026.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/d0fe0c1c-2142-43d3-bf49-3fe02eb1a7dd_PUHXM33U8E_MN_18022026.png"
+    ],
     "price": 155,
     "mrp": 175,
     "currency": "INR",
@@ -366,10 +382,10 @@
       "staple"
     ],
     "preferred": false,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "8906007280242"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/d0fe0c1c-2142-43d3-bf49-3fe02eb1a7dd_PUHXM33U8E_MN_18022026.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000032",
@@ -397,7 +413,8 @@
     "preferred": true,
     "imageUrl": null,
     "imageStatus": "unavailable",
-    "imageSource": "unavailable"
+    "imageSource": "unavailable",
+    "barcode": "8901088017381"
   },
   {
     "id": "prod_000033",
@@ -463,8 +480,10 @@
     "category": "Salt",
     "subcategory": "Iodized",
     "description": "Desh Ka Namak vacuum evaporated iodized table salt.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/219b05ab-1b6b-468b-807c-d4fdd353dc89_883CSP2S79_MN_18122025.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/219b05ab-1b6b-468b-807c-d4fdd353dc89_883CSP2S79_MN_18122025.png"
+    ],
     "price": 25,
     "mrp": 30,
     "currency": "INR",
@@ -478,10 +497,10 @@
       "staple"
     ],
     "preferred": true,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "8901052010233"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/219b05ab-1b6b-468b-807c-d4fdd353dc89_883CSP2S79_MN_18122025.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000051",
@@ -492,8 +511,10 @@
     "category": "Salt",
     "subcategory": "Low Sodium",
     "description": "15% low sodium formulation designed for healthy blood pressure.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/219b05ab-1b6b-468b-807c-d4fdd353dc89_883CSP2S79_MN_18122025.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/219b05ab-1b6b-468b-807c-d4fdd353dc89_883CSP2S79_MN_18122025.png"
+    ],
     "price": 40,
     "mrp": 48,
     "currency": "INR",
@@ -506,10 +527,10 @@
       "healthy"
     ],
     "preferred": false,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "8901052010233"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/219b05ab-1b6b-468b-807c-d4fdd353dc89_883CSP2S79_MN_18122025.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000070",
@@ -575,8 +596,10 @@
     "category": "Dal",
     "subcategory": "Toor Dal",
     "description": "Unpolished toor dal rich in natural protein and wholesome taste.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/16/eda40bda-ba3b-4fab-97ba-ccbd28c106cf_K71D7X8L8P_MN_15122025.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/16/eda40bda-ba3b-4fab-97ba-ccbd28c106cf_K71D7X8L8P_MN_15122025.png"
+    ],
     "price": 142,
     "mrp": 175,
     "currency": "INR",
@@ -591,10 +614,10 @@
       "staple"
     ],
     "preferred": true,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "8690982101714"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/16/eda40bda-ba3b-4fab-97ba-ccbd28c106cf_K71D7X8L8P_MN_15122025.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000061",
@@ -622,7 +645,7 @@
     "imageUrl": null,
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "8690982101714"
+    "barcode": null
   },
   {
     "id": "prod_000062",
@@ -650,7 +673,7 @@
     "imageUrl": null,
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "8690982101714"
+    "barcode": null
   },
   {
     "id": "prod_000075",
@@ -745,8 +768,10 @@
     "category": "Noodles",
     "subcategory": "Instant Noodles",
     "description": "India's favorite masala spice mix instant noodles.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png"
+    ],
     "price": 14,
     "mrp": 15,
     "currency": "INR",
@@ -760,10 +785,10 @@
       "snack"
     ],
     "preferred": true,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "8901058851298"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000141",
@@ -774,8 +799,10 @@
     "category": "Noodles",
     "subcategory": "Instant Noodles",
     "description": "Family saver multipack with 4 individual packs.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png"
+    ],
     "price": 54,
     "mrp": 60,
     "currency": "INR",
@@ -790,10 +817,10 @@
       "snack"
     ],
     "preferred": true,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "8901058851298"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000142",
@@ -831,8 +858,10 @@
     "category": "Biscuits",
     "subcategory": "Glucose",
     "description": "The quintessential chai partner packed with milk & wheat nutrition.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/f32e2bf5-96eb-472e-b732-70153306008c_HEDSJ4MV73_MN_17122025.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/f32e2bf5-96eb-472e-b732-70153306008c_HEDSJ4MV73_MN_17122025.png"
+    ],
     "price": 22,
     "mrp": 25,
     "currency": "INR",
@@ -846,9 +875,9 @@
       "snack"
     ],
     "preferred": true,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/f32e2bf5-96eb-472e-b732-70153306008c_HEDSJ4MV73_MN_17122025.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
     "barcode": "8901719134845"
   },
   {
@@ -860,8 +889,10 @@
     "category": "Biscuits",
     "subcategory": "Cookies",
     "description": "Rich butter cookies garnished with crunchy cashew nut chunks.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/f32e2bf5-96eb-472e-b732-70153306008c_HEDSJ4MV73_MN_17122025.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/f32e2bf5-96eb-472e-b732-70153306008c_HEDSJ4MV73_MN_17122025.png"
+    ],
     "price": 38,
     "mrp": 45,
     "currency": "INR",
@@ -874,10 +905,10 @@
       "snack"
     ],
     "preferred": false,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "8901063139329"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/f32e2bf5-96eb-472e-b732-70153306008c_HEDSJ4MV73_MN_17122025.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000145",
@@ -905,7 +936,7 @@
     "imageUrl": null,
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "8901063139329"
+    "barcode": null
   },
   {
     "id": "prod_000146",
@@ -944,8 +975,10 @@
     "category": "Snacks",
     "subcategory": "Chips",
     "description": "Crisp thinly sliced potato chips infused with spicy aromatic masala.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/3/18/684c1fe7-260e-41c1-b0b5-2af8499f1fb8_297695_1.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/3/18/684c1fe7-260e-41c1-b0b5-2af8499f1fb8_297695_1.png"
+    ],
     "price": 20,
     "mrp": 20,
     "currency": "INR",
@@ -959,10 +992,10 @@
       "snack"
     ],
     "preferred": true,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "8901491101844"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/3/18/684c1fe7-260e-41c1-b0b5-2af8499f1fb8_297695_1.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000148",
@@ -990,7 +1023,7 @@
     "imageUrl": null,
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "8901491100519"
+    "barcode": null
   },
   {
     "id": "prod_000149",
@@ -1019,7 +1052,7 @@
     "imageUrl": null,
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "8901491100519"
+    "barcode": null
   },
   {
     "id": "prod_000150",
@@ -1047,7 +1080,7 @@
     "imageUrl": null,
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "8901491100519"
+    "barcode": null
   },
   {
     "id": "prod_000151",
@@ -1087,8 +1120,10 @@
     "category": "Milk",
     "subcategory": "Toned Milk",
     "description": "UHT treated long life toned milk with zero preservatives.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/17/b42b731e-b555-4536-913a-265af70ec9e4_SKS75T1GV1_MN_16122025.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/17/b42b731e-b555-4536-913a-265af70ec9e4_SKS75T1GV1_MN_16122025.png"
+    ],
     "price": 66,
     "mrp": 72,
     "currency": "INR",
@@ -1102,10 +1137,10 @@
       "daily_essential"
     ],
     "preferred": true,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "8901262260091"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/17/b42b731e-b555-4536-913a-265af70ec9e4_SKS75T1GV1_MN_16122025.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000108",
@@ -1116,8 +1151,10 @@
     "category": "Milk",
     "subcategory": "Full Cream Milk",
     "description": "Thick wholesome full cream milk rich in natural butterfat.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/17/b42b731e-b555-4536-913a-265af70ec9e4_SKS75T1GV1_MN_16122025.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/17/b42b731e-b555-4536-913a-265af70ec9e4_SKS75T1GV1_MN_16122025.png"
+    ],
     "price": 74,
     "mrp": 80,
     "currency": "INR",
@@ -1130,10 +1167,10 @@
       "daily_essential"
     ],
     "preferred": false,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "8901262260091"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/17/b42b731e-b555-4536-913a-265af70ec9e4_SKS75T1GV1_MN_16122025.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000080",
@@ -1144,8 +1181,10 @@
     "category": "Tea",
     "subcategory": "Black Tea",
     "description": "Exquisite blend of strong Assam CTC tea and gentle aromatic long leaves.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/bf79f8d0-dfcb-4ebb-be63-b3e291656666_Q5AIG72TKQ_MN_18022026.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/bf79f8d0-dfcb-4ebb-be63-b3e291656666_Q5AIG72TKQ_MN_18022026.png"
+    ],
     "price": 209,
     "mrp": 260,
     "currency": "INR",
@@ -1160,10 +1199,10 @@
       "staple"
     ],
     "preferred": true,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "8901052000807"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/bf79f8d0-dfcb-4ebb-be63-b3e291656666_Q5AIG72TKQ_MN_18022026.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000081",
@@ -1174,8 +1213,10 @@
     "category": "Tea",
     "subcategory": "Black Tea",
     "description": "Pioneering blend of medium and large grains for unmatched body and aroma.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/bf79f8d0-dfcb-4ebb-be63-b3e291656666_Q5AIG72TKQ_MN_18022026.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/bf79f8d0-dfcb-4ebb-be63-b3e291656666_Q5AIG72TKQ_MN_18022026.png"
+    ],
     "price": 415,
     "mrp": 490,
     "currency": "INR",
@@ -1189,10 +1230,10 @@
       "staple"
     ],
     "preferred": false,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "8901052000807"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/bf79f8d0-dfcb-4ebb-be63-b3e291656666_Q5AIG72TKQ_MN_18022026.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000082",
@@ -1248,7 +1289,7 @@
     "imageUrl": null,
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "8410100020563"
+    "barcode": null
   },
   {
     "id": "prod_000086",
@@ -1276,7 +1317,7 @@
     "imageUrl": null,
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "8410100020563"
+    "barcode": null
   },
   {
     "id": "prod_000087",
@@ -1305,7 +1346,7 @@
     "imageUrl": null,
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "8422174025016"
+    "barcode": null
   },
   {
     "id": "prod_000088",
@@ -1316,8 +1357,10 @@
     "category": "Beverages",
     "subcategory": "Soft Drinks",
     "description": "The crisp and refreshing sparkling cola soda.",
-    "image": null,
-    "images": [],
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2025/11/28/28d03859-da45-4e2f-bb4a-4c3079700855_204.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2025/11/28/28d03859-da45-4e2f-bb4a-4c3079700855_204.png"
+    ],
     "price": 40,
     "mrp": 45,
     "currency": "INR",
@@ -1330,10 +1373,10 @@
       "beverage"
     ],
     "preferred": true,
-    "imageUrl": null,
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "5449000000996"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2025/11/28/28d03859-da45-4e2f-bb4a-4c3079700855_204.png",
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000090",
@@ -1363,7 +1406,7 @@
     "imageUrl": null,
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "8901030843150"
+    "barcode": null
   },
   {
     "id": "prod_000091",
@@ -1391,7 +1434,7 @@
     "imageUrl": null,
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "8901030843150"
+    "barcode": null
   },
   {
     "id": "prod_000092",
@@ -1447,7 +1490,7 @@
     "imageUrl": null,
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "8909106007123"
+    "barcode": null
   },
   {
     "id": "prod_000094",
@@ -1475,7 +1518,7 @@
     "imageUrl": null,
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "8909106007123"
+    "barcode": null
   },
   {
     "id": "prod_000095",
@@ -1617,7 +1660,7 @@
     "imageUrl": "https://images.openbeautyfacts.org/images/products/600/110/610/8991/front_fr.16.400.jpg",
     "imageStatus": "found",
     "imageSource": "open_beauty_facts",
-    "barcode": "6001106108991"
+    "barcode": null
   },
   {
     "id": "prod_000101",
@@ -1740,7 +1783,7 @@
     "imageUrl": "https://images.openbeautyfacts.org/images/products/628/100/111/2013/front_en.5.400.jpg",
     "imageStatus": "found",
     "imageSource": "open_beauty_facts",
-    "barcode": "6281001112013"
+    "barcode": null
   },
   {
     "id": "prod_000126",
@@ -1770,7 +1813,7 @@
     "imageUrl": "https://images.openbeautyfacts.org/images/products/628/100/111/2013/front_en.5.400.jpg",
     "imageStatus": "found",
     "imageSource": "open_beauty_facts",
-    "barcode": "6281001112013"
+    "barcode": null
   },
   {
     "id": "prod_000127",
@@ -1828,7 +1871,7 @@
     "imageUrl": "https://images.openbeautyfacts.org/images/products/600/110/610/8991/front_fr.16.400.jpg",
     "imageStatus": "found",
     "imageSource": "open_beauty_facts",
-    "barcode": "6001106108991"
+    "barcode": null
   },
   {
     "id": "prod_000122",
@@ -1906,7 +1949,7 @@
     "images": [],
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "8901725121747"
+    "barcode": null
   },
   {
     "id": "prod_000129",
@@ -1982,7 +2025,7 @@
     "images": [],
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "8901058851298"
+    "barcode": null
   },
   {
     "id": "prod_000132",
@@ -2034,7 +2077,7 @@
     "images": [],
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "8901063139329"
+    "barcode": null
   },
   {
     "id": "prod_000134",
@@ -2060,7 +2103,7 @@
     "images": [],
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "8901491101844"
+    "barcode": null
   },
   {
     "id": "prod_000135",
@@ -2086,7 +2129,7 @@
     "images": [],
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "8901491101844"
+    "barcode": null
   },
   {
     "id": "prod_000136",
@@ -2107,12 +2150,14 @@
       "cold_drinks"
     ],
     "preferred": true,
-    "imageUrl": null,
-    "image": null,
-    "images": [],
-    "imageStatus": "unavailable",
-    "imageSource": null,
-    "barcode": "5449000000996"
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2025/11/28/28d03859-da45-4e2f-bb4a-4c3079700855_204.png",
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2025/11/28/28d03859-da45-4e2f-bb4a-4c3079700855_204.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2025/11/28/28d03859-da45-4e2f-bb4a-4c3079700855_204.png"
+    ],
+    "imageStatus": "found",
+    "imageSource": "swiggy",
+    "barcode": null
   },
   {
     "id": "prod_000137",
@@ -2133,11 +2178,13 @@
       "cold_drinks"
     ],
     "preferred": true,
-    "imageUrl": null,
-    "image": null,
-    "images": [],
-    "imageStatus": "unavailable",
-    "imageSource": null,
+    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2025/11/28/28d03859-da45-4e2f-bb4a-4c3079700855_204.png",
+    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2025/11/28/28d03859-da45-4e2f-bb4a-4c3079700855_204.png",
+    "images": [
+      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2025/11/28/28d03859-da45-4e2f-bb4a-4c3079700855_204.png"
+    ],
+    "imageStatus": "found",
+    "imageSource": "swiggy",
     "barcode": "5449000014535"
   },
   {
@@ -2164,7 +2211,7 @@
     "images": [],
     "imageStatus": "unavailable",
     "imageSource": null,
-    "barcode": "8422174025016"
+    "barcode": null
   },
   {
     "id": "prod_000139",

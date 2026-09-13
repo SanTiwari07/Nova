@@ -897,6 +897,18 @@ async def clear_image_cache():
     image_cache.clear()
     return {"status": "ok", "message": "Image cache cleared"}
 
+
+@app.post("/api/images/cache/clear-unavailable")
+async def clear_unavailable_image_cache():
+    """
+    Purge only the 'unavailable' (null-URL) cache entries so products get a
+    fresh resolution attempt. Does not evict confirmed-found images.
+    Use this after fixing the pipeline or when images.openfoodfacts.org is
+    temporarily unreachable.
+    """
+    removed = image_cache.clear_unavailable()
+    return {"status": "ok", "message": f"Cleared {removed} unavailable entries"}
+
 class CartRequest(BaseModel):
     product_id: str
     quantity: Optional[int] = 1
