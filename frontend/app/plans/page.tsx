@@ -62,7 +62,7 @@ export default function PlansPage() {
       await fetch("/api/command", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: `Take care of ${plan.title} — order missing ingredients` }),
+        body: JSON.stringify({ text: `Take care of ${plan.title} - order missing ingredients` }),
       });
       setActionDoneId(plan.plan_id);
       window.dispatchEvent(new Event("household-updated"));
@@ -178,11 +178,26 @@ export default function PlansPage() {
 
                 <div>
                   <p className="font-semibold text-neutral-600 mb-1.5">Needed from store:</p>
-                  <div className="space-y-1">
+                  <div className="grid grid-cols-1 gap-3">
                     {customResult.missing_items?.map((item: any, i: number) => (
-                      <div key={i} className="flex items-center gap-2 text-neutral-900 font-semibold">
-                        <div className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-                        <span>{item.item}</span>
+                      <div key={i} className="flex items-start gap-3 bg-white p-2.5 rounded-xl border border-neutral-100 shadow-sm">
+                        {item.product?.image ? (
+                           <div className="w-12 h-12 rounded-lg bg-neutral-100 overflow-hidden shrink-0">
+                             <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover" />
+                           </div>
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
+                            <ShoppingBag className="w-5 h-5 text-amber-500" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-sm font-bold text-neutral-900 leading-tight">
+                            {item.product ? item.product.name : item.item}
+                          </p>
+                          {item.product && (
+                            <p className="text-xs text-neutral-500 mt-0.5">₹{item.product.price}</p>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>

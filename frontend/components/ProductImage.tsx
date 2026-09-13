@@ -18,7 +18,7 @@ interface ProductImageProps {
     category?: string;
     [key: string]: any;
   } | null;
-  /** Source of the resolved image URL — for console logging only */
+  /** Source of the resolved image URL - for console logging only */
   imageSource?: string | null;
   className?: string;
   sizes?: string;
@@ -58,7 +58,7 @@ export default function ProductImage({
     product?.images?.[0] ||
     null;
 
-  // Validate the URL — must be a genuine HTTP/HTTPS remote URL, never local assets or placeholders
+  // Validate the URL - must be a genuine HTTP/HTTPS remote URL, never local assets or placeholders
   const isValidUrl =
     typeof candidateSrc === 'string' &&
     candidateSrc.trim().length > 0 &&

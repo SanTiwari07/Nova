@@ -1,5 +1,5 @@
 """
-OpenFoodFactsResolver — real product image lookup via the official Open Food Facts API.
+OpenFoodFactsResolver - real product image lookup via the official Open Food Facts API.
 
 API docs: https://openfoodfacts.github.io/documentation/docs/Product-Opener/api/
 Base URL:  https://world.openfoodfacts.org/api/v2/
@@ -27,7 +27,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from .image_validator import validate_image_url
 
-# Public OFF API — no authentication required for read operations
+# Public OFF API - no authentication required for read operations
 OFF_BASE = "https://world.openfoodfacts.org"
 OFF_API_V2 = f"{OFF_BASE}/api/v2"
 
@@ -85,7 +85,7 @@ class OpenFoodFactsResolver:
             product = data.get("product") or {}
             image_url = self._extract_image_url(product)
             if image_url:
-                print(f"[OFF] Barcode {barcode}: EXACT MATCH — confidence 1.00 — image: {image_url[:80]}...")
+                print(f"[OFF] Barcode {barcode}: EXACT MATCH - confidence 1.00 - image: {image_url[:80]}...")
                 return image_url, 1.00, barcode
 
         # Fallback: in.openfoodfacts.org v0 API (used if world API is unreachable)
@@ -95,7 +95,7 @@ class OpenFoodFactsResolver:
             prod = data_v0.get("product") or {}
             image_url = self._extract_image_url(prod)
             if image_url:
-                print(f"[OFF] Barcode {barcode}: v0 MATCH — confidence 1.00 — image: {image_url[:80]}...")
+                print(f"[OFF] Barcode {barcode}: v0 MATCH - confidence 1.00 - image: {image_url[:80]}...")
                 return image_url, 1.00, barcode
 
         print(f"[OFF] Barcode {barcode}: not found or image unavailable")
@@ -204,11 +204,11 @@ class OpenFoodFactsResolver:
 
         if not best_url or best_conf < IMAGE_MATCH_THRESHOLD:
             print(
-                f"[OFF] Identity match failed or confidence ({best_conf:.2f}) below threshold {IMAGE_MATCH_THRESHOLD} — returning unavailable."
+                f"[OFF] Identity match failed or confidence ({best_conf:.2f}) below threshold {IMAGE_MATCH_THRESHOLD} - returning unavailable."
             )
             return None, 0.0, None
 
-        print(f"[OFF] Identity match verified: confidence {best_conf:.2f} — image: {best_url[:80]}...")
+        print(f"[OFF] Identity match verified: confidence {best_conf:.2f} - image: {best_url[:80]}...")
         return best_url, best_conf, best_key
 
     # ── Confidence Scoring ────────────────────────────────────────────────────
@@ -263,7 +263,7 @@ class OpenFoodFactsResolver:
                     score += 0.15
                     reasons.append(f"name_words✓({overlap_ratio:.0%})")
 
-        # 3. Quantity match — CRITICAL: Pack size mismatch = HARD REJECT
+        # 3. Quantity match - CRITICAL: Pack size mismatch = HARD REJECT
         our_qty_str = self._normalize_quantity_str(quantity, unit)
         if our_qty_str and cand_qty_raw:
             our_val, our_unit_n = self._parse_quantity(our_qty_str)
@@ -294,7 +294,7 @@ class OpenFoodFactsResolver:
           - Fall back to image_front_url / image_front_small_url
           - Reject raw /1.400.jpg crowdsourced user phone photos (handled by validator)
           - If server-side validation has a transient failure (SSL timeout, connection
-            error), still return the URL — the browser can attempt to load it directly.
+            error), still return the URL - the browser can attempt to load it directly.
             Only reject on DEFINITIVE permanent failures (404, HTML, tiny payload, etc.)
         """
         _TRANSIENT_REASONS = ("Connection error", "timed out", "timeout", "HTTP 429", "HTTP 502", "HTTP 503", "HTTP 504")
@@ -313,7 +313,7 @@ class OpenFoodFactsResolver:
                     if valid:
                         return url
                     if _is_transient(reason):
-                        print(f"[OFF] Transient validation error for {url[:60]} — returning URL for browser fetch")
+                        print(f"[OFF] Transient validation error for {url[:60]} - returning URL for browser fetch")
                         return url
             for val in display.values():
                 if isinstance(val, str) and val.startswith("http"):
@@ -321,7 +321,7 @@ class OpenFoodFactsResolver:
                     if valid:
                         return val
                     if _is_transient(reason):
-                        print(f"[OFF] Transient validation error for {val[:60]} — returning URL for browser fetch")
+                        print(f"[OFF] Transient validation error for {val[:60]} - returning URL for browser fetch")
                         return val
 
         # 2. Check image_front_url
@@ -332,7 +332,7 @@ class OpenFoodFactsResolver:
                 if valid:
                     return url
                 if _is_transient(reason):
-                    print(f"[OFF] Transient validation error for {url[:60]} — returning URL for browser fetch")
+                    print(f"[OFF] Transient validation error for {url[:60]} - returning URL for browser fetch")
                     return url
 
         return None

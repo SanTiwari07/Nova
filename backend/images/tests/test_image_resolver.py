@@ -49,7 +49,7 @@ from images.open_food_facts import OpenFoodFactsResolver
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def run(coro):
-    """Run an async coroutine in a test — compatible with Python 3.10+."""
+    """Run an async coroutine in a test - compatible with Python 3.10+."""
     return asyncio.run(coro)
 
 
@@ -178,7 +178,7 @@ class TestImageResolverTest3WrongQuantity(unittest.TestCase):
         self.assertIn("mismatch", reason.lower())
 
     def test_different_pack_sizes_rejected(self):
-        """Fortune Sunflower Oil 1L vs 5L — must reject."""
+        """Fortune Sunflower Oil 1L vs 5L - must reject."""
         off = OpenFoodFactsResolver()
 
         candidate_5l = {
@@ -198,7 +198,7 @@ class TestImageResolverTest3WrongQuantity(unittest.TestCase):
         self.assertEqual(score, 0.0, f"Expected 0.0 (qty mismatch) but got {score}. Reason: {reason}")
 
     def test_amul_taaza_500ml_does_not_match_1l(self):
-        """Amul Taaza Milk 500ml vs 1L — must reject."""
+        """Amul Taaza Milk 500ml vs 1L - must reject."""
         off = OpenFoodFactsResolver()
 
         candidate_1l = {
@@ -298,7 +298,7 @@ class TestImageResolverTest6OFFUnavailable(unittest.TestCase):
             ):
                 result = run(resolver.resolve(product))
 
-        # Image is unavailable — but result dict still returned cleanly
+        # Image is unavailable - but result dict still returned cleanly
         self.assertIsNone(result["imageUrl"])
         self.assertEqual(result["imageStatus"], "unavailable")
 
@@ -369,7 +369,7 @@ class TestImageResolverTest8ConfidenceScoring(unittest.TestCase):
             quantity=None,
             unit=None,
         )
-        # No brand, no quantity — score should be < threshold
+        # No brand, no quantity - score should be < threshold
         self.assertLess(score, 0.90, f"Expected < 0.90 for name-only match but got {score}. Reason: {reason}")
 
     def test_quantity_unit_normalization_kg_to_g(self):

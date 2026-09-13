@@ -37,7 +37,7 @@ INITIAL_SEED_EVENTS: List[Dict[str, Any]] = [
     {
         "id": "evt_seed_002",
         "type": "AUTONOMOUS_ACTION",
-        "title": "Cooking Oil Check — No Action Needed",
+        "title": "Cooking Oil Check - No Action Needed",
         "description": "Evaluated cooking oil stock. Household has 2.1L remaining, enough for ~30 days.",
         "status": "INFO",
         "entityType": "PANTRY",

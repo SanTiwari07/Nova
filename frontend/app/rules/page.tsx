@@ -102,7 +102,7 @@ export default function RulesPage() {
       window.dispatchEvent(new Event("household-updated"));
       setTimeout(() => setSaved(false), 2500);
     } catch {
-      // silent — show saved anyway if any succeeded
+      // silent - show saved anyway if any succeeded
     } finally {
       setIsSaving(false);
     }

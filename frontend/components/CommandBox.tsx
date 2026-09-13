@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import rehypeSanitize from "rehype-sanitize";
 import {
   Sparkles,
   Send,
@@ -15,6 +17,8 @@ import {
   Cpu,
   Layers,
   ArrowRight,
+  Check,
+  Loader2
 } from "lucide-react";
 
 interface ToolTraceItem {
@@ -47,7 +51,6 @@ export default function CommandBox({
   const [loading, setLoading] = useState(false);
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
 
-  // Check agent provider on mount
   useEffect(() => {
     fetch("/api/agent/provider")
       .then((res) => res.json())
@@ -57,7 +60,6 @@ export default function CommandBox({
       .catch(() => {});
   }, []);
 
-  // Listen for custom trigger events from other components
   useEffect(() => {
     const handleRunScenario = (e: any) => {
       if (e?.detail?.prompt) {
@@ -78,34 +80,73 @@ export default function CommandBox({
     setDecisionVerdict(null);
 
     try {
-      const res = await fetch("/api/command", {
+      const res = await fetch("/api/command/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: promptText }),
       });
-      const data = await res.json();
-      const respText = data.response || "Executed successfully.";
-      setResponse(respText);
-      setMode(data.mode || "STRANDS_AGENT");
-      if (data.provider) setProvider(data.provider);
-
-      if (Array.isArray(data.tool_trace)) {
-        setToolTrace(data.tool_trace);
-        for (const t of data.tool_trace) {
-          if (t.summary && t.summary.includes("Verdict: AUTO")) setDecisionVerdict("AUTO");
-          else if (t.summary && t.summary.includes("Verdict: DO_NOTHING")) setDecisionVerdict("DO_NOTHING");
-          else if (t.summary && t.summary.includes("Verdict: ASK")) setDecisionVerdict("ASK");
-          else if (t.summary && t.summary.includes("Verdict: BLOCKED")) setDecisionVerdict("BLOCKED");
-          else if (t.summary && t.summary.includes("Verdict: WAIT")) setDecisionVerdict("WAIT");
-          else if (t.tool === "record_restraint_decision") setDecisionVerdict("DO_NOTHING");
+      
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No stream available");
+      
+      const decoder = new TextDecoder();
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n").filter(l => l.trim() !== "");
+        for (const line of lines) {
+            try {
+                const msg = JSON.parse(line);
+                if (msg.type === "tool_start") {
+                    setToolTrace(prev => [...prev, { tool: msg.tool, status: "running" }]);
+                } else if (msg.type === "tool_completed") {
+                    setToolTrace(prev => {
+                        let found = false;
+                        const next = prev.map(t => {
+                            if (t.tool === msg.tool && t.status === "running" && !found) {
+                                found = true;
+                                return { ...t, status: msg.status, summary: msg.summary, duration: msg.duration_ms / 1000 };
+                            }
+                            return t;
+                        });
+                        // fallback if not found
+                        if (!found) {
+                            next.push({ tool: msg.tool, status: msg.status, summary: msg.summary, duration: msg.duration_ms / 1000 });
+                        }
+                        return next;
+                    });
+                } else if (msg.type === "final_result") {
+                    const data = msg.data;
+                    const respText = data.response || "Executed successfully.";
+                    setResponse(respText);
+                    setMode(data.mode || "STRANDS_AGENT");
+                    if (data.provider) setProvider(data.provider);
+                    
+                    let verdict = null;
+                    if (Array.isArray(data.tool_trace)) {
+                      for (const t of data.tool_trace) {
+                        if (t.summary && t.summary.includes("Verdict: AUTO")) verdict = "AUTO";
+                        else if (t.summary && t.summary.includes("Verdict: DO_NOTHING")) verdict = "DO_NOTHING";
+                        else if (t.summary && t.summary.includes("Verdict: ASK")) verdict = "ASK";
+                        else if (t.summary && t.summary.includes("Verdict: BLOCKED")) verdict = "BLOCKED";
+                        else if (t.summary && t.summary.includes("Verdict: WAIT")) verdict = "WAIT";
+                        else if (t.tool === "record_restraint_decision") verdict = "DO_NOTHING";
+                      }
+                    }
+              
+                    if (!verdict) {
+                      if (respText.includes("AUTO")) verdict = "AUTO";
+                      else if (respText.includes("DO_NOTHING") || respText.includes("Restraint")) verdict = "DO_NOTHING";
+                      else if (respText.includes("ASK") || respText.includes("confirmation")) verdict = "ASK";
+                      else if (respText.includes("BLOCKED")) verdict = "BLOCKED";
+                    }
+                    setDecisionVerdict(verdict);
+                }
+            } catch(e) {}
         }
-      }
-
-      if (!decisionVerdict) {
-        if (respText.includes("AUTO")) setDecisionVerdict("AUTO");
-        else if (respText.includes("DO_NOTHING") || respText.includes("Restraint")) setDecisionVerdict("DO_NOTHING");
-        else if (respText.includes("ASK") || respText.includes("confirmation")) setDecisionVerdict("ASK");
-        else if (respText.includes("BLOCKED")) setDecisionVerdict("BLOCKED");
       }
 
       window.dispatchEvent(new Event("household-updated"));
@@ -172,7 +213,7 @@ export default function CommandBox({
                 disabled={loading || !command.trim()}
                 className="px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 disabled:opacity-40 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
               >
-                {loading ? (
+                {loading && !response ? (
                   <>
                     <RotateCcw className="w-3.5 h-3.5 animate-spin" />
                     <span>Thinking…</span>
@@ -203,6 +244,29 @@ export default function CommandBox({
             </button>
           ))}
         </div>
+
+        {/* Dynamic Activity Traces */}
+        {loading && !response && (
+            <div className="mt-5 p-4 border border-blue-100 bg-blue-50/50 rounded-2xl">
+                <div className="flex items-center gap-2 mb-3 text-blue-800 font-medium text-sm">
+                    <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                    NOVA is checking your household...
+                </div>
+                <div className="space-y-2">
+                    {toolTrace.map((t, idx) => (
+                        <div key={idx} className="flex items-center gap-2 text-sm">
+                            {t.status === "running" ? (
+                                <Loader2 className="w-3 h-3 animate-spin text-blue-400" />
+                            ) : (
+                                <Check className="w-3 h-3 text-emerald-500" />
+                            )}
+                            <span className="text-neutral-600 font-mono text-xs">{t.tool}()</span>
+                            {t.summary && <span className="text-neutral-500 text-xs">- {t.summary}</span>}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )}
 
         {/* Response Presentation */}
         {response && (
@@ -247,9 +311,25 @@ export default function CommandBox({
               </button>
             </div>
 
-            {/* Conversational Assistant Explanation */}
-            <div className="text-sm text-neutral-800 leading-relaxed font-sans whitespace-pre-wrap">
-              {response}
+            {/* Answer Activity separation */}
+            {toolTrace.length > 0 && (
+                <div className="mb-4">
+                    <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Activity</div>
+                    <div className="space-y-1">
+                        {toolTrace.map((t, idx) => (
+                            <div key={idx} className="flex items-center gap-2 text-sm text-neutral-600">
+                                <Check className="w-3.5 h-3.5 text-emerald-500" />
+                                <span>{t.tool.replace(/_/g, " ")} {t.summary ? `- ${t.summary}` : ""}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Conversational Assistant Explanation as Markdown */}
+            <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Answer</div>
+            <div className="text-sm text-neutral-800 leading-relaxed font-sans prose prose-sm max-w-none">
+              <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{response}</ReactMarkdown>
             </div>
 
             {/* Optional Technical Details for Judges & Architecture Review */}

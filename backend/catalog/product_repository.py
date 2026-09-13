@@ -21,7 +21,7 @@ class ProductRepository:
                 item["subcategory"] = cls_info["subcategory"]
                 item["section"] = cls_info["section"]
                 item["keywords"] = cls_info["keywords"]
-                # Authenticate image URL — only genuine HTTP/HTTPS URLs are retained
+                # Authenticate image URL - only genuine HTTP/HTTPS URLs are retained
                 raw_img = item.get("imageUrl") or item.get("image")
                 if raw_img and str(raw_img).startswith("/assets/fallbacks/"):
                     raw_img = None

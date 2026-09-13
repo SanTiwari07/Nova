@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Query, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse, HTMLResponse
+from fastapi.responses import RedirectResponse, HTMLResponse, StreamingResponse
 # pyrefly: ignore [missing-import]
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -349,8 +349,87 @@ async def reset_demo():
     commerce_adapter._catalog_cache_time = 0.0
     return {"status": "ok"}
 
+@app.get("/api/agent/diagnostics")
+async def agent_diagnostics():
+    diagnostic_info = {
+        "strands_sdk": "ok",
+        "agent_initialization": "ok" if nova_agent.agent else "failed",
+        "model": "ok" if nova_agent.agent and nova_agent.agent.model else "failed",
+        "tool_registration": "ok" if nova_agent.tools else "failed",
+        "tool_execution": "pending",
+        "agent_execution": "pending",
+        "status": "healthy"
+    }
+    
+    try:
+        import strands
+        diagnostic_info["strands_sdk"] = "ok"
+    except ImportError as e:
+        diagnostic_info["strands_sdk"] = f"failed: {str(e)}"
+        diagnostic_info["status"] = "unhealthy"
+        return diagnostic_info
+
+    if not nova_agent.agent:
+        diagnostic_info["agent_initialization"] = "failed: agent is None"
+        diagnostic_info["status"] = "unhealthy"
+        return diagnostic_info
+        
+    try:
+        budget_tool = next((t for t in nova_agent.tools if getattr(t, "name", "") == "get_budget_status" or getattr(t, "tool_spec", {}).get("name") == "get_budget_status"), None)
+        if budget_tool:
+            # We can invoke it directly. wait, strands tool is callable directly.
+            budget_tool()
+            diagnostic_info["tool_execution"] = "ok"
+        else:
+            diagnostic_info["tool_execution"] = "failed: budget tool not found"
+            diagnostic_info["status"] = "unhealthy"
+    except Exception as e:
+        diagnostic_info["tool_execution"] = f"failed: {str(e)}"
+        diagnostic_info["status"] = "unhealthy"
+
+    try:
+        result = await nova_agent.invoke("Check budget")
+        if result and result.get("status") == "success":
+            diagnostic_info["agent_execution"] = "ok"
+        else:
+            diagnostic_info["agent_execution"] = "failed: bad result"
+            diagnostic_info["status"] = "unhealthy"
+    except Exception as e:
+        diagnostic_info["agent_execution"] = f"failed: {str(e)}"
+        diagnostic_info["status"] = "unhealthy"
+
+    return diagnostic_info
+
+import time
+import uuid
+import logging
+import json
+
+logger = logging.getLogger("nova.api")
+logger.setLevel(logging.INFO)
+if not logger.handlers:
+    sh = logging.StreamHandler()
+    formatter = logging.Formatter('{"time": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "message": "%(message)s"}')
+    sh.setFormatter(formatter)
+    logger.addHandler(sh)
+
+@app.post("/api/command/stream")
+async def process_command_stream(req: RequestModel):
+    query_text = req.get_text()
+    if not query_text:
+        raise HTTPException(status_code=400, detail="Empty request")
+        
+    return StreamingResponse(
+        nova_agent.invoke_stream(query_text),
+        media_type="application/x-ndjson"
+    )
+
 @app.post("/api/command")
 async def process_command(req: RequestModel):
+    request_id = str(uuid.uuid4())
+    session_id = "user_session_1"
+    start_time = time.time()
+    
     query_text = req.get_text()
     if not query_text:
         return {
@@ -359,15 +438,37 @@ async def process_command(req: RequestModel):
             "mode": "STRANDS_AGENT",
             "status": "error"
         }
-    result = await nova_agent.handle_request(query_text)
-    if isinstance(result, dict):
+
+    try:
+        force_fallback = getattr(req, "force_fallback", False)
+        
+        result = await nova_agent.handle_request(query_text, force_fallback=force_fallback)
+        
+        latency = round((time.time() - start_time) * 1000, 2)
+        tool_names = [t.get("tool") for t in result.get("tool_trace", [])]
+        
+        logger.info(json.dumps({
+            "event": "command_processed",
+            "request_id": request_id,
+            "session_id": session_id,
+            "latency_ms": latency,
+            "tools_called": tool_names,
+            "provider": result.get("provider"),
+            "mode": result.get("mode"),
+            "status": "success"
+        }))
+        
         return result
-    return {
-        "response": str(result),
-        "tool_trace": [],
-        "mode": "STRANDS_AGENT",
-        "status": "success"
-    }
+    except Exception as e:
+        latency = round((time.time() - start_time) * 1000, 2)
+        logger.error(json.dumps({
+            "event": "command_error",
+            "request_id": request_id,
+            "session_id": session_id,
+            "latency_ms": latency,
+            "error": str(e)
+        }))
+        raise HTTPException(status_code=500, detail=str(e))
 
 class BudgetUpdateRequest(BaseModel):
     monthly: Optional[float] = None
@@ -468,8 +569,23 @@ async def get_orders():
             (log for log in audit_logs if order_id in log.get("product", "")), None
         )
         decision_raw = order.get("decision", "AUTO")
+        
+        # Enrich items with images
+        enriched_items = []
+        for item in order.get("items", []):
+            item_copy = dict(item)
+            prod_id = item.get("id") or item.get("productId") or item.get("variantId")
+            if prod_id:
+                prod = product_repo.get_by_id(prod_id)
+                if prod:
+                    item_copy["imageUrl"] = prod.get("imageUrl") or prod.get("image")
+            elif "imageUrl" not in item_copy and "image" in item_copy:
+                item_copy["imageUrl"] = item_copy["image"]
+            enriched_items.append(item_copy)
+            
         enriched.append({
             **order,
+            "items": enriched_items,
             "decision_label": _DECISION_LABELS.get(decision_raw, decision_raw),
             "nova_reason": audit_entry["reasons"] if audit_entry else [
                 f"Purchase placed via NOVA autopilot ({decision_raw})."
@@ -486,6 +602,13 @@ async def get_pending_orders():
         log for log in audit_logs
         if log.get("decision") == "ASK" and "APPROVED" not in log.get("decision", "") and "REJECTED" not in log.get("decision", "")
     ]
+    for event in pending:
+        if event.get("entityId"):
+            prod = product_repo.get_by_id(event["entityId"])
+            if prod and "imageUrl" in prod:
+                event["imageUrl"] = prod["imageUrl"]
+            elif prod and "image" in prod:
+                event["imageUrl"] = prod["image"]
     return {"pending": pending, "count": len(pending)}
 
 @app.get("/api/audit/activity")
@@ -494,7 +617,15 @@ async def get_activity(
     limit: int = Query(50, ge=1, le=200)
 ):
     """Retrieve recent household audit & activity timeline events."""
-    return audit_service.get_recent(limit=limit, filter_type=filter)
+    events = audit_service.get_recent(limit=limit, filter_type=filter)
+    for event in events:
+        if event.get("entityId"):
+            prod = product_repo.get_by_id(event["entityId"])
+            if prod and "imageUrl" in prod:
+                event["imageUrl"] = prod["imageUrl"]
+            elif prod and "image" in prod:
+                event["imageUrl"] = prod["image"]
+    return events
 
 @app.get("/api/search")
 async def unified_search(
@@ -1203,7 +1334,7 @@ async def approve_autopilot_item(req: ApproveRequest):
 
 @app.get("/api/nova-cart")
 async def get_nova_cart():
-    """NOVA's intelligent household cart — the planned purchase set."""
+    """NOVA's intelligent household cart - the planned purchase set."""
     recurring = history_service.get_recurring_products()
     budget_remaining = await budget_service.get_remaining_budget()
     auto_limit = await budget_service.get_auto_buy_limit()
@@ -1324,12 +1455,27 @@ async def reconcile_household_plan(req: RequestModel):
     if not text:
         raise HTTPException(status_code=400, detail="Text required")
     reconciliation = await intent_service.reconcile_intent(text)
+    
+    # Enrich missing items with real products
+    for item in reconciliation.get("missing_items", []):
+        query = item.get("search_query")
+        if query:
+            products = await commerce_adapter.search_products(query)
+            if products:
+                prod = products[0]
+                item["product"] = {
+                    "id": prod.get("product_id"),
+                    "name": prod.get("name"),
+                    "price": prod.get("price", 0),
+                    "image": prod.get("image") or prod.get("imageUrl") or ""
+                }
+    
     return reconciliation
 
 
 @app.get("/api/household-status")
 async def get_household_status():
-    """Authoritative household briefing status endpoint — driven by real pantry, budget and audit state."""
+    """Authoritative household briefing status endpoint - driven by real pantry, budget and audit state."""
     from datetime import datetime as _dt
     hour = _dt.now().hour
     if hour < 12:

@@ -72,7 +72,7 @@ class ReminderEngine:
                 "type": "APPROVAL",
                 "priority": "HIGH",
                 "title": "India Gate Rice needs your okay",
-                "message": "Rice refill — ₹469. Within your budget but NOVA wants to confirm: do you want the 5kg pack this time?",
+                "message": "Rice refill - ₹469. Within your budget but NOVA wants to confirm: do you want the 5kg pack this time?",
                 "product_id": "prod_000010",
                 "product_name": "India Gate Basmati Rice",
                 "created_at": today.isoformat(),

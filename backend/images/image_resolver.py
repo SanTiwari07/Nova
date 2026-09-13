@@ -1,30 +1,30 @@
 """
-ImageResolver — orchestrates the full product image resolution pipeline.
+ImageResolver - orchestrates the full product image resolution pipeline.
 
 Resolution priority (strictly ordered):
 
-  PRIORITY 1 — Genuine Swiggy CDN image URL
+  PRIORITY 1 - Genuine Swiggy CDN image URL
     If the product already has a Swiggy CDN imageUrl, return it DIRECTLY
     without any further validation or OFF lookup. The Swiggy CDN is always
     authoritative. Trust it. Pass it straight to the frontend.
 
-  PRIORITY 2 — Swiggy image URL present but not yet validated
+  PRIORITY 2 - Swiggy image URL present but not yet validated
     If the Swiggy response contains an imageUrl field and it looks like a
     real CDN URL, validate it and return it if valid. If validation fails
     due to a TRANSIENT error (timeout, SSL, 429/503), still return the URL
-    to the browser — let the browser try fetching it directly instead of
+    to the browser - let the browser try fetching it directly instead of
     burying the image in a server-side timeout.
 
-  PRIORITY 3 — Open Food Facts barcode / GTIN match
+  PRIORITY 3 - Open Food Facts barcode / GTIN match
     Only attempted when Swiggy provides NO image at all.
     If Swiggy provides an authentic barcode/GTIN/EAN/UPC, use it for an
     exact OFF lookup. Confidence = 1.00.
 
-  PRIORITY 4 — Open Food Facts brand + name + quantity match
+  PRIORITY 4 - Open Food Facts brand + name + quantity match
     Attempt a controlled identity search. Requires confidence >= threshold.
     Pack size mismatch = hard reject. Only curated front packaging accepted.
 
-  PRIORITY 5 — No confident match
+  PRIORITY 5 - No confident match
     Return imageUrl = None, imageStatus = "unavailable".
     The UI shows a clean neutral placeholder ("Image unavailable").
     Never substitute an emoji or an AI-generated image.
@@ -197,7 +197,7 @@ class ImageResolver:
         if getattr(_off_resolver, "last_error_is_transient", False):
             print(
                 f"[IMAGE RESOLVER] Product: {product.get('name', '?')} | "
-                f"External service transient failure (OFF 429/503/timeout) — NOT caching unavailable."
+                f"External service transient failure (OFF 429/503/timeout) - NOT caching unavailable."
             )
             return {
                 "imageUrl": None,
@@ -207,7 +207,7 @@ class ImageResolver:
             }
 
         # Only cache this if we actually searched and found nothing.
-        # This is a confirmed "no image exists" — not a transient failure.
+        # This is a confirmed "no image exists" - not a transient failure.
         print(
             f"[IMAGE RESOLVER] Product: {product.get('name', '?')} | "
             f"Image: CONFIRMED UNAVAILABLE (exhausted all sources)"

@@ -444,7 +444,7 @@ def create_nova_tools(
         elif decision == "WAIT":
             audit_service.log_event(
                 event_type="AUTONOMOUS_ACTION",
-                title=f"Price Watch — Waiting: {product['name']}",
+                title=f"Price Watch - Waiting: {product['name']}",
                 description=f"Current price is elevated. Recommended to wait for price drop or deal.",
                 entity_type="PRODUCT",
                 entity_id=product_id,

@@ -7,7 +7,7 @@ NOVA is an intelligence layer that understands everyday household context and ta
 ### 2. NOVA Brand Definition
 **Name**: NOVA
 **Tagline**: The intelligence layer for everyday life.
-NOVA feels like a premium consumer product. It quietly understands the user's life and acts gracefully. It avoids aggressive "AI" branding—no robot imagery, no glowing effects, no "AGENT ONLINE" labels.
+NOVA feels like a premium consumer product. It quietly understands the user's life and acts gracefully. It avoids aggressive "AI" branding-no robot imagery, no glowing effects, no "AGENT ONLINE" labels.
 
 ### 3. Problem Statement
 Managing a household requires constant context retrieval, planning, and micro-decisions (What do we have? What do we need? Are we on budget?). Traditional apps require manual data entry, while basic AI agents lack deterministic constraints and deep context.

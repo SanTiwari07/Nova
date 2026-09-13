@@ -9,12 +9,12 @@ try:
 except ImportError:
     _HAS_PIL = False
 
-# Only cache definitive outcomes — NOT transient network failures.
+# Only cache definitive outcomes - NOT transient network failures.
 # Transient: timeout, connection error, HTTP 429/502/503/504 → NOT cached
 # Permanent: 200 OK (valid/invalid), 404, HTML content, bad dimensions → cached
 _VALIDATION_CACHE: Dict[str, Tuple[bool, str, Optional[Tuple[int, int]]]] = {}
 
-# HTTP status codes that are transient — never cache these
+# HTTP status codes that are transient - never cache these
 _TRANSIENT_HTTP_CODES = {429, 502, 503, 504, 408}
 
 
@@ -135,10 +135,10 @@ def validate_image_url(url: Optional[str]) -> Tuple[bool, str, Optional[Tuple[in
         return False, reason, None
 
     except Exception as e:
-        # Timeout, connection reset, SSL handshake, DNS failure — all TRANSIENT.
+        # Timeout, connection reset, SSL handshake, DNS failure - all TRANSIENT.
         # NEVER cache these as permanent failures.
         reason = f"Connection error: {e}"
-        print(f"IMAGE VALIDATION\nURL: {url_str}\nHTTP: N/A\nContent-Type: N/A\nDimensions: N/A\nVALID: false\nREASON: {reason} [transient — not cached]")
+        print(f"IMAGE VALIDATION\nURL: {url_str}\nHTTP: N/A\nContent-Type: N/A\nDimensions: N/A\nVALID: false\nREASON: {reason} [transient - not cached]")
         return False, reason, None
 
 

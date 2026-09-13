@@ -176,7 +176,7 @@ export default function TodayPage() {
       await fetch("/api/command", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: "Take care of tonight's Maggi plan — order required noodles" }),
+        body: JSON.stringify({ text: "Take care of tonight's Maggi plan - order required noodles" }),
       });
       setPlanActionDone(true);
       window.dispatchEvent(new Event("household-updated"));
@@ -248,7 +248,7 @@ export default function TodayPage() {
           </p>
         </div>
 
-        {/* ── SECTION 1 — NOVA'S BRIEFING SUMMARY ───────────────────── */}
+        {/* ── SECTION 1 - NOVA'S BRIEFING SUMMARY ───────────────────── */}
         <section className="mb-8">
           <div className="bg-white rounded-3xl border border-neutral-200/90 p-5 sm:p-6 shadow-xs">
             <div className="flex items-center gap-2 mb-3">
@@ -273,7 +273,7 @@ export default function TodayPage() {
           </div>
         </section>
 
-        {/* ── SECTION 2 — TAKEN CARE OF (AUTO) ───────────────────────── */}
+        {/* ── SECTION 2 - TAKEN CARE OF (AUTO) ───────────────────────── */}
         {s.taken_care_of && s.taken_care_of.length > 0 && (
           <section className="mb-8">
             <div className="flex items-center justify-between mb-3 px-1">
@@ -328,7 +328,7 @@ export default function TodayPage() {
           </section>
         )}
 
-        {/* ── SECTION 3 — NEEDS YOUR INPUT (ASK) ────────────────────── */}
+        {/* ── SECTION 3 - NEEDS YOUR INPUT (ASK) ────────────────────── */}
         {s.needs_input && s.needs_input.length > 0 && (
           <section className="mb-8">
             <div className="flex items-center justify-between mb-3 px-1">
@@ -381,7 +381,7 @@ export default function TodayPage() {
           </section>
         )}
 
-        {/* ── SECTION 4 — TONIGHT / UPCOMING (PLANS) ─────────────────── */}
+        {/* ── SECTION 4 - TONIGHT / UPCOMING (PLANS) ─────────────────── */}
         {s.tonight_plan && (
           <section className="mb-8">
             <div className="flex items-center justify-between mb-3 px-1">
@@ -483,7 +483,7 @@ export default function TodayPage() {
           </section>
         )}
 
-        {/* ── SECTION 5 — HOUSEHOLD STATUS ──────────────────────────── */}
+        {/* ── SECTION 5 - HOUSEHOLD STATUS ──────────────────────────── */}
         <section className="mb-8">
           <h2 className="text-xs font-bold tracking-widest text-neutral-400 uppercase mb-3 px-1">
             Your household
@@ -553,7 +553,7 @@ export default function TodayPage() {
           </div>
         </section>
 
-        {/* ── SECTION 6 — ALL SORTED (RESTRAINT DEMONSTRATION) ─────────── */}
+        {/* ── SECTION 6 - ALL SORTED (RESTRAINT DEMONSTRATION) ─────────── */}
         {s.all_sorted && s.all_sorted.length > 0 && (
           <section className="mb-8">
             <div className="flex items-center justify-between mb-3 px-1">
@@ -594,7 +594,7 @@ export default function TodayPage() {
           </section>
         )}
 
-        {/* ── SECTION 7 — WHAT CAN I TAKE CARE OF? (NATURAL INPUT) ───── */}
+        {/* ── SECTION 7 - WHAT CAN I TAKE CARE OF? (NATURAL INPUT) ───── */}
         <section className="mb-12">
           <CommandBox
             id="today-command-box"

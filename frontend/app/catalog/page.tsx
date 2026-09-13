@@ -300,7 +300,7 @@ function CatalogContent() {
                 <span className="font-semibold">Swiggy Instamart Live Session Active</span>
                 {activeAddress && (
                   <span className="text-emerald-700 hidden sm:inline">
-                    — Delivering to {activeAddress.label || activeAddress.addressCategory || activeAddress.formattedAddress}
+                    - Delivering to {activeAddress.label || activeAddress.addressCategory || activeAddress.formattedAddress}
                   </span>
                 )}
               </div>

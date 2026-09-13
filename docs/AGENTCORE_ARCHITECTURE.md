@@ -1,4 +1,4 @@
-﻿# NOVA — AWS Bedrock AgentCore Architecture Mapping
+﻿# NOVA - AWS Bedrock AgentCore Architecture Mapping
 
 NOVA is a **confidence-aware autonomous household decision agent** built for the **AWS Agents for Humans Hackathon**. Rather than operating as an unrestricted conversational bot, NOVA enforces a strict deterministic safety gate between LLM reasoning and real-world execution.
 

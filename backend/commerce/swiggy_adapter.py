@@ -347,7 +347,7 @@ class SwiggyInstamartAdapter(CommerceInterface):
 
         # ── Image URL resolution (Priority 1: Swiggy CDN) ─────────────────────
         # Inspect ALL known field names that the Swiggy MCP may use for images.
-        # ONLY use a field if it is actually present in the response — never fabricate.
+        # ONLY use a field if it is actually present in the response - never fabricate.
         raw_img_candidates = [
             variation.get("image"),
             variation.get("images"),

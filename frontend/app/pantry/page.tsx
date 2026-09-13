@@ -122,7 +122,7 @@ export default function PantryPage() {
   const handleTakeCareOf = async (item: PantryItem) => {
     setActionItem(item.product_id);
     try {
-      const prompt = `Take care of ${item.name} — ${item.quantity} ${item.unit} left (~${item.days_remaining} days). Please check if I need it and handle it.`;
+      const prompt = `Take care of ${item.name} - ${item.quantity} ${item.unit} left (~${item.days_remaining} days). Please check if I need it and handle it.`;
       const res = await fetch("/api/command", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -321,7 +321,7 @@ export default function PantryPage() {
           </section>
         )}
 
-        {/* COMFORTABLE — collapsible */}
+        {/* COMFORTABLE - collapsible */}
         {comfortable.length > 0 && (
           <section>
             <button
@@ -357,7 +357,7 @@ export default function PantryPage() {
             )}
             {!showComfortable && (
               <p className="text-xs text-neutral-400 ml-6">
-                {comfortable.map((i) => i.name.split(" ")[0]).join(", ")} — no action needed.
+                {comfortable.map((i) => i.name.split(" ")[0]).join(", ")} - no action needed.
               </p>
             )}
           </section>

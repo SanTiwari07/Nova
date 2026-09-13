@@ -3,8 +3,8 @@ import Header from '@/components/Header';
 import FloatingCopilotDrawer from '@/components/FloatingCopilotDrawer';
 
 export const metadata = {
-  title: 'NOVA — Household Autopilot & Intelligence',
-  description: 'NOVA takes care of everyday household decisions for you — managing inventory, predicting needs, and acting within your rules.',
+  title: 'NOVA - Household Autopilot & Intelligence',
+  description: 'NOVA takes care of everyday household decisions for you - managing inventory, predicting needs, and acting within your rules.',
 };
 
 export default function RootLayout({

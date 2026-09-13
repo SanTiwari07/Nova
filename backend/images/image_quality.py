@@ -1,5 +1,5 @@
 """
-ImageQualityEvaluator — deterministic image quality and catalog suitability scoring.
+ImageQualityEvaluator - deterministic image quality and catalog suitability scoring.
 
 Evaluates candidate product images to ensure only professional e-commerce quality
 images are displayed. Rejects low-quality, user-generated content (UGC), hand-held

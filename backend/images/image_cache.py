@@ -1,10 +1,10 @@
 """
-ImageCache — in-memory TTL cache for resolved product image URLs.
+ImageCache - in-memory TTL cache for resolved product image URLs.
 
 Prevents repeated Open Food Facts API calls for the same product.
 Cache records include source, confidence, matched identifier and expiry.
 
-No image files are stored locally — only remote URLs are cached.
+No image files are stored locally - only remote URLs are cached.
 
 CRITICAL CACHING RULES:
   - "found" results (real URL) → cache for 24 hours
@@ -53,13 +53,13 @@ class ImageCache:
             return None
 
         if time.time() > record.get("expiresAt", 0):
-            # Expired — evict and return miss
+            # Expired - evict and return miss
             del self._store[product_key]
-            print(f"[ImageCache] EXPIRED — evicting key: {product_key}")
+            print(f"[ImageCache] EXPIRED - evicting key: {product_key}")
             return None
 
         print(
-            f"[ImageCache] HIT — key: {product_key} | "
+            f"[ImageCache] HIT - key: {product_key} | "
             f"source: {record.get('source')} | "
             f"confidence: {record.get('confidence', 0):.2f}"
         )
@@ -99,7 +99,7 @@ class ImageCache:
         self._store[product_key] = record
 
         print(
-            f"[ImageCache] SET — key: {product_key} | "
+            f"[ImageCache] SET - key: {product_key} | "
             f"source: {source} | "
             f"confidence: {confidence:.2f} | "
             f"url: {'yes' if image_url else 'null'} | "
@@ -111,7 +111,7 @@ class ImageCache:
         """Remove a single key from the cache."""
         if product_key in self._store:
             del self._store[product_key]
-            print(f"[ImageCache] INVALIDATED — key: {product_key}")
+            print(f"[ImageCache] INVALIDATED - key: {product_key}")
 
     def clear(self) -> None:
         """Flush the entire cache."""
@@ -157,5 +157,5 @@ class ImageCache:
         }
 
 
-# Singleton — shared across the process lifetime
+# Singleton - shared across the process lifetime
 image_cache = ImageCache()

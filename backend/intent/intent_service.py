@@ -322,16 +322,21 @@ class IntentReconciliationService:
     def _extract_dynamic_dish(self, intent_text: str) -> Optional[str]:
         """Extracts dish name from phrases like 'I am making pasta tonight' or 'cook khichdi'."""
         _, cleaned = self._extract_serving_scale(intent_text)
+        
+        # Strip common trailing noise words
+        noise_pattern = r"(?:\bwhat\b|\bhow\b|\bcan\b|\bi\b|\bneed\b|\bto\b|\bhave\b|\bplease\b|\.|\?|,).*$"
+        cleaned_no_noise = re.sub(noise_pattern, "", cleaned).strip()
+        
         patterns = [
-            r"(?:make|making|cook|cooking|prepare|preparing|having|eat|eating|for)\s+([a-zA-Z\s]+?)(?:\s+tonight|\s+today|\s+for dinner|\s+for lunch|\s+for breakfast|\.|$|,)",
-            r"want\s+to\s+(?:make|cook|eat)\s+([a-zA-Z\s]+?)(?:\s+tonight|\s+today|\.|$|,)",
-            r"need\s+ingredients\s+for\s+([a-zA-Z\s]+?)(?:\.|$|,)"
+            r"(?:make|making|cook|cooking|prepare|preparing|having|eat|eating|for)\s+([a-zA-Z\s]+?)(?:\s+tonight|\s+today|\s+for dinner|\s+for lunch|\s+for breakfast|$)",
+            r"want\s+to\s+(?:make|cook|eat)\s+([a-zA-Z\s]+?)(?:\s+tonight|\s+today|$)",
+            r"need\s+ingredients\s+for\s+([a-zA-Z\s]+?)(?:$)"
         ]
         for pat in patterns:
-            m = re.search(pat, cleaned)
+            m = re.search(pat, cleaned_no_noise)
             if m:
                 dish = m.group(1).strip()
-                if dish and len(dish.split()) <= 4:
+                if dish and len(dish.split()) <= 5:
                     return dish.title()
         return None
 

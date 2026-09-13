@@ -136,7 +136,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className="group relative flex flex-col h-full bg-white border border-neutral-200 rounded-md p-3 hover:shadow-md transition-all duration-200">
-      {/* Product Image — uses async-resolved real URL (never emoji, never AI) */}
+      {/* Product Image - uses async-resolved real URL (never emoji, never AI) */}
       <Link href={`/catalog/${product.id}`} className="block relative w-full aspect-square mb-2 overflow-hidden bg-neutral-50/50 rounded">
         {imageResolving ? (
           /* Skeleton pulse while image resolution is in progress */
@@ -156,7 +156,7 @@ export default function ProductCard({ product }: { product: Product }) {
             className="group-hover:scale-105 transition-transform duration-200 object-contain p-2"
           />
         )}
-        {/* Image source badge — development observability */}
+        {/* Image source badge - development observability */}
         {imageSource && imageSource !== "unavailable" && (
           <span className="absolute bottom-1 right-1 text-[8px] font-bold px-1 py-0.5 rounded bg-black/30 text-white pointer-events-none select-none">
             {imageSource === "swiggy" ? "Swiggy" : imageSource === "open_food_facts" ? "OFF" : imageSource}

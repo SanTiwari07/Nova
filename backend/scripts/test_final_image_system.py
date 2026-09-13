@@ -50,7 +50,7 @@ TEST_QUERIES = [
 
 async def run_verification():
     print("\n" + "=" * 90)
-    print("HOUSEHOLD AUTOPILOT — FINAL DYNAMIC PRODUCT IMAGE SYSTEM VERIFICATION")
+    print("HOUSEHOLD AUTOPILOT - FINAL DYNAMIC PRODUCT IMAGE SYSTEM VERIFICATION")
     print("=" * 90)
 
     results = []

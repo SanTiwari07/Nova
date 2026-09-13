@@ -190,7 +190,7 @@ export default function BudgetPage() {
           </div>
         </div>
 
-        {/* Upcoming purchases — derived from pantry */}
+        {/* Upcoming purchases - derived from pantry */}
         {upcomingGroups.length > 0 && (
           <div className="bg-white rounded-3xl border border-neutral-200 p-6 mb-5">
             <h2 className="text-base font-black text-neutral-900 mb-4">
@@ -269,11 +269,11 @@ export default function BudgetPage() {
             )}
             {projectedStatus === "WITHIN" ? (
               <span className="text-sm text-emerald-600">
-                — ₹{projectedRemaining.toLocaleString("en-IN")} to spare
+                - ₹{projectedRemaining.toLocaleString("en-IN")} to spare
               </span>
             ) : (
               <span className="text-sm text-red-600">
-                — ₹{Math.abs(projectedRemaining).toLocaleString("en-IN")} shortfall
+                - ₹{Math.abs(projectedRemaining).toLocaleString("en-IN")} shortfall
               </span>
             )}
           </div>

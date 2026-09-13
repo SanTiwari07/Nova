@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --font-primary: "Amazon Ember", "Helvetica Neue", Roboto, Arial, sans-serif;
+}
+
+html,
+body {
+  font-family: var(--font-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+
 @layer utilities {
   .hide-scrollbar::-webkit-scrollbar {
     display: none;

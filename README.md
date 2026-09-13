@@ -1,4 +1,4 @@
-# NOVA — Household Autopilot
+# NOVA - Household Autopilot
 > **The intelligence layer for everyday commerce and household autonomy.**
 
 NOVA transforms routine household replenishment from an active cognitive chore into an intelligent, autonomous background service. Built with **AWS Strands Agents**, **FastAPI**, **Next.js 14**, and native **Swiggy Instamart MCP** connectivity.

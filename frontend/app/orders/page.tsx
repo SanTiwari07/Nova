@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import ProductImage from "@/components/ProductImage";
 import { Sparkles, CheckCircle2, Clock, AlertCircle, MinusCircle, ShieldCheck, ChevronDown, ChevronUp } from "lucide-react";
 
 interface OrderItem {
   name: string;
   price: number;
   qty?: number;
+  imageUrl?: string;
 }
 
 interface Order {
@@ -27,6 +29,7 @@ interface AuditEntry {
   decision: string;
   reasons: string[];
   timestamp: string;
+  imageUrl?: string;
 }
 
 const DECISION_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode; bg: string }> = {
@@ -128,7 +131,7 @@ export default function OrdersPage() {
           <p className="text-xs font-bold tracking-widest text-neutral-400 uppercase mb-1">NOVA · Decisions & Orders</p>
           <h1 className="text-3xl font-black text-neutral-900 tracking-tight mb-2">Orders</h1>
           <p className="text-neutral-500">
-            Everything NOVA has done — and what still needs your input.
+            Everything NOVA has done - and what still needs your input.
           </p>
         </div>
 
@@ -144,11 +147,20 @@ export default function OrdersPage() {
                   <div className="flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                     <div className="flex-1">
-                      <p className="font-bold text-neutral-900 mb-1">{item.product}</p>
-                      {item.reasons.map((r, i) => (
-                        <p key={i} className="text-xs text-neutral-500 mb-0.5">{r}</p>
-                      ))}
-                      <p className="text-[10px] text-neutral-400 mt-1">{timeAgo(item.timestamp)}</p>
+                      <div className="flex items-start gap-3">
+                        {item.imageUrl && (
+                          <div className="w-12 h-12 shrink-0 border border-amber-100 rounded-lg overflow-hidden bg-white relative">
+                            <ProductImage src={item.imageUrl} alt={item.product} className="object-contain p-1" fill sizes="48px" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-neutral-900 mb-1">{item.product}</p>
+                          {item.reasons.map((r, i) => (
+                            <p key={i} className="text-xs text-neutral-500 mb-0.5 line-clamp-1">{r}</p>
+                          ))}
+                          <p className="text-[10px] text-neutral-400 mt-1">{timeAgo(item.timestamp)}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div className="flex gap-2 mt-3">
@@ -190,14 +202,21 @@ export default function OrdersPage() {
                         </div>
                         <p className="text-base font-black text-neutral-900">₹{order.total?.toLocaleString("en-IN")}</p>
                       </div>
-                      <div className="flex flex-wrap gap-1 mb-2">
+                      <div className="flex flex-wrap gap-1.5 mb-2">
                         {(order.items || []).slice(0, 3).map((item, i) => (
-                          <span key={i} className="text-xs px-2 py-0.5 bg-neutral-50 border border-neutral-100 rounded-lg text-neutral-600">
-                            {item.name}
-                          </span>
+                          <div key={i} className="flex items-center gap-1.5 text-xs pr-2 py-0.5 bg-neutral-50 border border-neutral-100 rounded-lg text-neutral-600 overflow-hidden">
+                            {item.imageUrl ? (
+                              <div className="w-5 h-5 shrink-0 bg-white border-r border-neutral-100 relative">
+                                <ProductImage src={item.imageUrl} alt={item.name} className="object-contain p-0.5" fill sizes="20px" />
+                              </div>
+                            ) : (
+                              <div className="w-1.5" />
+                            )}
+                            <span className={item.imageUrl ? "" : "pl-0.5"}>{item.name}</span>
+                          </div>
                         ))}
                         {(order.items?.length ?? 0) > 3 && (
-                          <span className="text-xs px-2 py-0.5 bg-neutral-50 border border-neutral-100 rounded-lg text-neutral-400">
+                          <span className="text-xs px-2 py-1 bg-neutral-50 border border-neutral-100 rounded-lg text-neutral-400 flex items-center">
                             +{(order.items?.length ?? 0) - 3} more
                           </span>
                         )}
@@ -223,12 +242,21 @@ export default function OrdersPage() {
                             <span className="text-amber-500 mt-0.5">›</span> {r}
                           </p>
                         ))}
-                        {(order.items || []).map((item, i) => (
-                          <div key={i} className="flex items-center justify-between py-2 border-t border-amber-100/50">
-                            <p className="text-sm text-neutral-700">{item.name}</p>
-                            <p className="text-sm font-bold text-neutral-900">₹{item.price}</p>
-                          </div>
-                        ))}
+                        <div className="mt-3 space-y-2">
+                          {(order.items || []).map((item, i) => (
+                            <div key={i} className="flex items-center justify-between py-2 border-t border-amber-100/50">
+                              <div className="flex items-center gap-3">
+                                {item.imageUrl && (
+                                  <div className="w-10 h-10 shrink-0 border border-neutral-100 rounded bg-white relative overflow-hidden">
+                                    <ProductImage src={item.imageUrl} alt={item.name} className="object-contain p-1" fill sizes="40px" />
+                                  </div>
+                                )}
+                                <p className="text-sm text-neutral-700 font-medium">{item.name} <span className="text-neutral-400">x{item.qty || 1}</span></p>
+                              </div>
+                              <p className="text-sm font-bold text-neutral-900">₹{item.price}</p>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -255,10 +283,19 @@ export default function OrdersPage() {
                         <p className={`text-xs font-bold uppercase tracking-wide ${cfg.color}`}>{cfg.label}</p>
                         <p className="text-[10px] text-neutral-400">{timeAgo(entry.timestamp)}</p>
                       </div>
-                      <p className="text-sm text-neutral-800 font-medium truncate">{entry.product}</p>
-                      {entry.reasons[0] && (
-                        <p className="text-xs text-neutral-500 mt-0.5 line-clamp-1">{entry.reasons[0]}</p>
-                      )}
+                      <div className="flex items-center gap-3 mt-1.5">
+                        {entry.imageUrl ? (
+                          <div className="w-12 h-12 shrink-0 border border-neutral-100 rounded-lg overflow-hidden bg-white relative">
+                            <ProductImage src={entry.imageUrl} alt={entry.product} className="object-contain p-1" fill sizes="48px" />
+                          </div>
+                        ) : null}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-neutral-800 font-medium truncate">{entry.product}</p>
+                          {entry.reasons[0] && (
+                            <p className="text-xs text-neutral-500 mt-0.5 line-clamp-2">{entry.reasons[0]}</p>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );

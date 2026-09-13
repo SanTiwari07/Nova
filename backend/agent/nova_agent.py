@@ -28,7 +28,7 @@ for p in [
 load_dotenv()
 
 from strands import Agent
-from strands.hooks import AfterToolCallEvent
+from strands.hooks import AfterToolCallEvent, BeforeToolCallEvent
 from .tools import create_nova_tools
 
 NOVA_SYSTEM_PROMPT = """You are NOVA, an uncertainty-aware autonomous household decision AI agent built with the AWS Strands Agents SDK.
@@ -36,7 +36,7 @@ Your mission is to manage everyday household life: replenish groceries and essen
 
 CORE AGENT BEHAVIORS & PRINCIPLES:
 
-1. GATHER FACTS FIRST — NEVER GUESS:
+1. GATHER FACTS FIRST - NEVER GUESS:
    - Always check pantry inventory (`get_pantry_inventory`) or history before assuming an item needs replenishing.
    - Ground all statements in real household state. Never invent imaginary items or fake prices.
 
@@ -66,7 +66,7 @@ CORE AGENT BEHAVIORS & PRINCIPLES:
      * Always search products with `search_catalog(query=...)`.
      * ALWAYS call `evaluate_and_execute_purchase(product_id=..., quantity=...)` to run deterministic safety checks:
        policy rules, budget availability, per-transaction limit (₹500), necessity, and autonomy mode.
-     * You must NEVER simulate checkout yourself — `evaluate_and_execute_purchase` is the ONLY tool authorized to execute purchases.
+     * You must NEVER simulate checkout yourself - `evaluate_and_execute_purchase` is the ONLY tool authorized to execute purchases.
      * If the tool returns AUTO: The simulated purchase was approved and executed within limits. Confirm this clearly with product name, price, and status.
      * If the tool returns ASK: Explain why user confirmation is required (e.g. price > auto limit, or category requires ask).
      * If the tool returns BLOCKED: Explain policy restriction.
@@ -180,32 +180,40 @@ class NovaAgent:
             self.active_provider = mode_tag
 
             # Register telemetry hook
+            def on_before_tool(event: BeforeToolCallEvent):
+                queue = event.invocation_state.get("queue")
+                if queue is not None:
+                    tool_name = event.tool_use.get("name", "unknown")
+                    queue.put_nowait({"type": "tool_start", "tool": tool_name})
+
             def on_tool_call(event: AfterToolCallEvent):
                 traces = event.invocation_state.get("traces")
-                if traces is not None:
-                    tool_name = event.tool_use.get("name", "unknown")
-                    tool_input = event.tool_use.get("input", {})
-                    result_summary = "executed"
-                    if event.result and getattr(event.result, "content", None):
-                        content_list = event.result.content
-                        if content_list and isinstance(content_list[0], dict) and "text" in content_list[0]:
-                            text_snip = content_list[0]["text"]
-                            try:
-                                parsed = json.loads(text_snip)
-                                if isinstance(parsed, dict):
-                                    if "verdict" in parsed:
-                                        result_summary = f"Verdict: {parsed['verdict']}"
-                                    elif "reconciliation_summary" in parsed:
-                                        result_summary = parsed["reconciliation_summary"][:80]
-                                    elif "total_items_checked" in parsed:
-                                        result_summary = f"Checked {parsed['total_items_checked']} items ({parsed.get('low_stock_count', 0)} low)"
-                                    elif "remaining_budget" in parsed:
-                                        result_summary = f"Budget remaining: ₹{parsed['remaining_budget']}"
-                                    elif "item" in parsed and "action" in parsed:
-                                        result_summary = f"{parsed['action']}: {parsed['item']}"
-                            except (json.JSONDecodeError, TypeError, KeyError, AttributeError):
-                                result_summary = text_snip[:60]
+                queue = event.invocation_state.get("queue")
+                
+                tool_name = event.tool_use.get("name", "unknown")
+                tool_input = event.tool_use.get("input", {})
+                result_summary = "executed"
+                if event.result and getattr(event.result, "content", None):
+                    content_list = event.result.content
+                    if content_list and isinstance(content_list[0], dict) and "text" in content_list[0]:
+                        text_snip = content_list[0]["text"]
+                        try:
+                            parsed = json.loads(text_snip)
+                            if isinstance(parsed, dict):
+                                if "verdict" in parsed:
+                                    result_summary = f"Verdict: {parsed['verdict']}"
+                                elif "reconciliation_summary" in parsed:
+                                    result_summary = parsed["reconciliation_summary"][:80]
+                                elif "total_items_checked" in parsed:
+                                    result_summary = f"Checked {parsed['total_items_checked']} items ({parsed.get('low_stock_count', 0)} low)"
+                                elif "remaining_budget" in parsed:
+                                    result_summary = f"Budget remaining: ₹{parsed['remaining_budget']}"
+                                elif "item" in parsed and "action" in parsed:
+                                    result_summary = f"{parsed['action']}: {parsed['item']}"
+                        except (json.JSONDecodeError, TypeError, KeyError, AttributeError):
+                            result_summary = text_snip[:60]
 
+                if traces is not None:
                     traces.append({
                         "tool": tool_name,
                         "input": tool_input,
@@ -213,7 +221,17 @@ class NovaAgent:
                         "summary": result_summary,
                         "duration": round(event.duration or 0, 3)
                     })
+                    
+                if queue is not None:
+                    queue.put_nowait({
+                        "type": "tool_completed",
+                        "tool": tool_name,
+                        "summary": result_summary,
+                        "duration_ms": int((event.duration or 0) * 1000),
+                        "status": "error" if event.exception else "success"
+                    })
 
+            self.agent.add_hook(on_before_tool, BeforeToolCallEvent)
             self.agent.add_hook(on_tool_call, AfterToolCallEvent)
             print(f"[NovaAgent] Successfully initialized AWS Strands Agent ({self.active_provider})")
         except Exception as e:
@@ -224,6 +242,67 @@ class NovaAgent:
     async def invoke(self, user_request: str, force_fallback: bool = False) -> Dict[str, Any]:
         """Convenience alias for handle_request."""
         return await self.handle_request(user_request, force_fallback=force_fallback)
+
+    async def invoke_stream(self, user_request: str, force_fallback: bool = False):
+        if not force_fallback and not self.agent and (os.environ.get("GEMINI_API_KEY") or os.environ.get("BEDROCK_MODEL_ID")):
+            self._init_strands_agent()
+            
+        queue = asyncio.Queue()
+        traces = []
+        
+        async def run_agent():
+            if self.agent and not force_fallback:
+                try:
+                    result = await self.agent.invoke_async(
+                        user_request,
+                        invocation_state={"traces": traces, "queue": queue}
+                    )
+                    response_text = str(result).strip()
+
+                    # General restraint auditing
+                    if any(w in response_text.lower() for w in ["do_nothing", "sufficient", "do not buy", "healthy stock", "already have enough", "plenty"]):
+                        if not any(t.get("tool") == "record_restraint_decision" for t in traces):
+                            for item in self.inventory.get_all():
+                                if item["name"].lower() in user_request.lower() or item["category"].lower() in user_request.lower():
+                                    self.audit.log_decision(
+                                        item["name"],
+                                        "DO_NOTHING",
+                                        [f"Household pantry stock is healthy ({item['quantity']}{item['unit']} in stock, ~{item['days_remaining']} days left); autonomous restraint applied."]
+                                    )
+                                    break
+
+                    return {
+                        "response": response_text,
+                        "tool_trace": traces,
+                        "mode": f"{self.active_provider}_AUTONOMOUS",
+                        "provider": self.active_provider,
+                        "status": "success"
+                    }
+                except Exception as e:
+                    err_msg = str(e)
+                    print(f"[NovaAgent] Strands invocation error: {err_msg}. Falling back to tool dispatcher.")
+                    if "API_KEY_INVALID" in err_msg or "INVALID_ARGUMENT" in err_msg or "API key not valid" in err_msg:
+                        self.agent = None
+                    traces.append({"tool": "strands_agent", "status": "error", "summary": err_msg[:120]})
+                    return await self._deterministic_tool_dispatch(user_request, traces)
+            else:
+                return await self._deterministic_tool_dispatch(user_request, traces)
+                
+        task = asyncio.create_task(run_agent())
+        
+        while not task.done():
+            try:
+                msg = await asyncio.wait_for(queue.get(), timeout=0.1)
+                yield json.dumps(msg) + "\n"
+            except asyncio.TimeoutError:
+                continue
+                
+        while not queue.empty():
+            msg = queue.get_nowait()
+            yield json.dumps(msg) + "\n"
+            
+        final_result = task.result()
+        yield json.dumps({"type": "final_result", "data": final_result}) + "\n"
 
     async def handle_request(self, user_request: str, force_fallback: bool = False) -> Dict[str, Any]:
         """
@@ -624,7 +703,7 @@ class NovaAgent:
             if pw_tool:
                 res = pw_tool()
                 traces.append({"tool": "get_price_watch_items", "input": {}, "status": "success", "summary": f"Found {res.get('total_tracked', 0)} tracked price opportunities"})
-                opps_txt = "\n".join([f"- **{o['product_name']}**: Current ₹{o['current_price']} (Target ₹{o['target_price']}) — Action: **{o['action']}**. {o['reason']}" for o in res.get("opportunities", [])])
+                opps_txt = "\n".join([f"- **{o['product_name']}**: Current ₹{o['current_price']} (Target ₹{o['target_price']}) - Action: **{o['action']}**. {o['reason']}" for o in res.get("opportunities", [])])
                 resp = f"**Price Watch Opportunities (Savings: ₹{res.get('total_potential_saving', 0)}):**\n{opps_txt or 'No tracked items currently.'}"
                 return {"response": resp, "tool_trace": traces, "mode": "STRANDS_TOOLS_DETERMINISTIC", "provider": "STRANDS_FALLBACK", "status": "success"}
 

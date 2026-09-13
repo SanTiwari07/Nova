@@ -5,7 +5,7 @@ import os
 
 PERSISTENCE_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "pantry_state.json")
 
-# ─── Seeded demo household — single source of truth for inventory ─────────────
+# ─── Seeded demo household - single source of truth for inventory ─────────────
 DEMO_PANTRY: Dict[str, Dict[str, Any]] = {
     "prod_000109": {
         "name": "Amul Taaza Milk 1L",
@@ -174,7 +174,7 @@ def _compute_confidence(data: Dict[str, Any]) -> float:
         except (ValueError, TypeError):
             score -= 0.05
     else:
-        score -= 0.05  # no timestamp — less certain
+        score -= 0.05  # no timestamp - less certain
 
     # Preferred / regularly tracked items get a bonus
     if data.get("preferred", False):
@@ -183,7 +183,7 @@ def _compute_confidence(data: Dict[str, Any]) -> float:
     # Penalise uncertainty when quantity is very low (harder to estimate)
     qty = data.get("quantity", 0)
     if qty <= 0:
-        score -= 0.10  # depleted — very uncertain
+        score -= 0.10  # depleted - very uncertain
     elif qty < 0.1:
         score -= 0.05
 
@@ -218,7 +218,7 @@ class InventoryService:
         self.reset()
 
     def reset(self):
-        """Restore demo seed — tries to load from persisted JSON first."""
+        """Restore demo seed - tries to load from persisted JSON first."""
         import copy
         self.pantry: Dict[str, Dict[str, Any]] = copy.deepcopy(DEMO_PANTRY)
         # Stamp all items with current time if no timestamp
@@ -342,7 +342,7 @@ class InventoryService:
                 days = _compute_days_remaining(data)
                 return days <= 7  # needs replenishment if ≤ 7 days left
 
-        # Item not in pantry at all — treat as needed
+        # Item not in pantry at all - treat as needed
         return True
 
     # ── Mutations ─────────────────────────────────────────────────────────────

@@ -72,7 +72,7 @@ export default function PriceWatchPage() {
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-4">
               <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">WAIT</span>
-              <p className="text-sm text-neutral-500">Price is above your usual — no rush to buy</p>
+              <p className="text-sm text-neutral-500">Price is above your usual - no rush to buy</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {waitItems.map(item => (

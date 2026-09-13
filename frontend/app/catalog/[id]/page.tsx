@@ -123,7 +123,7 @@ export default function ProductDetailPage({ params }: { params?: { id: string } 
                 );
               } else if (match.status === "OK") {
                 setNovaInsight(
-                  `You currently have ${match.quantity}${match.unit} of ${match.name} — stock looks good.`
+                  `You currently have ${match.quantity}${match.unit} of ${match.name} - stock looks good.`
                 );
               }
             }
@@ -244,7 +244,7 @@ export default function ProductDetailPage({ params }: { params?: { id: string } 
                   sizes="(max-width: 768px) 90vw, 38vw"
                 />
               </div>
-              {/* Thumbnail strip — only shown when an image is present */}
+              {/* Thumbnail strip - only shown when an image is present */}
               {Boolean(product.imageUrl || product.image) && (
                 <div className="flex gap-2 justify-center">
                   <div className="w-14 h-14 border-2 border-[#FC8019] rounded-sm overflow-hidden bg-white cursor-pointer p-1">
@@ -306,7 +306,7 @@ export default function ProductDetailPage({ params }: { params?: { id: string } 
                   </div>
                   <div className="flex items-start gap-2">
                     <svg className="text-neutral-500 mt-0.5 shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    <p>Deliver to <span className="text-[#0066c0] font-medium cursor-pointer hover:underline">Your household — Mumbai 400001</span></p>
+                    <p>Deliver to <span className="text-[#0066c0] font-medium cursor-pointer hover:underline">Your household - Mumbai 400001</span></p>
                   </div>
                 </div>
 

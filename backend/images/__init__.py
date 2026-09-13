@@ -1,5 +1,5 @@
 """
-Images package — dynamic product image resolution pipeline.
+Images package - dynamic product image resolution pipeline.
 
 Priority chain:
   1. Swiggy CDN image URL (if genuinely present in MCP response)
