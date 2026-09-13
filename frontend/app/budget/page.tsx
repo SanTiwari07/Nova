@@ -1,29 +1,64 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
+import { useState, useEffect, useCallback } from "react";
+import {
+  SlidersHorizontal,
+  CheckCircle2,
+  AlertTriangle,
+  Sparkles,
+  Settings2,
+} from "lucide-react";
 import BudgetModal from "@/components/BudgetModal";
-import { CheckCircle2, AlertTriangle, Sparkles, SlidersHorizontal, Settings2 } from "lucide-react";
+
+interface BudgetData {
+  monthly: number;
+  spent: number;
+  remaining: number;
+  auto_limit: number;
+  currency: string;
+  spent_pct: number;
+  pressure: boolean;
+}
+
+interface PantryItem {
+  product_id: string;
+  name: string;
+  category: string;
+  days_remaining: number;
+  urgency: string;
+}
+
+// Estimated per-category replenishment cost (used for forecast)
+const REPLENISHMENT_EST: Record<string, number> = {
+  Milk: 68, Oil: 749, Rice: 320, Atta: 289, Salt: 25,
+  Dal: 142, Tea: 215, Detergent: 399, Sugar: 210,
+  Soap: 139, Cleaning: 109, "Hair Care": 199,
+};
 
 export default function BudgetPage() {
-  const [budget, setBudget] = useState<any>(null);
+  const [budget, setBudget] = useState<BudgetData | null>(null);
+  const [pantry, setPantry] = useState<PantryItem[]>([]);
   const [savings, setSavings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
 
-  const loadData = () => {
-    Promise.all([
-      fetch("/api/budget").then(r => r.json()).catch(() => null),
-      fetch("/api/savings").then(r => r.json()).catch(() => null),
-    ]).then(([bud, sav]) => {
+  const loadData = useCallback(async () => {
+    try {
+      const [bud, pant, sav] = await Promise.all([
+        fetch("/api/budget").then((r) => r.json()).catch(() => null),
+        fetch("/api/pantry").then((r) => r.json()).catch(() => []),
+        fetch("/api/savings").then((r) => r.json()).catch(() => null),
+      ]);
       setBudget(bud);
+      setPantry(Array.isArray(pant) ? pant : []);
       setSavings(sav);
-    }).finally(() => setLoading(false));
-  };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     loadData();
-
     const handleUpdate = () => loadData();
     window.addEventListener("budget-updated", handleUpdate);
     window.addEventListener("household-updated", handleUpdate);
@@ -31,140 +66,200 @@ export default function BudgetPage() {
       window.removeEventListener("budget-updated", handleUpdate);
       window.removeEventListener("household-updated", handleUpdate);
     };
-  }, []);
+  }, [loadData]);
 
-  if (loading) {
+  if (loading || !budget) {
     return (
-      <div className="min-h-screen bg-[#FCFBF9] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-neutral-200 border-t-[#FF9900] rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center pt-20">
+        <div className="w-8 h-8 border-4 border-neutral-200 border-t-neutral-800 rounded-full animate-spin" />
       </div>
     );
   }
 
-  const monthly = budget?.monthly || 5500;
-  const spent = budget?.spent || 3940;
-  const remaining = budget?.remaining || 1560;
-  const autoLimit = budget?.auto_limit || 500;
-  const spentPct = Math.min(100, (spent / monthly) * 100);
+  // Derive upcoming spend from real pantry state
+  const urgentAndUpcoming = pantry.filter(
+    (i) => i.urgency === "URGENT" || i.urgency === "UPCOMING"
+  );
+  const estimatedUpcomingSpend = urgentAndUpcoming.reduce(
+    (sum, item) => sum + (REPLENISHMENT_EST[item.category] ?? 120),
+    0
+  );
+  const projectedTotal = budget.spent + estimatedUpcomingSpend;
+  const projectedRemaining = budget.monthly - projectedTotal;
+  const projectedStatus = projectedTotal <= budget.monthly ? "WITHIN" : "OVER";
+  const spentPct = budget.spent_pct ?? Math.min(100, Math.round((budget.spent / budget.monthly) * 100));
 
-  const upcoming = [
-    { label: "Essential", items: ["Milk (2L)", "Atta 5kg", "Rice 5kg"], estimated: 920 },
-    { label: "Expected", items: ["Tea 500g", "Dal 1kg", "Soap"], estimated: 480 },
-    { label: "Optional", items: ["Detergent (wait)", "Shampoo"], estimated: 410 },
-  ];
-
-  const projectedTotal = spent + 920 + 480;
-  const projectedStatus = projectedTotal <= monthly ? "WITHIN" : "OVER";
+  // Build upcoming breakdown from pantry
+  const upcomingGroups = [
+    {
+      label: "Running low",
+      items: pantry.filter((i) => i.urgency === "URGENT"),
+      color: "bg-red-50 border-red-100",
+      textColor: "text-red-700",
+    },
+    {
+      label: "Coming up this week",
+      items: pantry.filter((i) => i.urgency === "UPCOMING"),
+      color: "bg-amber-50 border-amber-100",
+      textColor: "text-amber-700",
+    },
+  ].filter((g) => g.items.length > 0);
 
   return (
-    <div className="min-h-screen bg-[#FCFBF9]">
-      <div className="max-w-4xl mx-auto px-4 md:px-8 py-8">
+    <div className="min-h-screen bg-[#FAFAF8] pt-20 pb-32">
+      <div className="max-w-2xl mx-auto px-4 md:px-6">
 
         {/* Header */}
-        <div className="mb-8">
-          <p className="text-xs font-bold tracking-widest text-neutral-400 uppercase mb-2">NOVA · Budget Intelligence</p>
-          <h1 className="text-3xl font-black text-neutral-900 tracking-tight mb-2">September budget</h1>
-          <p className="text-neutral-500">NOVA connects your Amazon spending to household planning.</p>
+        <div className="pt-8 pb-6">
+          <p className="text-xs font-bold tracking-widest text-neutral-400 uppercase mb-1">NOVA · Budget Intelligence</p>
+          <h1 className="text-3xl font-black text-neutral-900 tracking-tight mb-2">Budget</h1>
+          <p className="text-neutral-500">
+            NOVA manages your household spending within these limits.
+          </p>
         </div>
 
         {/* Main budget card */}
-        <div className="bg-white rounded-3xl border border-neutral-200 p-6 md:p-8 mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6">
+        <div className="bg-white rounded-3xl border border-neutral-200 p-6 md:p-8 mb-5">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
             <div>
               <p className="text-sm text-neutral-500 mb-1">Monthly household budget</p>
               <div className="flex items-center gap-3">
-                <p className="text-5xl font-black text-neutral-900">₹{monthly.toLocaleString("en-IN")}</p>
+                <p className="text-5xl font-black text-neutral-900">
+                  ₹{budget.monthly.toLocaleString("en-IN")}
+                </p>
                 <button
                   type="button"
                   onClick={() => setIsBudgetModalOpen(true)}
-                  className="px-3.5 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-xs flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-xs flex items-center gap-1.5 transition-colors"
                 >
                   <SlidersHorizontal className="w-3.5 h-3.5 text-[#FF9900]" />
-                  Edit Budget
+                  Edit
                 </button>
               </div>
             </div>
-            <div className="flex gap-4">
-              <div className="text-center">
-                <p className="text-2xl font-black text-neutral-900">₹{spent.toLocaleString("en-IN")}</p>
+            <div className="flex gap-5">
+              <div>
+                <p className="text-2xl font-black text-neutral-900">
+                  ₹{budget.spent.toLocaleString("en-IN")}
+                </p>
                 <p className="text-xs text-neutral-400 mt-0.5">Spent this month</p>
               </div>
-              <div className="text-center">
-                <p className="text-2xl font-black text-green-700">₹{remaining.toLocaleString("en-IN")}</p>
+              <div>
+                <p className={`text-2xl font-black ${budget.remaining < 500 ? "text-red-600" : "text-emerald-700"}`}>
+                  ₹{budget.remaining.toLocaleString("en-IN")}
+                </p>
                 <p className="text-xs text-neutral-400 mt-0.5">Available</p>
               </div>
             </div>
           </div>
 
-          {/* Budget bar */}
+          {/* Progress bar */}
           <div className="mb-4">
-            <div className="w-full h-4 bg-neutral-100 rounded-full overflow-hidden">
+            <div className="w-full h-3 bg-neutral-100 rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all duration-1000 ${spentPct > 90 ? "bg-red-500" : spentPct > 70 ? "bg-[#FF9900]" : "bg-green-500"}`}
+                className={`h-full rounded-full transition-all duration-700 ${
+                  spentPct > 90 ? "bg-red-500" : spentPct > 70 ? "bg-amber-500" : "bg-emerald-500"
+                }`}
                 style={{ width: `${spentPct}%` }}
-              ></div>
+              />
             </div>
             <div className="flex justify-between mt-1.5">
               <p className="text-xs text-neutral-400">₹0</p>
-              <p className={`text-xs font-semibold ${spentPct > 90 ? "text-red-600" : "text-neutral-500"}`}>{spentPct.toFixed(0)}% used</p>
-              <p className="text-xs text-neutral-400">₹{monthly.toLocaleString("en-IN")}</p>
+              <p className={`text-xs font-semibold ${spentPct > 90 ? "text-red-600" : "text-neutral-500"}`}>
+                {spentPct}% used
+              </p>
+              <p className="text-xs text-neutral-400">₹{budget.monthly.toLocaleString("en-IN")}</p>
             </div>
           </div>
 
+          {/* Auto-limit */}
           <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-xl">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-              <p className="text-xs text-neutral-600">Auto-buy limit per item: <strong>₹{autoLimit}</strong></p>
+              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              <p className="text-xs text-neutral-600">
+                Auto-buy limit: <strong>₹{budget.auto_limit}</strong> per item
+              </p>
             </div>
             <button
               type="button"
               onClick={() => setIsBudgetModalOpen(true)}
-              className="text-xs font-bold text-[#007185] hover:text-[#C7511F] hover:underline flex items-center gap-1 cursor-pointer"
+              className="text-xs font-bold text-neutral-500 hover:text-neutral-900 flex items-center gap-1"
             >
-              <Settings2 className="w-3.5 h-3.5" />
-              Adjust Limits
+              <Settings2 className="w-3.5 h-3.5" /> Adjust
             </button>
           </div>
         </div>
 
-        {/* Upcoming purchases */}
-        <div className="bg-white rounded-3xl border border-neutral-200 p-6 mb-6">
-          <h2 className="text-lg font-black text-neutral-900 mb-4">Predicted upcoming Amazon purchases</h2>
-          <div className="space-y-3">
-            {upcoming.map((u) => (
-              <div key={u.label} className={`flex items-start gap-4 p-4 rounded-2xl border ${u.label === "Essential" ? "bg-orange-50 border-orange-100" : u.label === "Expected" ? "bg-blue-50 border-blue-100" : "bg-neutral-50 border-neutral-100"}`}>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-xs font-bold ${u.label === "Essential" ? "text-orange-700" : u.label === "Expected" ? "text-blue-700" : "text-neutral-500"}`}>{u.label}</span>
+        {/* Upcoming purchases — derived from pantry */}
+        {upcomingGroups.length > 0 && (
+          <div className="bg-white rounded-3xl border border-neutral-200 p-6 mb-5">
+            <h2 className="text-base font-black text-neutral-900 mb-4">
+              Expected replenishment
+            </h2>
+            <p className="text-xs text-neutral-400 mb-4">
+              Based on your current pantry levels.
+            </p>
+            <div className="space-y-3">
+              {upcomingGroups.map((group) => {
+                const groupCost = group.items.reduce(
+                  (s, i) => s + (REPLENISHMENT_EST[i.category] ?? 120),
+                  0
+                );
+                return (
+                  <div
+                    key={group.label}
+                    className={`flex items-start gap-4 p-4 rounded-2xl border ${group.color}`}
+                  >
+                    <div className="flex-1">
+                      <span className={`text-xs font-bold ${group.textColor}`}>{group.label}</span>
+                      <p className="text-xs text-neutral-500 mt-1">
+                        {group.items.map((i) => i.name.split(" ")[0]).join(", ")}
+                      </p>
+                    </div>
+                    <p className="text-base font-black text-neutral-900 shrink-0">
+                      ~₹{groupCost.toLocaleString("en-IN")}
+                    </p>
                   </div>
-                  <p className="text-xs text-neutral-500">{u.items.join(" · ")}</p>
-                </div>
-                <p className="text-base font-black text-neutral-900 shrink-0">₹{u.estimated.toLocaleString("en-IN")}</p>
-              </div>
-            ))}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* NOVA forecast */}
-        <div className={`rounded-3xl border p-6 mb-6 ${projectedStatus === "WITHIN" ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}>
-          <h2 className="text-lg font-black text-neutral-900 mb-4">NOVA forecast</h2>
+        <div
+          className={`rounded-3xl border p-6 mb-5 ${
+            projectedStatus === "WITHIN"
+              ? "bg-emerald-50 border-emerald-200"
+              : "bg-red-50 border-red-200"
+          }`}
+        >
+          <h2 className="text-base font-black text-neutral-900 mb-4">NOVA forecast</h2>
           <div className="grid grid-cols-3 gap-4">
             <div>
               <p className="text-xs text-neutral-500 mb-1">Spent so far</p>
-              <p className="text-xl font-black text-neutral-900">₹{spent.toLocaleString("en-IN")}</p>
+              <p className="text-xl font-black text-neutral-900">₹{budget.spent.toLocaleString("en-IN")}</p>
             </div>
             <div>
               <p className="text-xs text-neutral-500 mb-1">Expected to add</p>
-              <p className="text-xl font-black text-neutral-900">₹{(920 + 480).toLocaleString("en-IN")}</p>
+              <p className="text-xl font-black text-neutral-900">
+                ₹{estimatedUpcomingSpend.toLocaleString("en-IN")}
+              </p>
             </div>
             <div>
-              <p className="text-xs text-neutral-500 mb-1">Projected month-end</p>
-              <p className={`text-xl font-black ${projectedStatus === "WITHIN" ? "text-green-700" : "text-red-600"}`}>₹{projectedTotal.toLocaleString("en-IN")}</p>
+              <p className="text-xs text-neutral-500 mb-1">Projected end</p>
+              <p
+                className={`text-xl font-black ${
+                  projectedStatus === "WITHIN" ? "text-emerald-700" : "text-red-600"
+                }`}
+              >
+                ₹{projectedTotal.toLocaleString("en-IN")}
+              </p>
             </div>
           </div>
           <div className="mt-4 flex items-center gap-2">
             {projectedStatus === "WITHIN" ? (
-              <span className="flex items-center gap-1.5 text-sm font-bold text-green-700">
+              <span className="flex items-center gap-1.5 text-sm font-bold text-emerald-700">
                 <CheckCircle2 className="w-4 h-4" /> Within budget
               </span>
             ) : (
@@ -172,8 +267,14 @@ export default function BudgetPage() {
                 <AlertTriangle className="w-4 h-4" /> Over budget
               </span>
             )}
-            {projectedStatus === "WITHIN" && (
-              <span className="text-sm text-green-600">— ₹{(monthly - projectedTotal).toLocaleString("en-IN")} to spare</span>
+            {projectedStatus === "WITHIN" ? (
+              <span className="text-sm text-emerald-600">
+                — ₹{projectedRemaining.toLocaleString("en-IN")} to spare
+              </span>
+            ) : (
+              <span className="text-sm text-red-600">
+                — ₹{Math.abs(projectedRemaining).toLocaleString("en-IN")} shortfall
+              </span>
             )}
           </div>
         </div>
@@ -181,33 +282,39 @@ export default function BudgetPage() {
         {/* Savings */}
         {savings && savings.total_potential_saving > 0 && (
           <div className="bg-white rounded-3xl border border-neutral-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-black text-neutral-900">NOVA found savings</h2>
-              <span className="text-2xl font-black text-green-700">₹{savings.total_potential_saving}</span>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-black text-neutral-900">NOVA found savings</h2>
+              <span className="text-xl font-black text-emerald-700">
+                ₹{savings.total_potential_saving}
+              </span>
             </div>
             <p className="text-sm text-neutral-500 mb-4">{savings.summary}</p>
             <div className="space-y-2">
               {(savings.opportunities || []).map((opp: any) => (
-                <div key={opp.id} className="flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-100">
-                  <Sparkles className="w-4 h-4 text-green-600 shrink-0" />
+                <div
+                  key={opp.id}
+                  className="flex items-center gap-3 p-3 bg-emerald-50 rounded-xl border border-emerald-100"
+                >
+                  <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
                   <p className="text-xs text-neutral-700 flex-1">{opp.reason}</p>
-                  <span className="text-xs font-bold text-green-700 shrink-0">Save ₹{opp.potential_saving}</span>
+                  <span className="text-xs font-bold text-emerald-700 shrink-0">
+                    Save ₹{opp.potential_saving}
+                  </span>
                 </div>
               ))}
             </div>
-            <Link href="/price-watch" className="mt-4 block text-center text-sm font-semibold text-[#FF9900] hover:underline">
-              View Price Watch →
-            </Link>
           </div>
         )}
       </div>
 
-      {/* Interactive Budget and Limits Editor Modal */}
       <BudgetModal
         isOpen={isBudgetModalOpen}
-        onClose={() => setIsBudgetModalOpen(false)}
-        initialMonthly={monthly}
-        initialAutoLimit={autoLimit}
+        onClose={() => {
+          setIsBudgetModalOpen(false);
+          loadData();
+        }}
+        initialMonthly={budget.monthly}
+        initialAutoLimit={budget.auto_limit}
       />
     </div>
   );

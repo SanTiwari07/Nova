@@ -1,187 +1,282 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Sparkles, CheckCircle2, Clock, AlertCircle, MinusCircle, ShieldCheck, ChevronDown, ChevronUp } from "lucide-react";
+
+interface OrderItem {
+  name: string;
+  price: number;
+  qty?: number;
+}
+
+interface Order {
+  id: string;
+  status: string;
+  total: number;
+  items: OrderItem[];
+  decision?: string;
+  decision_label?: string;
+  nova_reason?: string[];
+  source?: string;
+  created_at?: string;
+}
+
+interface AuditEntry {
+  id: string;
+  product: string;
+  decision: string;
+  reasons: string[];
+  timestamp: string;
+}
+
+const DECISION_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode; bg: string }> = {
+  AUTO: { label: "Taken care of by NOVA", color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-100", icon: <CheckCircle2 className="w-4 h-4 text-emerald-600" /> },
+  ASK: { label: "Waiting for your approval", color: "text-amber-700", bg: "bg-amber-50 border-amber-100", icon: <AlertCircle className="w-4 h-4 text-amber-500" /> },
+  ASK_APPROVED: { label: "Approved by you", color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-100", icon: <CheckCircle2 className="w-4 h-4 text-emerald-600" /> },
+  DO_NOTHING: { label: "No action needed", color: "text-neutral-500", bg: "bg-neutral-50 border-neutral-100", icon: <MinusCircle className="w-4 h-4 text-neutral-400" /> },
+  WAIT: { label: "Waiting for better price", color: "text-blue-700", bg: "bg-blue-50 border-blue-100", icon: <Clock className="w-4 h-4 text-blue-500" /> },
+  BLOCKED: { label: "Blocked by your rules", color: "text-red-700", bg: "bg-red-50 border-red-100", icon: <ShieldCheck className="w-4 h-4 text-red-500" /> },
+  CHECKOUT_COMPLETED: { label: "Order placed", color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-100", icon: <CheckCircle2 className="w-4 h-4 text-emerald-600" /> },
+};
+
+function getConfig(decision: string) {
+  return DECISION_CONFIG[decision] ?? {
+    label: decision || "Order",
+    color: "text-neutral-600",
+    bg: "bg-neutral-50 border-neutral-100",
+    icon: <Sparkles className="w-4 h-4 text-neutral-400" />,
+  };
+}
+
+function timeAgo(isoStr?: string) {
+  if (!isoStr) return "";
+  try {
+    const diff = Date.now() - new Date(isoStr).getTime();
+    const mins = Math.round(diff / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.round(diff / 3600000);
+    if (hrs < 24) return `${hrs}h ago`;
+    return new Date(isoStr).toLocaleDateString("en-IN");
+  } catch { return ""; }
+}
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<any[]>([]);
-  const [historyOrders, setHistoryOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [activity, setActivity] = useState<AuditEntry[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    Promise.all([
-      fetch("/api/orders").then(r => r.json()).catch(() => []),
-      fetch("/api/purchase-history").then(r => r.json()).catch(() => ({ products: [] })),
-    ]).then(([liveOrders, history]) => {
-      setOrders(liveOrders || []);
-      // Build order list from history service
-      // Use seeded orders from history for demo richness
-      setHistoryOrders([]);
-    }).finally(() => setLoading(false));
+  const loadData = useCallback(async () => {
+    try {
+      const [liveOrders, activityRes, pendingRes] = await Promise.all([
+        fetch("/api/orders").then((r) => r.json()).catch(() => []),
+        fetch("/api/audit/activity").then((r) => r.json()).catch(() => []),
+        fetch("/api/orders/pending").then((r) => r.json()).catch(() => ({ count: 0 })),
+      ]);
+      setOrders(Array.isArray(liveOrders) ? liveOrders : []);
+      setActivity(Array.isArray(activityRes) ? activityRes : []);
+      setPendingCount(pendingRes?.count ?? 0);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Seeded demo orders for display
-  const demoOrders: any[] = [
-    {
-      order_id: "AMZ-2026-001",
-      order_date: "2026-09-08",
-      status: "DELIVERED",
-      total: 876,
-      retailer: "Amazon",
-      source: "AMAZON_MOCK",
-      items: [
-        { name: "Aashirvaad Atta 5kg", price: 289, qty: 1 },
-        { name: "Tata Sampann Toor Dal 1kg", price: 142, qty: 2 },
-        { name: "Tata Salt 1kg", price: 25, qty: 2 },
-        { name: "Dettol Soap Pack of 4", price: 139, qty: 1 },
-        { name: "Harpic Power Plus 750ml", price: 109, qty: 1 },
-      ],
-      nova_analysis: {
-        recurring_items: 5,
-        early_purchases: 1,
-        below_avg_price_items: 2,
-        summary: "5 recurring household items. 2 items purchased at below-average prices. Atta was bought 1 week earlier than usual.",
-      },
-    },
-    {
-      order_id: "AMZ-2026-002",
-      order_date: "2026-08-28",
-      status: "DELIVERED",
-      total: 1363,
-      retailer: "Amazon",
-      source: "AMAZON_MOCK",
-      items: [
-        { name: "Fortune Sunflower Oil 5L", price: 749, qty: 1 },
-        { name: "Tata Chai Classic Tea 500g", price: 215, qty: 1 },
-        { name: "Surf Excel Detergent 3kg", price: 399, qty: 1 },
-      ],
-      nova_analysis: {
-        recurring_items: 3,
-        early_purchases: 0,
-        below_avg_price_items: 1,
-        summary: "3 recurring household items. Tea was purchased at a below-average price. Detergent was slightly above average — NOVA noted this.",
-      },
-    },
-    ...orders.map(o => ({
-      order_id: o.id,
-      order_date: new Date().toISOString().split("T")[0],
-      status: o.status || "CONFIRMED",
-      total: o.total,
-      retailer: "Amazon",
-      source: "AMAZON_MOCK",
-      items: (o.items || []).map((i: any) => ({ name: i.name, price: i.price, qty: 1 })),
-      nova_analysis: {
-        recurring_items: o.items?.length || 0,
-        early_purchases: 0,
-        below_avg_price_items: 0,
-        summary: "Order placed via NOVA autopilot.",
-      },
-    })),
-  ];
+  useEffect(() => {
+    loadData();
+    const refresh = () => loadData();
+    window.addEventListener("household-updated", refresh);
+    window.addEventListener("cart-updated", refresh);
+    return () => {
+      window.removeEventListener("household-updated", refresh);
+      window.removeEventListener("cart-updated", refresh);
+    };
+  }, [loadData]);
+
+  const handleApprove = async (auditId: string, product: string) => {
+    await fetch(`/api/audit/activity`, { method: "GET" }); // refresh
+    await fetch("/api/command", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: `Please approve and proceed with purchasing ${product}` }),
+    });
+    window.dispatchEvent(new Event("household-updated"));
+    await loadData();
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FCFBF9] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-neutral-200 border-t-[#FF9900] rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center pt-20">
+        <div className="w-8 h-8 border-4 border-neutral-200 border-t-neutral-800 rounded-full animate-spin" />
       </div>
     );
   }
 
+  // Pending ASK items from audit trail
+  const pendingItems = activity.filter((a) => a.decision === "ASK");
+  // Recent decisions (all types, most recent first)
+  const recentDecisions = activity.slice(0, 20);
+
+  const hasAnyData = orders.length > 0 || recentDecisions.length > 0;
+
   return (
-    <div className="min-h-screen bg-[#FCFBF9]">
-      <div className="max-w-4xl mx-auto px-4 md:px-8 py-8">
+    <div className="min-h-screen bg-[#FAFAF8] pt-20 pb-32">
+      <div className="max-w-2xl mx-auto px-4 md:px-6">
 
         {/* Header */}
-        <div className="mb-8">
-          <p className="text-xs font-bold tracking-widest text-neutral-400 uppercase mb-2">Amazon · Demo data</p>
+        <div className="pt-8 pb-6">
+          <p className="text-xs font-bold tracking-widest text-neutral-400 uppercase mb-1">NOVA · Decisions & Orders</p>
           <h1 className="text-3xl font-black text-neutral-900 tracking-tight mb-2">Orders</h1>
-          <p className="text-neutral-500">Your Amazon household orders, enhanced with NOVA intelligence.</p>
+          <p className="text-neutral-500">
+            Everything NOVA has done — and what still needs your input.
+          </p>
         </div>
 
-        {/* Orders list */}
-        <div className="space-y-4">
-          {demoOrders.map(order => (
-            <div key={order.order_id} className="bg-white rounded-2xl border border-neutral-200 overflow-hidden hover:shadow-sm transition-all">
-              {/* Order header */}
-              <div className="p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="text-xs font-bold text-neutral-400 uppercase">Amazon</span>
-                      <span className="text-neutral-200">·</span>
-                      <span className="text-xs text-neutral-400">{order.order_date}</span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${order.status === "DELIVERED" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
-                        {order.status}
-                      </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 bg-neutral-100 text-neutral-400 rounded-full">Demo data</span>
+        {/* Needs approval */}
+        {pendingItems.length > 0 && (
+          <section className="mb-6">
+            <h2 className="text-xs font-bold tracking-widest text-amber-600 uppercase mb-3">
+              Needs your approval · {pendingItems.length}
+            </h2>
+            <div className="space-y-3">
+              {pendingItems.map((item) => (
+                <div key={item.id} className="bg-white rounded-2xl border border-amber-100 p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-bold text-neutral-900 mb-1">{item.product}</p>
+                      {item.reasons.map((r, i) => (
+                        <p key={i} className="text-xs text-neutral-500 mb-0.5">{r}</p>
+                      ))}
+                      <p className="text-[10px] text-neutral-400 mt-1">{timeAgo(item.timestamp)}</p>
                     </div>
-                    <p className="text-xs text-neutral-500">{order.order_id}</p>
                   </div>
-                  <p className="text-lg font-black text-neutral-900 shrink-0">₹{order.total.toLocaleString("en-IN")}</p>
-                </div>
-
-                {/* Items preview */}
-                <div className="mt-3 flex flex-wrap gap-1">
-                  {order.items.slice(0, 3).map((item: any, i: number) => (
-                    <span key={i} className="text-xs px-2 py-1 bg-neutral-50 border border-neutral-100 rounded-lg text-neutral-600">{item.name}</span>
-                  ))}
-                  {order.items.length > 3 && (
-                    <span className="text-xs px-2 py-1 bg-neutral-50 border border-neutral-100 rounded-lg text-neutral-400">+{order.items.length - 3} more</span>
-                  )}
-                </div>
-              </div>
-
-              {/* NOVA analysis bar */}
-              <div
-                className="border-t border-neutral-100 bg-orange-50 p-4 cursor-pointer hover:bg-orange-100/50 transition-colors"
-                onClick={() => setExpandedId(expandedId === order.order_id ? null : order.order_id)}
-              >
-                <div className="flex items-center gap-3">
-                  <Sparkles className="w-4 h-4 text-[#FF9900] shrink-0" />
-                  <p className="text-xs text-orange-800 flex-1">{order.nova_analysis.summary}</p>
-                  <svg className={`text-orange-400 transition-transform ${expandedId === order.order_id ? "rotate-180" : ""}`} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-              </div>
-
-              {/* Expanded NOVA detail + Learn actions */}
-              {expandedId === order.order_id && (
-                <div className="border-t border-orange-100 p-5 bg-orange-50/50">
-                  <div className="grid grid-cols-3 gap-3 mb-4">
-                    {[
-                      { label: "Recurring items", value: String(order.nova_analysis.recurring_items) },
-                      { label: "Early purchases", value: String(order.nova_analysis.early_purchases || 0) },
-                      { label: "Below avg price", value: String(order.nova_analysis.below_avg_price_items || 0) },
-                    ].map(stat => (
-                      <div key={stat.label} className="bg-white rounded-xl p-3 border border-orange-100">
-                        <p className="text-lg font-black text-neutral-900">{stat.value}</p>
-                        <p className="text-xs text-neutral-400 mt-0.5">{stat.label}</p>
-                      </div>
-                    ))}
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => handleApprove(item.id, item.product)}
+                      className="flex-1 py-2 rounded-xl bg-neutral-900 text-white text-sm font-bold hover:bg-neutral-800 transition-colors"
+                    >
+                      Approve
+                    </button>
+                    <button className="px-4 py-2 rounded-xl border border-neutral-200 text-neutral-600 text-sm font-bold hover:bg-neutral-50 transition-colors">
+                      Decline
+                    </button>
                   </div>
-
-                  <div className="space-y-2">
-                    {order.items.map((item: any, i: number) => (
-                      <div key={i} className="flex items-center justify-between p-3 bg-white rounded-xl border border-orange-100">
-                        <div>
-                          <p className="text-sm font-medium text-neutral-900">{item.name}</p>
-                          <p className="text-xs text-neutral-400">Qty: {item.qty} · ₹{item.price}</p>
-                        </div>
-                        <div className="flex gap-1">
-                          <button className="px-2 py-1 text-[10px] font-semibold text-neutral-600 bg-neutral-100 rounded-lg hover:bg-neutral-200 transition-colors">One-time</button>
-                          <button className="px-2 py-1 text-[10px] font-semibold text-neutral-600 bg-neutral-100 rounded-lg hover:bg-neutral-200 transition-colors">Recurring</button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <p className="text-xs text-neutral-400 mt-3">Mark items to help NOVA learn your preferences.</p>
                 </div>
-              )}
+              ))}
             </div>
-          ))}
-        </div>
+          </section>
+        )}
+
+        {/* Commerce orders placed by agent */}
+        {orders.length > 0 && (
+          <section className="mb-6">
+            <h2 className="text-xs font-bold tracking-widest text-neutral-400 uppercase mb-3">
+              Placed orders · {orders.length}
+            </h2>
+            <div className="space-y-3">
+              {orders.map((order) => {
+                const cfg = getConfig(order.decision || "AUTO");
+                const isExpanded = expandedId === order.id;
+                return (
+                  <div key={order.id} className="bg-white rounded-2xl border border-neutral-200 overflow-hidden">
+                    <div className="p-4">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-2">
+                          {cfg.icon}
+                          <p className={`text-xs font-bold uppercase tracking-wide ${cfg.color}`}>
+                            {order.decision_label || cfg.label}
+                          </p>
+                        </div>
+                        <p className="text-base font-black text-neutral-900">₹{order.total?.toLocaleString("en-IN")}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {(order.items || []).slice(0, 3).map((item, i) => (
+                          <span key={i} className="text-xs px-2 py-0.5 bg-neutral-50 border border-neutral-100 rounded-lg text-neutral-600">
+                            {item.name}
+                          </span>
+                        ))}
+                        {(order.items?.length ?? 0) > 3 && (
+                          <span className="text-xs px-2 py-0.5 bg-neutral-50 border border-neutral-100 rounded-lg text-neutral-400">
+                            +{(order.items?.length ?? 0) - 3} more
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-neutral-400">{order.id} · {timeAgo(order.created_at)}</p>
+                    </div>
+
+                    {/* Why? expandable */}
+                    <button
+                      className="w-full border-t border-neutral-100 px-4 py-3 flex items-center justify-between hover:bg-neutral-50 transition-colors"
+                      onClick={() => setExpandedId(isExpanded ? null : order.id)}
+                    >
+                      <span className="flex items-center gap-2 text-xs font-bold text-neutral-600">
+                        <Sparkles className="w-3.5 h-3.5 text-[#FF9900]" />
+                        Why did NOVA do this?
+                      </span>
+                      {isExpanded ? <ChevronUp className="w-4 h-4 text-neutral-400" /> : <ChevronDown className="w-4 h-4 text-neutral-400" />}
+                    </button>
+                    {isExpanded && (
+                      <div className="px-4 py-4 bg-amber-50/50 border-t border-amber-100">
+                        {(order.nova_reason || []).map((r, i) => (
+                          <p key={i} className="text-sm text-neutral-700 mb-1 flex items-start gap-1.5">
+                            <span className="text-amber-500 mt-0.5">›</span> {r}
+                          </p>
+                        ))}
+                        {(order.items || []).map((item, i) => (
+                          <div key={i} className="flex items-center justify-between py-2 border-t border-amber-100/50">
+                            <p className="text-sm text-neutral-700">{item.name}</p>
+                            <p className="text-sm font-bold text-neutral-900">₹{item.price}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* NOVA decision trail */}
+        {recentDecisions.length > 0 && (
+          <section className="mb-6">
+            <h2 className="text-xs font-bold tracking-widest text-neutral-400 uppercase mb-3">
+              NOVA decision trail
+            </h2>
+            <div className="bg-white rounded-2xl border border-neutral-200 divide-y divide-neutral-100 overflow-hidden">
+              {recentDecisions.map((entry) => {
+                const cfg = getConfig(entry.decision);
+                return (
+                  <div key={entry.id} className="px-4 py-3.5 flex items-start gap-3">
+                    <span className="mt-0.5 shrink-0">{cfg.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                        <p className={`text-xs font-bold uppercase tracking-wide ${cfg.color}`}>{cfg.label}</p>
+                        <p className="text-[10px] text-neutral-400">{timeAgo(entry.timestamp)}</p>
+                      </div>
+                      <p className="text-sm text-neutral-800 font-medium truncate">{entry.product}</p>
+                      {entry.reasons[0] && (
+                        <p className="text-xs text-neutral-500 mt-0.5 line-clamp-1">{entry.reasons[0]}</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* Empty state */}
+        {!hasAnyData && (
+          <div className="text-center py-16">
+            <MinusCircle className="w-10 h-10 text-neutral-300 mx-auto mb-4" />
+            <p className="font-bold text-neutral-500 mb-2">NOVA hasn't needed to place anything yet.</p>
+            <p className="text-sm text-neutral-400">
+              Use the command box on the home page to give NOVA something to do.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

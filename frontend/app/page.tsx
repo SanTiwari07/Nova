@@ -1,5 +1,9 @@
-import Storefront from "@/components/Storefront";
+import type { Metadata } from "next";
 
-export default function HomePage() {
-  return <Storefront />;
-}
+export const metadata: Metadata = {
+  title: "NOVA — Household Intelligence",
+  description:
+    "NOVA keeps an eye on your household — tracking what you have, predicting what you need, and acting within your rules.",
+};
+
+export { default } from "@/components/TodayPage";

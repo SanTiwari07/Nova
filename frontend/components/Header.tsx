@@ -94,22 +94,23 @@ export default function Header() {
 
   const handleReset = async () => {
     await fetch("/api/demo/reset", { method: "POST" });
-    router.push("/store");
+    router.push("/");
     router.refresh();
   };
 
+
   const secondaryNavLinks = [
-    { href: "/store", label: "NOVA Home" },
+    { href: "/", label: "Today" },
     { href: "/pantry", label: "Pantry" },
-    { href: "/autopilot", label: "Autopilot" },
-    { href: "/nova-cart", label: "NOVA Cart" },
+    { href: "/orders", label: "Orders" },
     { href: "/budget", label: "Budget" },
     { href: "/rules", label: "Rules" },
-    { href: "/reminders", label: "Reminders" },
+    { href: "/store", label: "Store" },
+    { href: "/autopilot", label: "Autopilot" },
+    { href: "/nova-cart", label: "NOVA Cart" },
     { href: "/activity", label: "Activity" },
     { href: "/price-watch", label: "Price Watch" },
     { href: "/memory", label: "Memory" },
-    { href: "/orders", label: "Orders" },
   ];
 
   return (
@@ -119,7 +120,7 @@ export default function Header() {
         <div className="max-w-[1500px] mx-auto px-3 h-14 flex items-center gap-2">
           {/* NOVA Logo */}
           <Link
-            href="/store"
+            href="/"
             className="flex items-center gap-0.5 shrink-0 px-2 py-1 rounded hover:outline hover:outline-1 hover:outline-white/50 transition-all"
           >
             <span className="text-[#FF9900] font-black text-2xl leading-none">N</span>

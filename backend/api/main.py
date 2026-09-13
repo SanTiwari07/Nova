@@ -377,31 +377,35 @@ class BudgetUpdateRequest(BaseModel):
 
 @app.get("/api/budget")
 async def get_budget():
+    status = budget_service.get_status()
     return {
-        "monthly": budget_service.monthly_budget,
-        "spent": budget_service.spent,
-        "remaining": await budget_service.get_remaining_budget(),
-        "auto_limit": budget_service.auto_limit
+        "monthly": status["monthly"],
+        "spent": status["spent"],
+        "remaining": status["remaining"],
+        "auto_limit": status["auto_limit"],
+        "currency": status.get("currency", "INR"),
+        "spent_pct": status.get("spent_pct", 0),
+        "pressure": status.get("pressure", False),
     }
 
 @app.post("/api/budget")
 async def update_budget(req: BudgetUpdateRequest):
     monthly = req.monthly if req.monthly is not None else req.monthly_budget
     auto_limit = req.auto_limit if req.auto_limit is not None else req.auto_buy_limit
-    
+
     if monthly is not None:
         budget_service.set_budget(float(monthly))
     if auto_limit is not None:
         budget_service.set_auto_limit(float(auto_limit))
-        
+
     audit_service.log_decision(
         "Household Budget",
         "BUDGET_UPDATED",
         [
             f"Monthly budget: ₹{budget_service.monthly_budget}",
             f"Auto limit: ₹{budget_service.auto_limit}",
-            f"Remaining: ₹{await budget_service.get_remaining_budget()}"
-        ]
+            f"Remaining: ₹{await budget_service.get_remaining_budget()}",
+        ],
     )
     return await get_budget()
 
@@ -409,9 +413,52 @@ async def update_budget(req: BudgetUpdateRequest):
 async def get_pantry():
     return inventory_service.get_all()
 
+# Human-readable labels for decision codes
+_DECISION_LABELS = {
+    "AUTO": "Taken care of by NOVA",
+    "ASK": "Waiting for your approval",
+    "ASK_APPROVED": "Approved by you",
+    "ASK_REJECTED": "Declined by you",
+    "DO_NOTHING": "No action needed",
+    "WAIT": "NOVA is waiting for a better price",
+    "BLOCKED": "Blocked by your rules",
+    "CHECKOUT_COMPLETED": "Order placed",
+    "APPROVED_BY_USER": "Approved by you",
+    "REJECTED_BY_USER": "Declined by you",
+}
+
 @app.get("/api/orders")
 async def get_orders():
-    return commerce_adapter.get_orders()
+    raw_orders = commerce_adapter.get_orders()
+    # Enrich with audit context
+    audit_logs = audit_service.get_recent(limit=100)
+    enriched = []
+    for order in raw_orders:
+        order_id = order.get("id", "")
+        # Find matching audit log entry
+        audit_entry = next(
+            (log for log in audit_logs if order_id in log.get("product", "")), None
+        )
+        decision_raw = order.get("decision", "AUTO")
+        enriched.append({
+            **order,
+            "decision_label": _DECISION_LABELS.get(decision_raw, decision_raw),
+            "nova_reason": audit_entry["reasons"] if audit_entry else [
+                f"Purchase placed via NOVA autopilot ({decision_raw})."
+            ],
+            "source": order.get("source", "AGENT"),
+        })
+    return enriched
+
+@app.get("/api/orders/pending")
+async def get_pending_orders():
+    """Items awaiting explicit user approval (decision=ASK)."""
+    audit_logs = audit_service.get_recent(limit=50)
+    pending = [
+        log for log in audit_logs
+        if log.get("decision") == "ASK" and "APPROVED" not in log.get("decision", "") and "REJECTED" not in log.get("decision", "")
+    ]
+    return {"pending": pending, "count": len(pending)}
 
 @app.get("/api/audit/activity")
 async def get_activity():
@@ -1036,24 +1083,93 @@ async def remove_nova_cart_item(product_id: str):
 
 @app.get("/api/household-status")
 async def get_household_status():
-    """Aggregated household status for the home page hero."""
-    recurring = history_service.get_recurring_products()
-    budget_remaining = await budget_service.get_remaining_budget()
-    savings = savings_engine.get_savings_opportunities()
-    active_reminders = reminder_engine.get_reminders(status="ACTIVE")
+    """Authoritative household status endpoint — driven by real pantry, budget and audit state."""
+    from datetime import datetime as _dt
+    hour = _dt.now().hour
+    if hour < 12:
+        greeting = "Good morning"
+    elif hour < 17:
+        greeting = "Good afternoon"
+    else:
+        greeting = "Good evening"
 
-    due_soon = [p for p in recurring if p.get("days_until_needed", 30) <= 7]
-    total_estimated = sum(p.get("current_price", 0) * p.get("typical_quantity", 1) for p in recurring if p.get("days_until_needed", 30) <= 20)
+    # Real pantry data
+    urgency_groups = inventory_service.get_urgency_grouped()
+    all_items = inventory_service.get_all()
+    urgent = urgency_groups.get("URGENT", [])
+    upcoming = urgency_groups.get("UPCOMING", [])
+    uncertain = urgency_groups.get("UNCERTAIN", [])
+
+    # Estimate replenishment cost from pantry items that need restocking
+    # Using a rough heuristic: ₹100–200 per low/urgent item as a floor estimate
+    replenishment_estimates = {
+        "Milk": 68, "Oil": 749, "Rice": 320, "Atta": 289, "Salt": 25,
+        "Dal": 142, "Tea": 215, "Detergent": 399, "Sugar": 210,
+        "Soap": 139, "Cleaning": 109, "Hair Care": 199,
+    }
+    estimated_upcoming_spend = sum(
+        replenishment_estimates.get(item["category"], 120)
+        for item in urgent + upcoming
+    )
+
+    # Budget
+    budget_status = budget_service.get_status()
+    budget_forecast = budget_service.get_forecast(upcoming_spend=estimated_upcoming_spend)
+
+    # Recent activity
+    recent_activity = audit_service.get_recent(limit=10)
+    recent_decisions = [a for a in recent_activity if a.get("decision") in ("AUTO", "DO_NOTHING", "ASK", "BLOCKED", "WAIT")]
+    auto_actions = [a for a in recent_decisions if a.get("decision") == "AUTO"]
+    restraint_actions = [a for a in recent_decisions if a.get("decision") == "DO_NOTHING"]
+    ask_actions = [a for a in recent_decisions if a.get("decision") == "ASK"]
+
+    # Cart
+    cart_count = 0
+    try:
+        if commerce_adapter.carts:
+            cart_id = list(commerce_adapter.carts.keys())[0]
+            cart = commerce_adapter.get_cart(cart_id)
+            cart_count = cart.get("item_count", 0)
+    except Exception:
+        pass
+
+    # Autonomy
+    autonomy = session_service.get_autonomy_profile() if session_service else "FULL_AUTOPILOT"
+
+    # Compose the status headline from real state
+    if len(urgent) == 0 and len(upcoming) == 0:
+        headline = "Everything is well stocked. NOVA is staying out of the way."
+    elif len(urgent) > 0 and len(ask_actions) > 0:
+        headline = f"{len(urgent)} item{'s need' if len(urgent) > 1 else ' needs'} your attention."
+    elif len(urgent) > 0:
+        headline = f"{len(urgent)} item{'s are' if len(urgent) > 1 else ' is'} running low."
+    else:
+        headline = f"{len(upcoming)} item{'s are' if len(upcoming) > 1 else ' is'} coming up in the next week."
 
     return {
-        "greeting_context": "Good evening",
-        "status_headline": "Your household is almost ready for September.",
-        "tracked_items": len(recurring),
-        "items_due_soon": len(due_soon),
-        "estimated_monthly_spend": round(total_estimated),
-        "potential_savings": savings["total_potential_saving"],
-        "budget_remaining": budget_remaining,
-        "active_reminders": len(active_reminders),
-        "attention_items": len([r for r in active_reminders if r["priority"] == "HIGH"]),
-        "source": "AMAZON_MOCK",
+        "greeting": greeting,
+        "headline": headline,
+        "household_size": 4,
+        "autonomy_profile": autonomy,
+        "autopilot_on": autonomy == "FULL_AUTOPILOT",
+        "pantry": {
+            "total_tracked": len(all_items),
+            "urgent_count": len(urgent),
+            "upcoming_count": len(upcoming),
+            "comfortable_count": len(urgency_groups.get("COMFORTABLE", [])),
+            "uncertain_count": len(uncertain),
+            "urgent_items": urgent[:5],
+            "upcoming_items": upcoming[:5],
+        },
+        "budget": budget_forecast,
+        "activity": {
+            "recent": recent_activity[:5],
+            "auto_count": len(auto_actions),
+            "restraint_count": len(restraint_actions),
+            "ask_count": len(ask_actions),
+        },
+        "cart": {
+            "item_count": cart_count,
+        },
+        "estimated_upcoming_spend": estimated_upcoming_spend,
     }
