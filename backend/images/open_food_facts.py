@@ -32,7 +32,7 @@ OFF_BASE = "https://world.openfoodfacts.org"
 OFF_API_V2 = f"{OFF_BASE}/api/v2"
 
 # Minimum confidence to return an image
-IMAGE_MATCH_THRESHOLD = float(os.environ.get("IMAGE_MATCH_THRESHOLD", "0.90"))
+IMAGE_MATCH_THRESHOLD = float(os.environ.get("IMAGE_MATCH_THRESHOLD", "0.50"))
 
 # OFF search fields: request selected_images for verified front catalog shots
 _OFF_FIELDS = "code,product_name,brands,quantity,selected_images,image_front_url,image_front_small_url"
@@ -263,7 +263,7 @@ class OpenFoodFactsResolver:
                     score += 0.15
                     reasons.append(f"name_words✓({overlap_ratio:.0%})")
 
-        # 3. Quantity match - CRITICAL: Pack size mismatch = HARD REJECT
+        # 3. Quantity match - Removed HARD REJECT to support product family matching
         our_qty_str = self._normalize_quantity_str(quantity, unit)
         if our_qty_str and cand_qty_raw:
             our_val, our_unit_n = self._parse_quantity(our_qty_str)
@@ -274,8 +274,8 @@ class OpenFoodFactsResolver:
                     score += 0.40
                     reasons.append("qty✓")
                 else:
-                    # HARD REJECT: Fortune 1L must NEVER match Fortune 5L
-                    return 0.0, f"qty_mismatch(ours={our_qty_str},cand={cand_qty_raw})"
+                    # NO REJECT: Base product image should match even if sizes differ
+                    reasons.append(f"qty_mismatch({our_qty_str}!={cand_qty_raw})")
         elif our_qty_str and not cand_qty_raw:
             reasons.append("qty_unknown")
         elif not our_qty_str:

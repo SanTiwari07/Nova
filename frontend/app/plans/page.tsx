@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import ProductImage from "@/components/ProductImage";
 import {
   UtensilsCrossed,
   Check,
@@ -20,8 +21,8 @@ interface PlanItem {
   key: string;
   title: string;
   meal: string;
-  have_items: Array<{ item: string; stock: string; status: string }>;
-  need_items: Array<{ item: string; needed: string; estimated_price: number }>;
+  have_items: Array<{ item: string; stock: string; status: string; imageUrl?: string }>;
+  need_items: Array<{ item: string; needed: string; estimated_price: number; imageUrl?: string }>;
   ready_to_cook: boolean;
   missing_count: number;
   estimated_cost: number;

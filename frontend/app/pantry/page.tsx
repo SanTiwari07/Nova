@@ -14,6 +14,8 @@ import {
   Send,
 } from "lucide-react";
 
+import ProductImage from "@/components/ProductImage";
+
 interface PantryItem {
   product_id: string;
   name: string;
@@ -29,6 +31,8 @@ interface PantryItem {
   confidence_level: string;
   preferred: boolean;
   last_updated: string | null;
+  imageUrl?: string | null;
+  image?: string | null;
 }
 
 function ConfidenceBar({ value, level }: { value: number; level: string }) {
@@ -226,14 +230,17 @@ export default function PantryPage() {
               {urgent.map((item) => (
                 <div key={item.product_id} className="bg-white rounded-2xl border border-red-100 p-4">
                   <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-neutral-900 mb-0.5">{item.name}</p>
-                      <p className="text-xs text-neutral-500 mb-2">
-                        {item.quantity} {item.unit} · daily use: {item.daily_consumption} {item.unit}
-                      </p>
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <DaysLabel days={item.days_remaining} />
-                        <ConfidenceBar value={item.confidence} level={item.confidence_level} />
+                    <div className="flex items-start gap-4 flex-1 min-w-0">
+                      <ProductImage src={item.imageUrl || item.image} alt={item.name} size="lg" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-neutral-900 mb-0.5">{item.name}</p>
+                        <p className="text-xs text-neutral-500 mb-2">
+                          {item.quantity} {item.unit} · daily use: {item.daily_consumption} {item.unit}
+                        </p>
+                        <div className="flex items-center gap-3 flex-wrap mt-2">
+                          <DaysLabel days={item.days_remaining} />
+                          <ConfidenceBar value={item.confidence} level={item.confidence_level} />
+                        </div>
                       </div>
                     </div>
                     <button
@@ -267,6 +274,7 @@ export default function PantryPage() {
               {uncertain.map((item) => (
                 <div key={item.product_id} className="bg-white rounded-2xl border border-amber-100 p-4">
                   <div className="flex items-start gap-4">
+                    <ProductImage src={item.imageUrl || item.image} alt={item.name} size="md" />
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-neutral-900 mb-0.5">{item.name}</p>
                       <p className="text-xs text-neutral-500 mb-2">
@@ -303,6 +311,7 @@ export default function PantryPage() {
               {upcoming.map((item) => (
                 <div key={item.product_id} className="px-4 py-3.5 flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                  <ProductImage src={item.imageUrl || item.image} alt={item.name} size="sm" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-neutral-800 truncate">{item.name}</p>
                     <p className="text-xs text-neutral-400">
@@ -344,6 +353,7 @@ export default function PantryPage() {
                 {comfortable.map((item) => (
                   <div key={item.product_id} className="px-4 py-3 flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+                    <ProductImage src={item.imageUrl || item.image} alt={item.name} size="sm" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-neutral-700 truncate">{item.name}</p>
                       <p className="text-xs text-neutral-400">

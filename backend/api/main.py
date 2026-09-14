@@ -80,8 +80,11 @@ product_repo = ProductRepository()
 asset_repo = AssetRepository()
 
 from intent.intent_service import IntentReconciliationService
-intent_service = IntentReconciliationService(inventory_service=inventory_service)
-
+intent_service = IntentReconciliationService(
+    inventory_service=inventory_service,
+    ai_service=ai_service,
+    commerce_adapter=commerce_adapter
+)
 # Amazon-first services
 history_service = MockAmazonHistoryProvider()
 price_service = PriceService()
@@ -1417,7 +1420,7 @@ async def get_household_plans():
             needed_qty = comp.get("needed_qty", 0.1)
             if matched_item and matched_item.get("status") == "HEALTHY" and matched_item.get("days_remaining", 0) > 2:
                 have_items.append({
-                    "item": comp["item"],
+                    "item": comp["item"], "imageUrl": _get_demo_image(comp["item"]) or _get_demo_image(matched_item["name"]) if "_get_demo_image" in globals() else None,
                     "stock": f"{matched_item.get('quantity')} {matched_item.get('unit')} in pantry",
                     "status": "In stock",
                     "days_remaining": matched_item.get("days_remaining", 0)
@@ -1425,7 +1428,7 @@ async def get_household_plans():
             else:
                 est_price = 14 if "maggi" in comp["item"].lower() else (45 if "tea" in comp["item"].lower() or "milk" in comp["item"].lower() else 35)
                 need_items.append({
-                    "item": comp["item"],
+                    "item": comp["item"], "imageUrl": _get_demo_image(comp["item"]) if "_get_demo_image" in globals() else None,
                     "category": comp.get("category", "General"),
                     "needed": f"{needed_qty} {comp.get('unit', 'pack')}",
                     "estimated_price": est_price
@@ -1472,6 +1475,17 @@ async def reconcile_household_plan(req: RequestModel):
     
     return reconciliation
 
+
+def _get_demo_image(prod_name):
+    lower_name = prod_name.lower()
+    if "milk" in lower_name: return "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/17/b42b731e-b555-4536-913a-265af70ec9e4_SKS75T1GV1_MN_16122025.png"
+    if "oil" in lower_name: return "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/d0fe0c1c-2142-43d3-bf49-3fe02eb1a7dd_PUHXM33U8E_MN_18022026.png"
+    if "maggi" in lower_name or "noodles" in lower_name: return "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png"
+    if "atta" in lower_name: return "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/3/9/805a02b1-e08b-4d4b-aa8f-ab05cabb1e37_1780_1.png"
+    if "tea" in lower_name: return "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/bf79f8d0-dfcb-4ebb-be63-b3e291656666_Q5AIG72TKQ_MN_18022026.png"
+    if "salt" in lower_name: return "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/219b05ab-1b6b-468b-807c-d4fdd353dc89_883CSP2S79_MN_18122025.png"
+    if "rice" in lower_name: return "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/7/21/ed973afb-e397-4df3-8a23-6153474d93b0_450_1.png"
+    return None
 
 @app.get("/api/household-status")
 async def get_household_status():
@@ -1545,7 +1559,9 @@ async def get_household_status():
             "decision": "AUTO",
             "status_label": "Done for you",
             "timestamp": act.get("timestamp"),
-            "system_telemetry": {
+            "imageUrl": _get_demo_image(prod_name),
+              "imageUrl": _get_demo_image(act.get("product", "")),
+              "system_telemetry": {
                 "tool": "execute_autonomous_purchase",
                 "verdict": "AUTO",
                 "provider": "AWS Strands Agents SDK",
@@ -1571,7 +1587,9 @@ async def get_household_status():
             "decision": "AUTO",
             "status_label": "Done for you",
             "timestamp": _dt.now().isoformat(),
-            "system_telemetry": {
+            "imageUrl": _get_demo_image(prod_name),
+              "imageUrl": _get_demo_image(act.get("product", "")),
+              "system_telemetry": {
                 "tool": "execute_autonomous_purchase",
                 "verdict": "AUTO",
                 "provider": "AWS Strands Agents SDK",
@@ -1617,15 +1635,17 @@ async def get_household_status():
         "meal": "Maggi 2-Minute Masala Noodles",
         "tagline": "Tonight's household plan",
         "have_items": [
-            {"name": "Cooking Oil", "stock": f"{oil_item.get('quantity', 2.1) if oil_item else 2.1}L in pantry", "status": "In stock"},
-            {"name": "Salt & Spices", "stock": f"{salt_item.get('quantity', 0.4) if salt_item else 0.4}kg in pantry", "status": "In stock"},
+            {"name": "Cooking Oil", "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/d0fe0c1c-2142-43d3-bf49-3fe02eb1a7dd_PUHXM33U8E_MN_18022026.png", "stock": f"{oil_item.get('quantity', 2.1) if oil_item else 2.1}L in pantry", "status": "In stock"},
+            {"name": "Salt & Spices", "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/219b05ab-1b6b-468b-807c-d4fdd353dc89_883CSP2S79_MN_18122025.png", "stock": f"{salt_item.get('quantity', 0.4) if salt_item else 0.4}kg in pantry", "status": "In stock"},
         ],
         "need_items": [
-            {"name": "Maggi 2-Minute Masala Noodles (Pack of 4)", "needed": "1 pack", "price": 56}
+            {"name": "Maggi 2-Minute Masala Noodles (Pack of 4)", "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png", "needed": "1 pack", "price": 56}
         ],
         "estimated_cost": 56,
         "action_label": "Take care of it",
-        "system_telemetry": {
+        "imageUrl": _get_demo_image(prod_name),
+              "imageUrl": _get_demo_image(act.get("product", "")),
+              "system_telemetry": {
             "tool": "reconcile_meal_intent",
             "verdict": "RECONCILED",
             "pantry_items_matched": 2,
@@ -1646,7 +1666,9 @@ async def get_household_status():
                 "Current stock is sufficient for household needs.",
                 "NOVA avoided an unnecessary purchase to preserve your budget."
             ]),
-            "system_telemetry": {
+            "imageUrl": _get_demo_image(prod_name),
+              "imageUrl": _get_demo_image(act.get("product", "")),
+              "system_telemetry": {
                 "tool": "record_restraint_decision",
                 "verdict": "DO_NOTHING",
                 "provider": "AWS Strands Agents SDK"
@@ -1665,7 +1687,9 @@ async def get_household_status():
                 "Average consumption is 0.07 L/day (~19 to 30 days of supply).",
                 "NOVA applied spending restraint; no unnecessary purchase made."
             ],
-            "system_telemetry": {
+            "imageUrl": _get_demo_image(prod_name),
+              "imageUrl": _get_demo_image(act.get("product", "")),
+              "system_telemetry": {
                 "tool": "record_restraint_decision",
                 "verdict": "DO_NOTHING",
                 "provider": "AWS Strands Agents SDK"

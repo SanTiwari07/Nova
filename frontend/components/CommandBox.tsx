@@ -20,6 +20,7 @@ import {
   Check,
   Loader2
 } from "lucide-react";
+import RecipePlanCard from "./RecipePlanCard";
 
 interface ToolTraceItem {
   tool: string;
@@ -50,6 +51,7 @@ export default function CommandBox({
   const [decisionVerdict, setDecisionVerdict] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
+  const [structuredPlan, setStructuredPlan] = useState<any>(null);
 
   useEffect(() => {
     fetch("/api/agent/provider")
@@ -78,6 +80,7 @@ export default function CommandBox({
     setToolTrace([]);
     setMode("");
     setDecisionVerdict(null);
+    setStructuredPlan(null);
 
     try {
       const res = await fetch("/api/command/stream", {
@@ -134,6 +137,10 @@ export default function CommandBox({
                         else if (t.summary && t.summary.includes("Verdict: BLOCKED")) verdict = "BLOCKED";
                         else if (t.summary && t.summary.includes("Verdict: WAIT")) verdict = "WAIT";
                         else if (t.tool === "record_restraint_decision") verdict = "DO_NOTHING";
+
+                        if (t.tool === "reconcile_activity_requirements" && t.result) {
+                           setStructuredPlan(t.result);
+                        }
                       }
                     }
               
@@ -280,19 +287,19 @@ export default function CommandBox({
                     Done for you
                   </span>
                 )}
-                {decisionVerdict === "DO_NOTHING" && (
+                {decisionVerdict === "DO_NOTHING" && (!structuredPlan || (structuredPlan && !structuredPlan.shopping?.items?.length)) && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
                     <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
                     All sorted · No action needed
                   </span>
                 )}
-                {decisionVerdict === "ASK" && (
+                {((decisionVerdict === "ASK") || (structuredPlan && structuredPlan.shopping?.items?.length > 0)) && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
                     <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
                     Needs your input
                   </span>
                 )}
-                {!decisionVerdict && (
+                {!decisionVerdict && !structuredPlan && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-neutral-200 text-neutral-800">
                     <Sparkles className="w-3.5 h-3.5 text-neutral-600" />
                     Assistant
@@ -311,24 +318,25 @@ export default function CommandBox({
               </button>
             </div>
 
-            {/* Answer Activity separation */}
-            {toolTrace.length > 0 && (
-                <div className="mb-4">
-                    <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Activity</div>
-                    <div className="space-y-1">
-                        {toolTrace.map((t, idx) => (
-                            <div key={idx} className="flex items-center gap-2 text-sm text-neutral-600">
-                                <Check className="w-3.5 h-3.5 text-emerald-500" />
-                                <span>{t.tool.replace(/_/g, " ")} {t.summary ? `- ${t.summary}` : ""}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+            {/* Structured Recipe Plan Card */}
+            {structuredPlan && (
+              <RecipePlanCard 
+                plan={structuredPlan} 
+                onAddToCart={async (items) => {
+                  for (const item of items) {
+                     await fetch("/api/cart/add", {
+                       method: "POST",
+                       headers: {"Content-Type": "application/json"},
+                       body: JSON.stringify({product_id: item.id || item.product_id, quantity: item.quantity || 1})
+                     });
+                  }
+                  window.dispatchEvent(new Event("cart-updated"));
+                }} 
+              />
             )}
 
             {/* Conversational Assistant Explanation as Markdown */}
-            <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Answer</div>
-            <div className="text-sm text-neutral-800 leading-relaxed font-sans prose prose-sm max-w-none">
+            <div className="text-sm text-neutral-800 leading-relaxed font-sans prose prose-sm max-w-none mt-4">
               <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{response}</ReactMarkdown>
             </div>
 

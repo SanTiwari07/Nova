@@ -511,10 +511,8 @@
     "category": "Salt",
     "subcategory": "Low Sodium",
     "description": "15% low sodium formulation designed for healthy blood pressure.",
-    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/219b05ab-1b6b-468b-807c-d4fdd353dc89_883CSP2S79_MN_18122025.png",
-    "images": [
-      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/219b05ab-1b6b-468b-807c-d4fdd353dc89_883CSP2S79_MN_18122025.png"
-    ],
+    "image": null,
+    "images": [],
     "price": 40,
     "mrp": 48,
     "currency": "INR",
@@ -527,9 +525,9 @@
       "healthy"
     ],
     "preferred": false,
-    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/219b05ab-1b6b-468b-807c-d4fdd353dc89_883CSP2S79_MN_18122025.png",
-    "imageStatus": "found",
-    "imageSource": "swiggy",
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": null,
     "barcode": null
   },
   {
@@ -889,10 +887,8 @@
     "category": "Biscuits",
     "subcategory": "Cookies",
     "description": "Rich butter cookies garnished with crunchy cashew nut chunks.",
-    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/f32e2bf5-96eb-472e-b732-70153306008c_HEDSJ4MV73_MN_17122025.png",
-    "images": [
-      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/f32e2bf5-96eb-472e-b732-70153306008c_HEDSJ4MV73_MN_17122025.png"
-    ],
+    "image": null,
+    "images": [],
     "price": 38,
     "mrp": 45,
     "currency": "INR",
@@ -905,9 +901,9 @@
       "snack"
     ],
     "preferred": false,
-    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/f32e2bf5-96eb-472e-b732-70153306008c_HEDSJ4MV73_MN_17122025.png",
-    "imageStatus": "found",
-    "imageSource": "swiggy",
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": null,
     "barcode": null
   },
   {
@@ -1151,10 +1147,8 @@
     "category": "Milk",
     "subcategory": "Full Cream Milk",
     "description": "Thick wholesome full cream milk rich in natural butterfat.",
-    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/17/b42b731e-b555-4536-913a-265af70ec9e4_SKS75T1GV1_MN_16122025.png",
-    "images": [
-      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/17/b42b731e-b555-4536-913a-265af70ec9e4_SKS75T1GV1_MN_16122025.png"
-    ],
+    "image": null,
+    "images": [],
     "price": 74,
     "mrp": 80,
     "currency": "INR",
@@ -1167,9 +1161,9 @@
       "daily_essential"
     ],
     "preferred": false,
-    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/17/b42b731e-b555-4536-913a-265af70ec9e4_SKS75T1GV1_MN_16122025.png",
-    "imageStatus": "found",
-    "imageSource": "swiggy",
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": null,
     "barcode": null
   },
   {
@@ -1213,10 +1207,8 @@
     "category": "Tea",
     "subcategory": "Black Tea",
     "description": "Pioneering blend of medium and large grains for unmatched body and aroma.",
-    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/bf79f8d0-dfcb-4ebb-be63-b3e291656666_Q5AIG72TKQ_MN_18022026.png",
-    "images": [
-      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/bf79f8d0-dfcb-4ebb-be63-b3e291656666_Q5AIG72TKQ_MN_18022026.png"
-    ],
+    "image": null,
+    "images": [],
     "price": 415,
     "mrp": 490,
     "currency": "INR",
@@ -1230,9 +1222,9 @@
       "staple"
     ],
     "preferred": false,
-    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/bf79f8d0-dfcb-4ebb-be63-b3e291656666_Q5AIG72TKQ_MN_18022026.png",
-    "imageStatus": "found",
-    "imageSource": "swiggy",
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": null,
     "barcode": null
   },
   {
@@ -1794,10 +1786,8 @@
     "category": "Toothpaste",
     "subcategory": "Fresh Gel",
     "description": "Infused with cooling cooling crystals for an explosion of freshness.",
-    "image": "https://images.openbeautyfacts.org/images/products/628/100/111/2013/front_en.5.400.jpg",
-    "images": [
-      "https://images.openbeautyfacts.org/images/products/628/100/111/2013/front_en.5.400.jpg"
-    ],
+    "image": null,
+    "images": [],
     "price": 108,
     "mrp": 130,
     "currency": "INR",
@@ -1810,9 +1800,9 @@
       "personal_care"
     ],
     "preferred": false,
-    "imageUrl": "https://images.openbeautyfacts.org/images/products/628/100/111/2013/front_en.5.400.jpg",
-    "imageStatus": "found",
-    "imageSource": "open_beauty_facts",
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": null,
     "barcode": null
   },
   {
@@ -1851,10 +1841,8 @@
     "category": "Personal Care",
     "subcategory": "Handwash",
     "description": "100% better protection against illness-causing germs with moisturising formula.",
-    "image": "https://images.openbeautyfacts.org/images/products/600/110/610/8991/front_fr.16.400.jpg",
-    "images": [
-      "https://images.openbeautyfacts.org/images/products/600/110/610/8991/front_fr.16.400.jpg"
-    ],
+    "image": null,
+    "images": [],
     "price": 99,
     "mrp": 125,
     "currency": "INR",
@@ -1868,9 +1856,9 @@
       "bestseller"
     ],
     "preferred": true,
-    "imageUrl": "https://images.openbeautyfacts.org/images/products/600/110/610/8991/front_fr.16.400.jpg",
-    "imageStatus": "found",
-    "imageSource": "open_beauty_facts",
+    "imageUrl": null,
+    "imageStatus": "unavailable",
+    "imageSource": null,
     "barcode": null
   },
   {
@@ -2150,13 +2138,11 @@
       "cold_drinks"
     ],
     "preferred": true,
-    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2025/11/28/28d03859-da45-4e2f-bb4a-4c3079700855_204.png",
-    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2025/11/28/28d03859-da45-4e2f-bb4a-4c3079700855_204.png",
-    "images": [
-      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2025/11/28/28d03859-da45-4e2f-bb4a-4c3079700855_204.png"
-    ],
-    "imageStatus": "found",
-    "imageSource": "swiggy",
+    "imageUrl": null,
+    "image": null,
+    "images": [],
+    "imageStatus": "unavailable",
+    "imageSource": null,
     "barcode": null
   },
   {
@@ -2178,13 +2164,11 @@
       "cold_drinks"
     ],
     "preferred": true,
-    "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2025/11/28/28d03859-da45-4e2f-bb4a-4c3079700855_204.png",
-    "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2025/11/28/28d03859-da45-4e2f-bb4a-4c3079700855_204.png",
-    "images": [
-      "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2025/11/28/28d03859-da45-4e2f-bb4a-4c3079700855_204.png"
-    ],
-    "imageStatus": "found",
-    "imageSource": "swiggy",
+    "imageUrl": null,
+    "image": null,
+    "images": [],
+    "imageStatus": "unavailable",
+    "imageSource": null,
     "barcode": "5449000014535"
   },
   {

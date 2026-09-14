@@ -58,6 +58,15 @@ export default function ProductCard({ product }: { product: Product }) {
   useEffect(() => {
     // Only attempt resolution if image is genuinely missing
     if (resolvedImageUrl || resolveAttempted.current || !imageResolving) return;
+
+    // If the backend already marked this product as unavailable (both products.json and
+    // the canonical registry had no URL), skip the network resolve call entirely.
+    // The ProductImage component will show a clean category placeholder instead.
+    if (product.imageStatus === "unavailable" || product.imageStatus === "not_found") {
+      setImageResolving(false);
+      return;
+    }
+
     resolveAttempted.current = true;
 
     const productKey = product.variantId
@@ -149,7 +158,7 @@ export default function ProductCard({ product }: { product: Product }) {
             alt={product.name}
             category={product.category}
             id={product.id}
-            product={product}
+            product={product as any}
             imageSource={imageSource}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"

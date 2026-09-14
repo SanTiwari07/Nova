@@ -23,6 +23,7 @@ import {
   Zap,
 } from "lucide-react";
 import CommandBox from "@/components/CommandBox";
+import ProductImage from "@/components/ProductImage";
 
 // ─── Interfaces ──────────────────────────────────────────────────────────────
 interface TakenCareItem {
@@ -37,6 +38,7 @@ interface TakenCareItem {
   status_label: string;
   timestamp?: string;
   system_telemetry?: Record<string, any>;
+  imageUrl?: string | null;
 }
 
 interface NeedsInputOption {
@@ -54,6 +56,7 @@ interface NeedsInputItem {
   description: string;
   reasons?: string[];
   options: NeedsInputOption[];
+  imageUrl?: string | null;
 }
 
 interface TonightPlanComponent {
@@ -63,6 +66,7 @@ interface TonightPlanComponent {
   status?: string;
   needed?: string;
   price?: number;
+  imageUrl?: string;
 }
 
 interface TonightPlan {
@@ -75,6 +79,7 @@ interface TonightPlan {
   estimated_cost: number;
   action_label?: string;
   system_telemetry?: Record<string, any>;
+  imageUrl?: string | null;
 }
 
 interface AllSortedItem {
@@ -86,6 +91,7 @@ interface AllSortedItem {
   description: string;
   reasons: string[];
   system_telemetry?: Record<string, any>;
+  imageUrl?: string | null;
 }
 
 interface HouseholdStatusData {
@@ -292,13 +298,18 @@ export default function TodayPage() {
                   className="bg-white rounded-3xl border border-emerald-100/90 p-5 sm:p-6 shadow-xs hover:border-emerald-200 transition-all"
                 >
                   <div className="flex items-start justify-between gap-4 mb-2">
-                    <div>
-                      <h3 className="text-lg font-bold text-neutral-950">
-                        {item.product}
-                      </h3>
-                      <p className="text-sm text-neutral-600 mt-1 leading-relaxed">
-                        {item.summary}
-                      </p>
+                    <div className="flex items-start gap-4 flex-1">
+                      <div className="w-[88px] h-[88px] shrink-0 flex items-center justify-center">
+                        <ProductImage src={item.imageUrl} alt={item.product} size="md" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-neutral-950">
+                          {item.product}
+                        </h3>
+                        <p className="text-sm text-neutral-600 mt-1 leading-relaxed">
+                          {item.summary}
+                        </p>
+                      </div>
                     </div>
 
                     <div className="text-right shrink-0">
@@ -344,21 +355,26 @@ export default function TodayPage() {
                   className="bg-white rounded-3xl border border-amber-200/90 p-5 sm:p-6 shadow-xs hover:border-amber-300 transition-all"
                 >
                   <div className="flex items-start justify-between gap-4 mb-3">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg font-bold text-neutral-950">
-                          {item.product}
-                        </h3>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 uppercase tracking-wide">
-                          ~{item.days_remaining} days left
-                        </span>
+                    <div className="flex items-start gap-4 flex-1">
+                      <div className="w-[88px] h-[88px] shrink-0 flex items-center justify-center">
+                        <ProductImage src={item.imageUrl} alt={item.product} size="md" />
                       </div>
-                      <p className="text-sm text-neutral-600 leading-relaxed">
-                        {item.summary}
-                      </p>
-                      <p className="text-xs text-neutral-500 mt-1">
-                        NOVA found {item.options?.length || 3} suitable options for your household.
-                      </p>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-lg font-bold text-neutral-950">
+                            {item.product}
+                          </h3>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 uppercase tracking-wide">
+                            ~{item.days_remaining} days left
+                          </span>
+                        </div>
+                        <p className="text-sm text-neutral-600 leading-relaxed">
+                          {item.summary}
+                        </p>
+                        <p className="text-xs text-neutral-500 mt-1">
+                          NOVA found {item.options?.length || 3} suitable options for your household.
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -420,6 +436,9 @@ export default function TodayPage() {
                     {s.tonight_plan.have_items.map((item, i) => (
                       <div key={i} className="flex items-center gap-2 text-neutral-700">
                         <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 stroke-[3]" />
+                        {item.imageUrl && (
+                          <ProductImage src={item.imageUrl} alt={item.name || item.item || ""} width={20} height={20} className="w-5 h-5 bg-transparent" />
+                        )}
                         <span className="font-medium">{item.name || item.item}</span>
                         {item.stock && (
                           <span className="text-neutral-400 text-[11px]">({item.stock})</span>
@@ -435,6 +454,9 @@ export default function TodayPage() {
                     {s.tonight_plan.need_items.map((item, i) => (
                       <div key={i} className="flex items-center gap-2 text-neutral-900 font-semibold">
                         <div className="w-3.5 h-3.5 rounded-full border-2 border-amber-500 shrink-0" />
+                        {item.imageUrl && (
+                          <ProductImage src={item.imageUrl} alt={item.name || item.item || ""} width={20} height={20} className="w-5 h-5 bg-transparent" />
+                        )}
                         <span>{item.name || item.item}</span>
                         {item.price && (
                           <span className="text-neutral-500 font-normal text-[11px]">(₹{item.price})</span>
@@ -570,18 +592,23 @@ export default function TodayPage() {
                   className="bg-white rounded-3xl border border-neutral-200/80 p-5 sm:p-6 shadow-2xs"
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-base font-bold text-neutral-900">
-                          {item.product}
-                        </h3>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 uppercase">
-                          Safe
-                        </span>
+                    <div className="flex items-start gap-4 flex-1">
+                      <div className="w-[88px] h-[88px] shrink-0 flex items-center justify-center">
+                        <ProductImage src={item.imageUrl} alt={item.product} size="md" />
                       </div>
-                      <p className="text-sm text-neutral-600">
-                        {item.summary}
-                      </p>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-base font-bold text-neutral-900">
+                            {item.product}
+                          </h3>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 uppercase">
+                            Safe
+                          </span>
+                        </div>
+                        <p className="text-sm text-neutral-600">
+                          {item.summary}
+                        </p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-1 text-xs font-bold text-neutral-500 shrink-0">
                       <MinusCircle className="w-4 h-4 text-neutral-400" />

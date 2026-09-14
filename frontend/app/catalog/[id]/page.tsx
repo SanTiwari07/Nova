@@ -239,7 +239,7 @@ export default function ProductDetailPage({ params }: { params?: { id: string } 
                   src={product.imageUrl || product.image}
                   alt={product.name}
                   category={product.category}
-                  product={product}
+                  product={product as any}
                   fill
                   sizes="(max-width: 768px) 90vw, 38vw"
                 />
@@ -252,7 +252,7 @@ export default function ProductDetailPage({ params }: { params?: { id: string } 
                       src={product.imageUrl || product.image}
                       alt={product.name}
                       category={product.category}
-                      product={product}
+                      product={product as any}
                       width={52}
                       height={52}
                     />
@@ -472,7 +472,7 @@ export default function ProductDetailPage({ params }: { params?: { id: string } 
                         src={p.imageUrl || p.image}
                         alt={p.name}
                         category={p.category}
-                        product={p}
+                        product={p as any}
                         fill
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
                       />

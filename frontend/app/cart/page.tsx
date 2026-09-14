@@ -253,7 +253,7 @@ export default function CartPage() {
                           src={item.imageUrl || item.image}
                           alt={item.name}
                           category={item.category}
-                          product={item}
+                          product={item as any}
                           fill
                           sizes="96px"
                           className="object-contain p-1"

@@ -211,6 +211,7 @@ class NovaAgent:
                                 elif "item" in parsed and "action" in parsed:
                                     result_summary = f"{parsed['action']}: {parsed['item']}"
                         except (json.JSONDecodeError, TypeError, KeyError, AttributeError):
+                            parsed = None
                             result_summary = text_snip[:60]
 
                 if traces is not None:
@@ -219,7 +220,8 @@ class NovaAgent:
                         "input": tool_input,
                         "status": "error" if event.exception else "success",
                         "summary": result_summary,
-                        "duration": round(event.duration or 0, 3)
+                        "duration": round(event.duration or 0, 3),
+                        "result": parsed if 'parsed' in locals() and isinstance(parsed, dict) else None
                     })
                     
                 if queue is not None:
@@ -228,7 +230,8 @@ class NovaAgent:
                         "tool": tool_name,
                         "summary": result_summary,
                         "duration_ms": int((event.duration or 0) * 1000),
-                        "status": "error" if event.exception else "success"
+                        "status": "error" if event.exception else "success",
+                        "result": parsed if 'parsed' in locals() and isinstance(parsed, dict) else None
                     })
 
             self.agent.add_hook(on_before_tool, BeforeToolCallEvent)
@@ -488,20 +491,21 @@ class NovaAgent:
                     "tool": "reconcile_activity_requirements",
                     "input": {"intent": user_request},
                     "status": "success",
-                    "summary": reconcile_res.get("reconciliation_summary", "Reconciliation complete")[:80]
+                    "summary": f"Reconciled {reconcile_res.get('recipe', {}).get('name', 'Recipe')} with pantry",
+                    "result": reconcile_res
                 })
 
-                missing_items = reconcile_res.get("missing_items", [])
-                suggested_queries = reconcile_res.get("suggested_queries", [])
-                query = suggested_queries[0] if suggested_queries else (missing_items[0]["item"] if missing_items else "")
+                shopping_items = reconcile_res.get("shopping", {}).get("items", [])
+                missing_items = [{"item": item["name"]} for item in shopping_items]
+                query = shopping_items[0]["name"] if shopping_items else ""
 
                 if missing_items and query and search_tool and purchase_tool:
                     products = await search_tool(query=query)
-                    if not products and len(suggested_queries) > 1:
-                        for alt_q in suggested_queries[1:]:
-                            products = await search_tool(query=alt_q)
+                    if not products and len(shopping_items) > 1:
+                        for alt_q in shopping_items[1:]:
+                            products = await search_tool(query=alt_q["name"])
                             if products:
-                                query = alt_q
+                                query = alt_q["name"]
                                 break
                     if not products and missing_items:
                         first_word = missing_items[0]["item"].split()[0]
@@ -529,9 +533,9 @@ class NovaAgent:
                             "summary": f"Verdict: {res.get('verdict')}"
                         })
 
-                        avail_desc = ", ".join([a.get("summary", a["item"]) for a in reconcile_res.get("available_in_pantry", [])])
+                        avail_desc = ", ".join([a.get("name", a) for a in reconcile_res.get("pantry", {}).get("available", [])])
                         resp = (
-                            f"**Activity Reconciliation for '{reconcile_res.get('matched_activity', 'Meal/Activity')}':**\n\n"
+                            f"**Activity Reconciliation for '{reconcile_res.get('recipe', {}).get('name', 'Meal/Activity')}':**\n\n"
                             f"1. **Pantry Check:**\n"
                             f"   - **Available in stock:** {avail_desc or 'None'}\n"
                             f"   - **Missing from pantry:** {', '.join([m['item'] for m in missing_items])}\n\n"
@@ -548,9 +552,9 @@ class NovaAgent:
                             "status": "success"
                         }
                     else:
-                        avail_desc = ", ".join([a.get("summary", a["item"]) for a in reconcile_res.get("available_in_pantry", [])])
+                        avail_desc = ", ".join([a.get("name", a) for a in reconcile_res.get("pantry", {}).get("available", [])])
                         resp = (
-                            f"**Activity Reconciliation for '{reconcile_res.get('matched_activity', 'Meal/Activity')}':**\n\n"
+                            f"**Activity Reconciliation for '{reconcile_res.get('recipe', {}).get('name', 'Meal/Activity')}':**\n\n"
                             f"1. **Pantry Check:**\n"
                             f"   - **Available in stock:** {avail_desc or 'None'}\n"
                             f"   - **Missing from pantry:** {', '.join([m['item'] for m in missing_items])}\n\n"

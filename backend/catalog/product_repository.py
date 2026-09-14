@@ -31,7 +31,7 @@ class ProductRepository:
                     item["image"] = raw_img
                     item["images"] = [raw_img]
                     item["imageStatus"] = "found"
-                    item["imageSource"] = "catalog"
+                    item["imageSource"] = item.get("imageSource") or "catalog"
                 else:
                     item["imageUrl"] = None
                     item["image"] = None
@@ -39,7 +39,30 @@ class ProductRepository:
                     item["imageStatus"] = "unavailable"
                     item["imageSource"] = None
                 self.products.append(item)
-                
+
+        # ── Registry fallback pass ────────────────────────────────────────
+        # For every product still missing an imageUrl, consult the canonical
+        # product image registry (deterministic, no network calls, runs once
+        # at startup). Products resolved here get imageSource="registry".
+        # Registry returning None means "known product, no confirmed URL yet";
+        # those products correctly display a clean frontend placeholder.
+        try:
+            from images.product_image_registry import get_registry_image
+            for item in self.products:
+                if not item.get("imageUrl"):
+                    registry_url = get_registry_image(
+                        item.get("name", ""),
+                        item.get("brand"),
+                    )
+                    if registry_url:
+                        item["imageUrl"] = registry_url
+                        item["image"] = registry_url
+                        item["images"] = [registry_url]
+                        item["imageStatus"] = "found"
+                        item["imageSource"] = "registry"
+        except Exception as exc:
+            print(f"[ProductRepository] Registry fallback skipped: {exc}")
+
     def get_all(self, skip: int = 0, limit: int = 250) -> List[Dict[str, Any]]:
         return self.products[skip:skip+limit]
         

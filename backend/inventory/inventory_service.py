@@ -9,7 +9,7 @@ PERSISTENCE_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "pantry
 DEMO_PANTRY: Dict[str, Dict[str, Any]] = {
     "prod_000109": {
         "name": "Amul Taaza Milk 1L",
-        "image": None,
+        "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/17/b42b731e-b555-4536-913a-265af70ec9e4_SKS75T1GV1_MN_16122025.png",
         "quantity": 0.3,
         "unit": "L",
         "daily_consumption": 0.6,
@@ -20,7 +20,7 @@ DEMO_PANTRY: Dict[str, Dict[str, Any]] = {
     },
     "prod_000030": {
         "name": "Fortune Sunflower Oil 5L",
-        "image": None,
+        "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/d0fe0c1c-2142-43d3-bf49-3fe02eb1a7dd_PUHXM33U8E_MN_18022026.png",
         "quantity": 2.1,
         "unit": "L",
         "daily_consumption": 0.07,
@@ -31,7 +31,7 @@ DEMO_PANTRY: Dict[str, Dict[str, Any]] = {
     },
     "prod_000010": {
         "name": "India Gate Basmati Rice 5kg",
-        "image": None,
+        "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/7/21/ed973afb-e397-4df3-8a23-6153474d93b0_450_1.png",
         "quantity": 1.8,
         "unit": "kg",
         "daily_consumption": 0.25,
@@ -42,7 +42,7 @@ DEMO_PANTRY: Dict[str, Dict[str, Any]] = {
     },
     "prod_000001": {
         "name": "Aashirvaad Whole Wheat Atta 5kg",
-        "image": None,
+        "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/3/9/805a02b1-e08b-4d4b-aa8f-ab05cabb1e37_1780_1.png",
         "quantity": 1.2,
         "unit": "kg",
         "daily_consumption": 0.2,
@@ -53,7 +53,7 @@ DEMO_PANTRY: Dict[str, Dict[str, Any]] = {
     },
     "prod_000050": {
         "name": "Tata Salt 1kg",
-        "image": None,
+        "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/219b05ab-1b6b-468b-807c-d4fdd353dc89_883CSP2S79_MN_18122025.png",
         "quantity": 0.4,
         "unit": "kg",
         "daily_consumption": 0.02,
@@ -64,7 +64,7 @@ DEMO_PANTRY: Dict[str, Dict[str, Any]] = {
     },
     "prod_000060": {
         "name": "Tata Sampann Toor Dal 1kg",
-        "image": None,
+        "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/16/eda40bda-ba3b-4fab-97ba-ccbd28c106cf_K71D7X8L8P_MN_15122025.png",
         "quantity": 0.5,
         "unit": "kg",
         "daily_consumption": 0.07,
@@ -75,7 +75,7 @@ DEMO_PANTRY: Dict[str, Dict[str, Any]] = {
     },
     "prod_000080": {
         "name": "Tata Tea Gold 500g",
-        "image": None,
+        "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2026/2/18/bf79f8d0-dfcb-4ebb-be63-b3e291656666_Q5AIG72TKQ_MN_18022026.png",
         "quantity": 0.15,
         "unit": "kg",
         "daily_consumption": 0.025,
@@ -86,7 +86,7 @@ DEMO_PANTRY: Dict[str, Dict[str, Any]] = {
     },
     "prod_000090": {
         "name": "Surf Excel Matic Front Load Detergent 2kg",
-        "image": None,
+        "image": "https://images.openfoodfacts.org/images/products/890/103/086/5169/front_en.9.400.jpg",
         "quantity": 1.2,
         "unit": "kg",
         "daily_consumption": 0.08,
@@ -97,7 +97,7 @@ DEMO_PANTRY: Dict[str, Dict[str, Any]] = {
     },
     "prod_000070": {
         "name": "Madhur Pure & Hygienic Sugar 5kg",
-        "image": None,
+        "image": "https://images.openfoodfacts.org/images/products/890/602/690/0022/front_en.4.400.jpg",
         "quantity": 1.8,
         "unit": "kg",
         "daily_consumption": 0.1,
@@ -108,7 +108,7 @@ DEMO_PANTRY: Dict[str, Dict[str, Any]] = {
     },
     "prod_000100": {
         "name": "Dettol Original Soap Pack of 4",
-        "image": None,
+        "image": "https://images.openfoodfacts.org/images/products/629/512/001/0150/front_en.3.400.jpg",
         "quantity": 1.0,
         "unit": "pack",
         "daily_consumption": 0.03,
@@ -119,7 +119,7 @@ DEMO_PANTRY: Dict[str, Dict[str, Any]] = {
     },
     "prod_000110": {
         "name": "Harpic Power Plus Toilet Cleaner 1L",
-        "image": None,
+        "image": "https://images.openfoodfacts.org/images/products/629/512/005/2334/front_en.3.400.jpg",
         "quantity": 0.4,
         "unit": "bottle",
         "daily_consumption": 0.025,
@@ -130,7 +130,7 @@ DEMO_PANTRY: Dict[str, Dict[str, Any]] = {
     },
     "prod_000120": {
         "name": "Head & Shoulders Shampoo 340ml",
-        "image": None,
+        "image": "https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto/NI_CATALOG/IMAGES/CIW/2026/2/25/c9e9b048-c2b3-4f99-9ea2-2253adfc2b60_5.png",
         "quantity": 0.1,
         "unit": "bottle",
         "daily_consumption": 0.025,

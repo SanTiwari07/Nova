@@ -43,7 +43,7 @@ from .open_food_facts import OpenFoodFactsResolver
 from .image_validator import validate_image_url
 
 # Configurable minimum confidence to display an image
-IMAGE_MATCH_THRESHOLD = float(os.environ.get("IMAGE_MATCH_THRESHOLD", "0.90"))
+IMAGE_MATCH_THRESHOLD = float(os.environ.get("IMAGE_MATCH_THRESHOLD", "0.50"))
 
 _off_resolver = OpenFoodFactsResolver()
 
@@ -358,10 +358,18 @@ class ImageResolver:
                 item = repo.get_by_id(clean_pid)
                 if item and item.get("imageUrl"):
                     return item.get("imageUrl")
-            name = (product.get("name") or "").strip().lower()
+            name = (product.get("name") or "").strip()
+            
             if name:
+                from images.canonical_mapper import get_canonical_image
+                mapped = get_canonical_image(name, product.get("brand"), repo)
+                if mapped:
+                    return mapped
+                
+                # Strict fallback
+                name_lower = name.lower()
                 for p in repo.products:
-                    if p.get("imageUrl") and p.get("name", "").strip().lower() == name:
+                    if p.get("imageUrl") and p.get("name", "").strip().lower() == name_lower:
                         return p.get("imageUrl")
         except Exception as e:
             print(f"[IMAGE RESOLVER] Catalog lookup exception: {e}")
