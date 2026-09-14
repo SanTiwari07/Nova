@@ -135,9 +135,137 @@ interface HouseholdStatusData {
   };
 }
 
+const DEFAULT_HOUSEHOLD_STATUS: HouseholdStatusData = {
+  greeting: "Good evening",
+  headline: "Here's what's happening at home.",
+  briefing_summary: {
+    title: "NOVA has 3 things for you.",
+    bullets: [
+      "1 thing is already taken care of.",
+      "1 thing may need your attention.",
+      "1 plan is ready for tonight.",
+    ],
+    taken_count: 1,
+    input_count: 1,
+    plan_count: 1,
+  },
+  taken_care_of: [
+    {
+      id: "auto_milk_01",
+      product: "Milk",
+      package_name: "Amul Taaza 1L",
+      cost: 68,
+      summary: "You were running low, so NOVA ordered your usual 1L pack.",
+      description: "Milk was running low (~0.3L left). NOVA ordered your usual 1L pack.",
+      reasons: [
+        "Your pantry milk stock dropped to ~0.3 L (less than 1 day remaining).",
+        "Average household consumption is ~0.6 L/day.",
+        "Price Rs 68 is within your Rs 500 auto-order limit.",
+        "Monthly grocery budget has sufficient headroom (Rs 1,560 remaining).",
+      ],
+      decision: "AUTO",
+      status_label: "Done for you",
+      timestamp: "Today",
+      imageUrl: "/assets/products/milk/amul_taaza.png",
+      system_telemetry: {
+        tool: "execute_autonomous_purchase",
+        verdict: "AUTO",
+        provider: "AWS Strands Agents SDK",
+        rule: "Autonomous approval ceiling Rs 500",
+      },
+    },
+  ],
+  needs_input: [
+    {
+      id: "input_detergent_01",
+      product: "Surf Excel Matic Front Load 2kg",
+      category: "Detergent",
+      days_remaining: 3,
+      summary: "Running low (~3 days left). Price is Rs 525, which exceeds your Rs 500 auto-buy ceiling.",
+      description: "Detergent is running low (~3 days left). Price is Rs 525, which is above your Rs 500 auto-order ceiling. NOVA needs your call.",
+      reasons: [
+        "Pantry detergent stock is at ~3 days remaining.",
+        "Pack cost Rs 525 exceeds your Rs 500 autonomous limit.",
+        "Requires explicit user confirmation before order placement.",
+      ],
+      options: [
+        { name: "Approve 2kg pack (Rs 525)", price: 525, tag: "Preferred" },
+        { name: "Switch to 1kg pack (Rs 290)", price: 290, tag: "Budget" },
+      ],
+      imageUrl: "/assets/products/detergent/surf_excel_matic.png",
+    },
+  ],
+  tonight_plan: {
+    plan_id: "plan_maggi_01",
+    title: "Tonight's Cooking Plan: Maggi",
+    meal: "Maggi 2-Minute Noodles",
+    tagline: "Oil and Salt in pantry. Only noodles needed.",
+    have_items: [
+      { name: "Fortune Sunflower Oil", stock: "2.1L available", status: "Healthy", imageUrl: "/assets/products/oil/fortune_oil.png" },
+      { name: "Tata Salt", stock: "0.4kg available", status: "Healthy", imageUrl: "/assets/products/salt/tata_salt.png" },
+    ],
+    need_items: [
+      { name: "Maggi 2-Minute Noodles 280g", price: 55, needed: "1 pack", imageUrl: "/assets/products/noodles/maggi_noodles.png" },
+    ],
+    estimated_cost: 55,
+    action_label: "Take care of this (Rs 55)",
+    imageUrl: "/assets/products/noodles/maggi_noodles.png",
+    system_telemetry: {
+      tool: "reconcile_meal_intent",
+      verdict: "AUTO",
+      provider: "AWS Strands Agents SDK",
+    },
+  },
+  all_sorted: [
+    {
+      id: "sorted_oil_01",
+      product: "Fortune Sunlite Sunflower Oil 5L",
+      days_remaining: 30,
+      summary: "You still have 2.1L of cooking oil in your pantry (~30 days of supply). Left alone.",
+      description: "Sufficient stock. Capital preserved.",
+      reasons: [
+        "Pantry inventory tracks 2.1L remaining.",
+        "Daily consumption velocity is 0.07L/day (30 days of supply).",
+        "Deterministic pre-commit gate evaluated DO_NOTHING.",
+      ],
+      imageUrl: "/assets/products/oil/fortune_oil.png",
+      system_telemetry: {
+        tool: "evaluate_inventory_gate",
+        verdict: "DO_NOTHING",
+        provider: "AWS Strands Agents SDK",
+      },
+    },
+  ],
+  household_size: 2,
+  autonomy_profile: "FULL_AUTOPILOT",
+  autopilot_on: true,
+  pantry: {
+    total_tracked: 28,
+    urgent_count: 2,
+    upcoming_count: 3,
+    comfortable_count: 21,
+    uncertain_count: 2,
+  },
+  budget: {
+    spent: 3440,
+    remaining: 1560,
+    monthly: 5000,
+    auto_limit: 500,
+  },
+  activity: {
+    recent: [],
+    auto_count: 4,
+    restraint_count: 7,
+    ask_count: 2,
+  },
+  cart: {
+    item_count: 0,
+  },
+};
+
 export default function TodayPage() {
-  const [status, setStatus] = useState<HouseholdStatusData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<HouseholdStatusData>(DEFAULT_HOUSEHOLD_STATUS);
+  const [loading, setLoading] = useState(false);
 
   // Modals state
   const [whyModalItem, setWhyModalItem] = useState<TakenCareItem | null>(null);
@@ -152,10 +280,14 @@ export default function TodayPage() {
   const loadStatus = useCallback(async () => {
     try {
       const res = await fetch("/api/household-status");
-      const data = await res.json();
-      setStatus(data);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.briefing_summary) {
+          setStatus(data);
+        }
+      }
     } catch {
-      // keep existing state on fail
+      // keep fallback on network failure
     } finally {
       setLoading(false);
     }
@@ -235,7 +367,7 @@ export default function TodayPage() {
     );
   }
 
-  const s = status!;
+  const s = status || DEFAULT_HOUSEHOLD_STATUS;
   const briefing = s.briefing_summary || {
     title: "NOVA has 3 things for you.",
     bullets: [

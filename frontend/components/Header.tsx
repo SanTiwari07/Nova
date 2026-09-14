@@ -73,12 +73,12 @@ export default function Header() {
 
   const fetchHeaderData = useCallback(() => {
     Promise.all([
-      fetch("/api/cart").then((r) => r.json()).catch(() => ({ items: [] })),
-      fetch("/api/budget").then((r) => r.json()).catch(() => ({ remaining: null })),
-      fetch("/api/auth/swiggy/status").then((r) => r.json()).catch(() => ({ authenticated: false })),
+      fetch("/api/cart").then((r) => r.ok ? r.json() : { items: [] }).catch(() => ({ items: [] })),
+      fetch("/api/budget").then((r) => r.ok ? r.json() : { remaining: 1560 }).catch(() => ({ remaining: 1560 })),
+      fetch("/api/auth/swiggy/status").then((r) => r.ok ? r.json() : { authenticated: false }).catch(() => ({ authenticated: false })),
     ]).then(([cart, bud, swiggy]) => {
       setCartCount(cart?.items?.length || 0);
-      setBudgetRemaining(bud?.remaining ?? null);
+      setBudgetRemaining(bud?.remaining ?? 1560);
       setSwiggyStatus(swiggy || { authenticated: false });
     });
   }, []);

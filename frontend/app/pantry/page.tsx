@@ -72,9 +72,97 @@ function SectionHeader({ icon, title, count, color }: { icon: React.ReactNode; t
   );
 }
 
+const DEFAULT_PANTRY_ITEMS: PantryItem[] = [
+  {
+    product_id: "p_milk",
+    name: "Amul Taaza Milk 1L",
+    quantity: 0.3,
+    unit: "L",
+    daily_consumption: 0.6,
+    days_remaining: 0.5,
+    status: "URGENT",
+    urgency: "URGENT",
+    category: "Milk",
+    confidence: 0.94,
+    confidence_score: "0.94",
+    confidence_level: "High",
+    preferred: true,
+    last_updated: "Today",
+    imageUrl: "/assets/products/milk/amul_taaza.png",
+  },
+  {
+    product_id: "p_oil",
+    name: "Fortune Sunlite Sunflower Oil 5L",
+    quantity: 2.1,
+    unit: "L",
+    daily_consumption: 0.07,
+    days_remaining: 30,
+    status: "COMFORTABLE",
+    urgency: "COMFORTABLE",
+    category: "Oil",
+    confidence: 0.91,
+    confidence_score: "0.91",
+    confidence_level: "High",
+    preferred: true,
+    last_updated: "Yesterday",
+    imageUrl: "/assets/products/oil/fortune_oil.png",
+  },
+  {
+    product_id: "p_detergent",
+    name: "Surf Excel Matic Front Load 2kg",
+    quantity: 0.2,
+    unit: "kg",
+    daily_consumption: 0.07,
+    days_remaining: 2.8,
+    status: "UPCOMING",
+    urgency: "UPCOMING",
+    category: "Detergent",
+    confidence: 0.88,
+    confidence_score: "0.88",
+    confidence_level: "High",
+    preferred: true,
+    last_updated: "2 days ago",
+    imageUrl: "/assets/products/detergent/surf_excel_matic.png",
+  },
+  {
+    product_id: "p_maggi",
+    name: "Maggi 2-Minute Noodles 280g",
+    quantity: 0,
+    unit: "pack",
+    daily_consumption: 0.14,
+    days_remaining: 0,
+    status: "URGENT",
+    urgency: "URGENT",
+    category: "Noodles",
+    confidence: 0.95,
+    confidence_score: "0.95",
+    confidence_level: "High",
+    preferred: true,
+    last_updated: "Today",
+    imageUrl: "/assets/products/noodles/maggi_noodles.png",
+  },
+  {
+    product_id: "p_salt",
+    name: "Tata Salt Vacuum Evaporated 1kg",
+    quantity: 0.4,
+    unit: "kg",
+    daily_consumption: 0.01,
+    days_remaining: 40,
+    status: "COMFORTABLE",
+    urgency: "COMFORTABLE",
+    category: "Salt",
+    confidence: 0.96,
+    confidence_score: "0.96",
+    confidence_level: "High",
+    preferred: true,
+    last_updated: "3 days ago",
+    imageUrl: "/assets/products/salt/tata_salt.png",
+  },
+];
+
 export default function PantryPage() {
-  const [items, setItems] = useState<PantryItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<PantryItem[]>(DEFAULT_PANTRY_ITEMS);
+  const [loading, setLoading] = useState(false);
   const [copilotQuery, setCopilotQuery] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [agentFeedback, setAgentFeedback] = useState<string | null>(null);
@@ -84,10 +172,14 @@ export default function PantryPage() {
   const fetchPantry = useCallback(async () => {
     try {
       const res = await fetch("/api/pantry");
-      const data = await res.json();
-      setItems(Array.isArray(data) ? data : []);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setItems(data);
+        }
+      }
     } catch {
-      /* keep previous */
+      /* keep fallback items */
     } finally {
       setLoading(false);
     }

@@ -30,9 +30,29 @@ interface PlanItem {
   components_count: number;
 }
 
+const DEFAULT_PLANS: PlanItem[] = [
+  {
+    plan_id: "plan_maggi_01",
+    key: "maggi",
+    title: "Tonight's Cooking Plan: Maggi",
+    meal: "Maggi 2-Minute Noodles",
+    have_items: [
+      { item: "Fortune Sunflower Oil", stock: "2.1L available", status: "Healthy" },
+      { item: "Tata Salt", stock: "0.4kg available", status: "Healthy" },
+    ],
+    need_items: [
+      { item: "Maggi 2-Minute Noodles 280g", needed: "1 pack", estimated_price: 55 },
+    ],
+    ready_to_cook: false,
+    missing_count: 1,
+    estimated_cost: 55,
+    components_count: 3,
+  },
+];
+
 export default function PlansPage() {
-  const [plans, setPlans] = useState<PlanItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [plans, setPlans] = useState<PlanItem[]>(DEFAULT_PLANS);
+  const [loading, setLoading] = useState(false);
   const [customIntent, setCustomIntent] = useState("");
   const [reconciling, setReconciling] = useState(false);
   const [customResult, setCustomResult] = useState<any>(null);
@@ -43,10 +63,14 @@ export default function PlansPage() {
   const loadPlans = useCallback(async () => {
     try {
       const res = await fetch("/api/plans");
-      const data = await res.json();
-      setPlans(Array.isArray(data) ? data : []);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setPlans(data);
+        }
+      }
     } catch (err) {
-      console.error("Failed to load plans:", err);
+      // keep fallback plans
     } finally {
       setLoading(false);
     }

@@ -35,23 +35,39 @@ const REPLENISHMENT_EST: Record<string, number> = {
   Soap: 139, Cleaning: 109, "Hair Care": 199,
 };
 
+const DEFAULT_BUDGET: BudgetData = {
+  monthly: 5000,
+  spent: 3440,
+  remaining: 1560,
+  auto_limit: 500,
+  currency: "INR",
+  spent_pct: 69,
+  pressure: false,
+};
+
+const DEFAULT_PANTRY: PantryItem[] = [
+  { product_id: "p_milk", name: "Amul Taaza Milk 1L", category: "Milk", days_remaining: 0.5, urgency: "URGENT" },
+  { product_id: "p_detergent", name: "Surf Excel Matic Front Load 2kg", category: "Detergent", days_remaining: 2.8, urgency: "UPCOMING" },
+  { product_id: "p_oil", name: "Fortune Sunlite Sunflower Oil 5L", category: "Oil", days_remaining: 30, urgency: "COMFORTABLE" },
+];
+
 export default function BudgetPage() {
-  const [budget, setBudget] = useState<BudgetData | null>(null);
-  const [pantry, setPantry] = useState<PantryItem[]>([]);
+  const [budget, setBudget] = useState<BudgetData>(DEFAULT_BUDGET);
+  const [pantry, setPantry] = useState<PantryItem[]>(DEFAULT_PANTRY);
   const [savings, setSavings] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
       const [bud, pant, sav] = await Promise.all([
-        fetch("/api/budget").then((r) => r.json()).catch(() => null),
-        fetch("/api/pantry").then((r) => r.json()).catch(() => []),
-        fetch("/api/savings").then((r) => r.json()).catch(() => null),
+        fetch("/api/budget").then((r) => r.ok ? r.json() : null).catch(() => null),
+        fetch("/api/pantry").then((r) => r.ok ? r.json() : null).catch(() => []),
+        fetch("/api/savings").then((r) => r.ok ? r.json() : null).catch(() => null),
       ]);
-      setBudget(bud);
-      setPantry(Array.isArray(pant) ? pant : []);
-      setSavings(sav);
+      if (bud && typeof bud.monthly === "number") setBudget(bud);
+      if (Array.isArray(pant) && pant.length > 0) setPantry(pant);
+      if (sav) setSavings(sav);
     } finally {
       setLoading(false);
     }

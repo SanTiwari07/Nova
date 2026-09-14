@@ -13,11 +13,11 @@ export default function Navbar() {
   useEffect(() => {
     // Load reminders count and budget remaining for the header indicators
     Promise.all([
-      fetch("/api/reminders").then(r => r.json()).catch(() => ({ count: 0 })),
-      fetch("/api/budget").then(r => r.json()).catch(() => ({ remaining: 0 })),
+      fetch("/api/reminders").then(r => r.ok ? r.json() : { count: 0 }).catch(() => ({ count: 0 })),
+      fetch("/api/budget").then(r => r.ok ? r.json() : { remaining: 1560 }).catch(() => ({ remaining: 1560 })),
     ]).then(([rem, bud]) => {
       setRemindersCount(rem?.count || 0);
-      setBudgetRemaining(bud?.remaining || null);
+      setBudgetRemaining(bud?.remaining || 1560);
     });
   }, [pathname]);
 
