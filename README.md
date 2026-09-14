@@ -513,8 +513,8 @@ npm run build
 
 Expected output:
 ```text
-✓ Generating static pages (24/24)
-✓ Finalizing page optimization
+[OK] Generating static pages (24/24)
+[OK] Finalizing page optimization
 Exit Code: 0
 ```
 
