@@ -1,30 +1,79 @@
-# NOVA Local Development and Deployment Setup
+# NOVA Local Development and Quickstart Guide
 
 ## 1. Zero-Cost-First Strategy
-Development prioritizes local environments, mock commerce, seed data, and controlled AWS usage. We avoid provisioning expensive always-on infrastructure just for demonstration.
+Development prioritizes local environments, simulated commerce, seeded household state, and controlled cloud usage. NOVA can run entirely locally without requiring active AWS or external commerce credentials.
 
 ## 2. Environment Setup
 
-### Backend (Python/FastAPI)
-1. Navigate to `backend/`
-2. Create a virtual environment: `python -m venv venv`
-3. Activate the environment.
-4. Install dependencies: `pip install -r requirements.txt` (to be created)
-5. Copy `.env.example` to `.env` and configure:
-   - `AWS_PROFILE` (for Bedrock/DynamoDB local testing)
-   - `COMMERCE_PROVIDER=mock`
-6. Run the server: `uvicorn api.app:app --reload`
+### Prerequisites
+- Python 3.10+ (tested on Python 3.12)
+- Node.js 18+ (tested on Node.js 20+)
+- npm or pnpm
 
-### Frontend (Next.js)
-1. Navigate to `frontend/`
-2. Install dependencies: `npm install`
-3. Copy `.env.example` to `.env.local`
-4. Run the development server: `npm run dev`
+### Backend (Python / FastAPI)
+1. Navigate to `backend/`:
+   ```bash
+   cd backend
+   ```
+2. Create and activate a virtual environment:
+   ```bash
+   # Linux / macOS
+   python3 -m venv venv
+   source venv/bin/activate
 
-## 3. Mock Data
-- Use `scripts/seed_household.py` to populate local DynamoDB or in-memory mock data with the default "Demo Household".
-- The mock commerce adapter will simulate network latency and return success payloads for checkout.
+   # Windows (PowerShell)
+   python -m venv venv
+   .\venv\Scripts\Activate.ps1
+   ```
+3. Install backend dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Configure environment variables:
+   Copy `.env.example` to `.env` in the repository root or `backend/`:
+   ```bash
+   cp ../.env.example ../.env
+   ```
+   Key variables:
+   - `LLM_PROVIDER`: `gemini` (default for quick testing), `bedrock` (Amazon Bedrock Claude 3.5 Sonnet), or offline deterministic fallback.
+   - `COMMERCE_MODE`: `live` (Swiggy Instamart MCP via JSON-RPC 2.0) or `mock` (deterministic local catalog).
+   - `DEFAULT_AUTONOMY_PROFILE`: `FULL_AUTOPILOT`, `ASK_EVERYTHING`, or `RESTRICTIVE`.
+5. Start the FastAPI backend server:
+   ```bash
+   python -m uvicorn api.main:app --reload --port 8000
+   ```
+   The interactive OpenAPI docs are accessible at `http://localhost:8000/docs`.
 
-## 4. AWS Deployment (Phase 2)
-- Use AWS SAM or CDK to deploy the serverless stack (API Gateway + Lambda for backend, DynamoDB tables, EventBridge rules).
-- Frontend deployed to Vercel or AWS Amplify.
+### Frontend (Next.js 14)
+1. Navigate to `frontend/`:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Run the development server:
+   ```bash
+   npm run dev
+   ```
+4. Or create a production build:
+   ```bash
+   npm run build
+   npm start
+   ```
+   Open `http://localhost:3000` to access the NOVA Command Center.
+
+## 3. Seed Data & State Persistence
+- Seed data is loaded automatically from `backend/inventory/inventory_service.py` (`DEMO_PANTRY`), initializing realistic Indian grocery staples (Amul Milk, Fortune Sunflower Oil, Aashirvaad Atta, Tata Salt, etc.).
+- State changes (pantry levels, budget spend, audit trail) are persisted to `backend/data/*_state.json`.
+- To reset the demo state at any time, click "Reset Demo State" in the UI header or call `POST /api/demo/reset`.
+
+## 4. Running the Test Suite
+The backend includes a comprehensive 32-test automated verification suite covering all hero scenarios, deterministic guardrails, cooking intent reconciliation, and edge cases:
+```bash
+# From repository root
+python -m pytest backend/tests/ -v
+```
+Expected output: **32 passed in ~3.5s**.
+

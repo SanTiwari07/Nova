@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOVA — System Architecture Diagram (16:9 Presentation Slide)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #0B0F19;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 24px;
+    }
+    .presentation-frame {
+      max-width: 1920px;
+      width: 100%;
+      background: #F6F7F9;
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.7);
+      border-radius: 12px;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+    }
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="presentation-frame">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" style="background:#F6F7F9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Soft architectural drop shadows -->
+    <filter id="shadow-soft" x="-5%" y="-5%" width="110%" height="112%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0F172A" flood-opacity="0.04" />
+    </filter>
+    <filter id="shadow-card" x="-8%" y="-8%" width="116%" height="118%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#0F172A" flood-opacity="0.06" />
+    </filter>
+    <filter id="shadow-hero" x="-10%" y="-10%" width="120%" height="122%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08" />
+    </filter>
+    <filter id="shadow-gate" x="-12%" y="-12%" width="124%" height="126%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#DC2626" flood-opacity="0.10" />
+    </filter>
+
+    <!-- Precise directional arrow markers -->
+    <marker id="arr-orange" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#FF9900" />
+    </marker>
+    <marker id="arr-slate" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#475569" />
+    </marker>
+    <marker id="arr-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#10B981" />
+    </marker>
+    <marker id="arr-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#0284C7" />
+    </marker>
+    <marker id="arr-purple" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#6366F1" />
+    </marker>
+    <marker id="arr-red" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#DC2626" />
+    </marker>
+  </defs>
+
+  <!-- ========================================================================= -->
+  <!-- 1. TOP HEADER & EQUATION BANNER (y: 12 to y: 92)                          -->
+  <!-- ========================================================================= -->
+  <rect x="20" y="12" width="1880" height="80" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" filter="url(#shadow-soft)" />
+  
+  <!-- Left Brand & Architecture Title -->
+  <g transform="translate(36, 22)">
+    <rect x="0" y="4" width="80" height="44" rx="8" fill="#0F172A" />
+    <text x="40" y="31" fill="#FFFFFF" font-size="20" font-weight="900" letter-spacing="1.5" text-anchor="middle">NOVA</text>
+    <circle cx="68" cy="15" r="4.5" fill="#FF9900" />
+    
+    <text x="96" y="24" fill="#0F172A" font-size="20" font-weight="800" letter-spacing="-0.3">Autonomous Household Decision Architecture</text>
+    <text x="96" y="44" fill="#64748B" font-size="12" font-weight="500">
+      <tspan fill="#FF9900" font-weight="700">Strands Agents SDK</tspan> • 
+      <tspan fill="#4338CA" font-weight="700">Amazon Bedrock</tspan> • 
+      <tspan fill="#0284C7" font-weight="700">Bedrock AgentCore</tspan> • 
+      <tspan fill="#059669" font-weight="700">Deterministic Safety Gate</tspan>
+      <tspan dx="10" fill="#CBD5E1">|</tspan>
+      <tspan dx="10" fill="#B45309" font-weight="600" font-style="italic">An uncertainty-aware agent that knows when to act, ask, wait, or stop</tspan>
+    </text>
+  </g>
+
+  <!-- Right: Hackathon Badge + Central Innovation Equation Pill -->
+  <g transform="translate(1100, 20)">
+    <rect x="0" y="2" width="784" height="64" rx="10" fill="#0F172A" stroke="#FF9900" stroke-width="1.5" filter="url(#shadow-soft)" />
+    <!-- Subtitle Hackathon Bar -->
+    <rect x="14" y="10" width="220" height="18" rx="4" fill="#1E293B" />
+    <circle cx="24" cy="19" r="3" fill="#FF9900" />
+    <text x="32" y="23" fill="#F8FAFC" font-size="9" font-weight="700" letter-spacing="0.5">AWS AGENTS FOR HUMANS HACKATHON</text>
+    <text x="246" y="23" fill="#94A3B8" font-size="10" font-weight="600">Everyday Agents Track</text>
+
+    <!-- Core Equation -->
+    <text x="14" y="48" fill="#E2E8F0" font-size="12" font-weight="700" letter-spacing="0.6">
+      <tspan fill="#FF9900" font-weight="900">AUTONOMY</tspan> = 
+      <tspan fill="#FFFFFF">REASONING</tspan> + 
+      <tspan fill="#60A5FA">CONSTRAINTS</tspan> + 
+      <tspan fill="#FBBF24">CONFIDENCE</tspan> + 
+      <tspan fill="#34D399">ACTION</tspan> + 
+      <tspan fill="#F87171">RESTRAINT</tspan>
+    </text>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- 2. PROACTIVE BACKGROUND TRIGGER BAR (y: 100 to y: 146)                    -->
+  <!-- ========================================================================= -->
+  <rect x="20" y="100" width="1880" height="46" rx="10" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1" />
+  
+  <!-- EventBridge Proactive Card -->
+  <g transform="translate(36, 107)">
+    <rect x="0" y="0" width="220" height="32" rx="6" fill="#FFF7ED" stroke="#FF9900" stroke-width="1.2" />
+    <rect x="4" y="4" width="24" height="24" rx="4" fill="#FF9900" />
+    <text x="16" y="21" fill="#FFFFFF" font-size="13" font-weight="900" text-anchor="middle">⚡</text>
+    <text x="36" y="15" fill="#9A3412" font-size="10.5" font-weight="800">Amazon EventBridge</text>
+    <text x="36" y="27" fill="#C2410C" font-size="9">Scheduled Household Audit (Cron)</text>
+  </g>
+
+  <!-- Arrow EventBridge -> Lambda -->
+  <path d="M 264 123 L 286 123" fill="none" stroke="#FF9900" stroke-width="1.8" marker-end="url(#arr-orange)" />
+
+  <!-- Lambda Evaluator Card -->
+  <g transform="translate(294, 107)">
+    <rect x="0" y="0" width="200" height="32" rx="6" fill="#FFF7ED" stroke="#FF9900" stroke-width="1.2" />
+    <rect x="4" y="4" width="24" height="24" rx="4" fill="#FF9900" />
+    <text x="16" y="21" fill="#FFFFFF" font-size="14" font-weight="900" text-anchor="middle">λ</text>
+    <text x="36" y="15" fill="#9A3412" font-size="10.5" font-weight="800">AWS Lambda / Workflow</text>
+    <text x="36" y="27" fill="#C2410C" font-size="9">Proactive Household Evaluator</text>
+  </g>
+
+  <!-- Connector: Lambda -> Primary Agent -->
+  <path d="M 500 123 L 610 123 L 610 188" fill="none" stroke="#FF9900" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arr-orange)" />
+  <rect x="630" y="109" width="530" height="28" rx="5" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1" />
+  <text x="640" y="127" fill="#92400E" font-size="10" font-weight="800">
+    ★ PROACTIVE AUTONOMY PATH: Periodically audits consumption &amp; triggers replenishment without human intervention
+  </text>
+
+  <!-- ========================================================================= -->
+  <!-- 3. MAIN ARCHITECTURE CANVAS (y: 154 to y: 964)                            -->
+  <!-- ========================================================================= -->
+
+  <!-- ZONE 1: PROBABILISTIC REASONING (Left Region) -->
+  <rect x="20" y="154" width="805" height="810" rx="14" fill="#FAF5FF" stroke="#E0E7FF" stroke-width="1.8" />
+  <rect x="36" y="164" width="410" height="22" rx="5" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="1" />
+  <text x="46" y="179" fill="#4338CA" font-size="10" font-weight="800" letter-spacing="0.5">
+    PROBABILISTIC LAYER — Strands Agents SDK + Amazon Bedrock
+  </text>
+  <text x="456" y="179" fill="#6B7280" font-size="9.5" font-weight="500">Understand • Reason • Plan • Explain</text>
+
+  <!-- ZONE 2: DETERMINISTIC SAFETY & CONTROL (Right Region) -->
+  <rect x="835" y="154" width="1065" height="810" rx="14" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.8" />
+  <rect x="1150" y="164" width="480" height="22" rx="5" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1" />
+  <text x="1160" y="179" fill="#166534" font-size="10" font-weight="800" letter-spacing="0.5">
+    DETERMINISTIC LAYER — Bedrock AgentCore + DynamoDB
+  </text>
+  <text x="1640" y="179" fill="#6B7280" font-size="9.5" font-weight="500">Math • Policy • Restraint • Commerce</text>
+
+  <!-- CRITICAL BOUNDARY DIVIDER BANNER -->
+  <g transform="translate(685, 148)">
+    <rect x="0" y="0" width="440" height="32" rx="16" fill="#0F172A" stroke="#FF9900" stroke-width="2" filter="url(#shadow-card)" />
+    <text x="220" y="21" fill="#FFFFFF" font-size="11.5" font-weight="800" letter-spacing="0.6" text-anchor="middle">
+      <tspan fill="#C7D2FE">LLM PROPOSES</tspan> <tspan fill="#FF9900">➔</tspan> <tspan fill="#86EFAC">DETERMINISTIC CODE DECIDES</tspan>
+    </text>
+  </g>
+
+  <!-- ----------------------------------------------------------------------- -->
+  <!-- ZONE A: HUMAN / PRODUCT EXPERIENCE (x: 34)                              -->
+  <!-- ----------------------------------------------------------------------- -->
+
+  <!-- User Request Card -->
+  <g transform="translate(34, 198)">
+    <rect x="0" y="0" width="222" height="118" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" filter="url(#shadow-card)" />
+    <rect x="0" y="0" width="222" height="28" rx="10" fill="#F1F5F9" />
+    <rect x="0" y="20" width="222" height="8" fill="#F1F5F9" />
+    <circle cx="16" cy="14" r="5" fill="#3B82F6" />
+    <text x="28" y="18" fill="#0F172A" font-size="11" font-weight="700">USER / HOUSEHOLD</text>
+    
+    <text x="12" y="44" fill="#0F172A" font-size="10" font-weight="700">Entry Path 1: User Request</text>
+    <text x="12" y="58" fill="#64748B" font-size="9">Natural-language household intent</text>
+    
+    <rect x="10" y="66" width="202" height="42" rx="6" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1" />
+    <text x="18" y="82" fill="#475569" font-size="9.5" font-style="italic">“I want to make Maggi tonight”</text>
+    <text x="18" y="96" fill="#94A3B8" font-size="8.5">Reconciles ingredients against pantry</text>
+  </g>
+
+  <!-- NOVA Web Command Center -->
+  <g transform="translate(34, 330)">
+    <rect x="0" y="0" width="222" height="336" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" filter="url(#shadow-card)" />
+    <!-- Header -->
+    <rect x="0" y="0" width="222" height="32" rx="10" fill="#0F172A" />
+    <rect x="0" y="22" width="222" height="10" fill="#0F172A" />
+    <circle cx="14" cy="16" r="4" fill="#FF9900" />
+    <text x="24" y="20" fill="#FFFFFF" font-size="10.5" font-weight="700">NOVA Web Command Center</text>
+
+    <!-- Subtitle -->
+    <text x="12" y="48" fill="#0F172A" font-size="9.5" font-weight="700">Household Management Console</text>
+    <text x="12" y="60" fill="#64748B" font-size="8.5">Next.js 14 • React • Tailwind • Hooks</text>
+
+    <!-- 7 Views -->
+    <g transform="translate(10, 68)">
+      <rect x="0" y="0" width="98" height="22" rx="4" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="8" y="15" fill="#334155" font-size="8.5" font-weight="600">🏠 Today</text>
+      <rect x="104" y="0" width="98" height="22" rx="4" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="112" y="15" fill="#334155" font-size="8.5" font-weight="600">🥫 Pantry</text>
+
+      <rect x="0" y="26" width="98" height="22" rx="4" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="8" y="41" fill="#334155" font-size="8.5" font-weight="600">📋 Plans</text>
+      <rect x="104" y="26" width="98" height="22" rx="4" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="112" y="41" fill="#334155" font-size="8.5" font-weight="600">📦 Orders</text>
+
+      <rect x="0" y="52" width="98" height="22" rx="4" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="8" y="67" fill="#334155" font-size="8.5" font-weight="600">💰 Budget</text>
+      <rect x="104" y="52" width="98" height="22" rx="4" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="112" y="67" fill="#334155" font-size="8.5" font-weight="600">🛡️ Rules</text>
+
+      <rect x="0" y="78" width="202" height="22" rx="4" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="8" y="93" fill="#334155" font-size="8.5" font-weight="600">🔍 Activity &amp; Explanations</text>
+    </g>
+
+    <!-- Transparent "Why did NOVA do this?" Card -->
+    <g transform="translate(10, 180)">
+      <rect x="0" y="0" width="202" height="144" rx="8" fill="#FFFBEB" stroke="#FCD34D" stroke-width="1.2" />
+      <text x="10" y="18" fill="#92400E" font-size="10.5" font-weight="800">“Why did NOVA do this?”</text>
+      <text x="10" y="32" fill="#B45309" font-size="8.5" font-weight="600">Human-Readable Explanation Card</text>
+      
+      <rect x="8" y="40" width="186" height="74" rx="6" fill="#FFFFFF" stroke="#FDE68A" />
+      <text x="14" y="54" fill="#475569" font-size="8.5" font-weight="500">“Milk was running low (&lt;0.5L),</text>
+      <text x="14" y="68" fill="#475569" font-size="8.5" font-weight="500">consumption confidence was high (94%),</text>
+      <text x="14" y="82" fill="#475569" font-size="8.5" font-weight="500">Dairy is an allowed AUTO category,</text>
+      <text x="14" y="96" fill="#475569" font-size="8.5" font-weight="500">and ₹65 is within ₹500 auto-limit.”</text>
+      
+      <text x="10" y="128" fill="#059669" font-size="8.5" font-weight="700">✓ Auditable Autonomous Execution</text>
+    </g>
+  </g>
+
+  <!-- Connectors from UI/User -> FastAPI -->
+  <path d="M 256 255 L 268 255" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arr-slate)" />
+  <path d="M 256 420 L 268 420" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arr-slate)" />
+
+  <!-- ----------------------------------------------------------------------- -->
+  <!-- ZONE B: FASTAPI ORCHESTRATION GATEWAY (x: 270)                          -->
+  <!-- ----------------------------------------------------------------------- -->
+  <g transform="translate(270, 198)">
+    <rect x="0" y="0" width="134" height="468" rx="10" fill="#FFFFFF" stroke="#0284C7" stroke-width="1.5" filter="url(#shadow-card)" />
+    <!-- Header -->
+    <rect x="0" y="0" width="134" height="32" rx="10" fill="#0284C7" />
+    <rect x="0" y="22" width="134" height="10" fill="#0284C7" />
+    <text x="67" y="16" fill="#FFFFFF" font-size="10.5" font-weight="800" text-anchor="middle">FastAPI Gateway</text>
+    <text x="67" y="27" fill="#E0F2FE" font-size="8" text-anchor="middle">Python FastAPI</text>
+
+    <!-- Duties -->
+    <g transform="translate(8, 42)">
+      <rect x="0" y="0" width="118" height="38" rx="4" fill="#F0F9FF" stroke="#BAE6FD" />
+      <text x="6" y="16" fill="#0369A1" font-size="8.5" font-weight="700">POST /command</text>
+      <text x="6" y="29" fill="#64748B" font-size="7.5">User request intake</text>
+
+      <rect x="0" y="46" width="118" height="38" rx="4" fill="#F0F9FF" stroke="#BAE6FD" />
+      <text x="6" y="62" fill="#0369A1" font-size="8.5" font-weight="700">WebSocket Events</text>
+      <text x="6" y="75" fill="#64748B" font-size="7.5">Live tool execution trace</text>
+
+      <rect x="0" y="92" width="118" height="38" rx="4" fill="#F0F9FF" stroke="#BAE6FD" />
+      <text x="6" y="108" fill="#0369A1" font-size="8.5" font-weight="700">Domain Endpoints</text>
+      <text x="6" y="121" fill="#64748B" font-size="7.5">Pantry, Plans, Orders</text>
+
+      <rect x="0" y="138" width="118" height="38" rx="4" fill="#F0F9FF" stroke="#BAE6FD" />
+      <text x="6" y="154" fill="#0369A1" font-size="8.5" font-weight="700">Strands Dispatcher</text>
+      <text x="6" y="167" fill="#64748B" font-size="7.5">Agent lifecycle dispatch</text>
+
+      <rect x="0" y="184" width="118" height="38" rx="4" fill="#F0F9FF" stroke="#BAE6FD" />
+      <text x="6" y="200" fill="#0369A1" font-size="8.5" font-weight="700">Pre-flight Security</text>
+      <text x="6" y="213" fill="#64748B" font-size="7.5">Household token verify</text>
+
+      <!-- Label inside Gateway -->
+      <rect x="0" y="348" width="118" height="54" rx="6" fill="#0F172A" />
+      <text x="59" y="366" fill="#FF9900" font-size="8.5" font-weight="800" text-anchor="middle">API BOUNDARY</text>
+      <text x="59" y="379" fill="#FFFFFF" font-size="8" text-anchor="middle">Web ↔ Agent Gateway</text>
+      <text x="59" y="392" fill="#94A3B8" font-size="7.5" text-anchor="middle">Async Orchestrator</text>
+    </g>
+  </g>
+
+  <!-- Connector: FastAPI -> Primary Agent -->
+  <path d="M 404 350 L 416 350" fill="none" stroke="#FF9900" stroke-width="2.5" marker-end="url(#arr-orange)" />
+
+  <!-- ----------------------------------------------------------------------- -->
+  <!-- ZONE C: PRIMARY AGENT — THE CENTERPIECE (x: 418, width: 395)            -->
+  <!-- ----------------------------------------------------------------------- -->
+  <g transform="translate(418, 198)">
+    <rect x="0" y="0" width="395" height="468" rx="14" fill="#FFFFFF" stroke="#FF9900" stroke-width="2.5" filter="url(#shadow-hero)" />
+    
+    <!-- Top Accent Bar -->
+    <rect x="0" y="0" width="395" height="42" rx="14" fill="#0F172A" />
+    <rect x="0" y="30" width="395" height="12" fill="#0F172A" />
+    <circle cx="20" cy="21" r="5" fill="#FF9900" />
+    <text x="32" y="26" fill="#FFFFFF" font-size="14" font-weight="900" letter-spacing="0.5">NOVA PRIMARY AGENT</text>
+    <rect x="245" y="10" width="140" height="22" rx="6" fill="#FF9900" />
+    <text x="315" y="25" fill="#0F172A" font-size="10" font-weight="800" text-anchor="middle">Strands Agents SDK</text>
+
+    <!-- Explicit Single Agent Badge -->
+    <g transform="translate(12, 50)">
+      <rect x="0" y="0" width="371" height="26" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1" />
+      <text x="185" y="17" fill="#92400E" font-size="10" font-weight="800" text-anchor="middle">
+        ★ ONE PRIMARY NOVA AGENT — Single Autonomous Intelligence Core
+      </text>
+    </g>
+
+    <text x="16" y="92" fill="#4338CA" font-size="10" font-weight="800">PROBABILISTIC / LLM REASONING CAPABILITIES</text>
+
+    <!-- Capabilities 6 Cards -->
+    <g transform="translate(12, 100)">
+      <rect x="0" y="0" width="180" height="38" rx="6" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="8" y="16" fill="#0F172A" font-size="9" font-weight="700">💬 Natural Language</text>
+      <text x="8" y="29" fill="#64748B" font-size="8">Deep intent understanding</text>
+
+      <rect x="191" y="0" width="180" height="38" rx="6" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="199" y="16" fill="#0F172A" font-size="9" font-weight="700">🎯 Intent Recognition</text>
+      <text x="199" y="29" fill="#64748B" font-size="8">Goal &amp; recipe decomposition</text>
+
+      <rect x="0" y="44" width="180" height="38" rx="6" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="8" y="60" fill="#0F172A" font-size="9" font-weight="700">🧠 Reasoning &amp; Planning</text>
+      <text x="8" y="73" fill="#64748B" font-size="8">Multi-step action sequences</text>
+
+      <rect x="191" y="44" width="180" height="38" rx="6" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="199" y="60" fill="#0F172A" font-size="9" font-weight="700">📚 Context Interpretation</text>
+      <text x="199" y="73" fill="#64748B" font-size="8">Household routines &amp; habits</text>
+
+      <rect x="0" y="88" width="180" height="38" rx="6" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="8" y="104" fill="#0F172A" font-size="9" font-weight="700">🛠️ Dynamic Tool Selection</text>
+      <text x="8" y="117" fill="#64748B" font-size="8">AgentCore Gateway invocation</text>
+
+      <rect x="191" y="88" width="180" height="38" rx="6" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="199" y="104" fill="#0F172A" font-size="9" font-weight="700">💡 Transparent Explanation</text>
+      <text x="199" y="117" fill="#64748B" font-size="8">Synthesizes human-ready reasons</text>
+    </g>
+
+    <!-- Agentic Loop Visual (Section 18) -->
+    <g transform="translate(12, 246)">
+      <rect x="0" y="0" width="371" height="76" rx="8" fill="#F1F5F9" stroke="#CBD5E1" />
+      <text x="10" y="16" fill="#0F172A" font-size="9.5" font-weight="800">AUTONOMOUS AGENTIC LOOP</text>
+      <text x="188" y="16" fill="#64748B" font-size="8">Closed-loop evaluation &amp; restraint cycle</text>
+      
+      <!-- Loop Line 1 -->
+      <g transform="translate(8, 26)">
+        <rect x="0" y="0" width="64" height="18" rx="4" fill="#FFFFFF" stroke="#94A3B8" />
+        <text x="32" y="12" fill="#0F172A" font-size="7.5" font-weight="700" text-anchor="middle">UNDERSTAND</text>
+        <text x="69" y="12" fill="#FF9900" font-size="9" font-weight="900">→</text>
+
+        <rect x="78" y="0" width="58" height="18" rx="4" fill="#FFFFFF" stroke="#94A3B8" />
+        <text x="107" y="12" fill="#0F172A" font-size="7.5" font-weight="700" text-anchor="middle">RETRIEVE</text>
+        <text x="140" y="12" fill="#FF9900" font-size="9" font-weight="900">→</text>
+
+        <rect x="148" y="0" width="56" height="18" rx="4" fill="#FFFFFF" stroke="#94A3B8" />
+        <text x="176" y="12" fill="#0F172A" font-size="7.5" font-weight="700" text-anchor="middle">REASON</text>
+        <text x="208" y="12" fill="#FF9900" font-size="9" font-weight="900">→</text>
+
+        <rect x="216" y="0" width="62" height="18" rx="4" fill="#FFFFFF" stroke="#94A3B8" />
+        <text x="247" y="12" fill="#0F172A" font-size="7.5" font-weight="700" text-anchor="middle">USE TOOLS</text>
+        <text x="282" y="12" fill="#FF9900" font-size="9" font-weight="900">→</text>
+
+        <rect x="290" y="0" width="64" height="18" rx="4" fill="#FFFFFF" stroke="#94A3B8" />
+        <text x="322" y="12" fill="#0F172A" font-size="7.5" font-weight="700" text-anchor="middle">CONSTRAIN</text>
+      </g>
+      <!-- Loop Line 2 -->
+      <g transform="translate(8, 49)">
+        <rect x="0" y="0" width="56" height="18" rx="4" fill="#FFFFFF" stroke="#94A3B8" />
+        <text x="28" y="12" fill="#0F172A" font-size="7.5" font-weight="700" text-anchor="middle">DECIDE</text>
+        <text x="61" y="12" fill="#FF9900" font-size="9" font-weight="900">→</text>
+
+        <rect x="70" y="0" width="108" height="18" rx="4" fill="#FEF3C7" stroke="#F59E0B" />
+        <text x="124" y="12" fill="#92400E" font-size="7.5" font-weight="800" text-anchor="middle">ACT / ASK / RESTRAIN</text>
+        <text x="182" y="12" fill="#FF9900" font-size="9" font-weight="900">→</text>
+
+        <rect x="190" y="0" width="58" height="18" rx="4" fill="#FFFFFF" stroke="#94A3B8" />
+        <text x="219" y="12" fill="#0F172A" font-size="7.5" font-weight="700" text-anchor="middle">UPDATE</text>
+        <text x="252" y="12" fill="#FF9900" font-size="9" font-weight="900">→</text>
+
+        <rect x="260" y="0" width="60" height="18" rx="4" fill="#ECFDF5" stroke="#10B981" />
+        <text x="290" y="12" fill="#065F46" font-size="7.5" font-weight="800" text-anchor="middle">LEARN ↺</text>
+      </g>
+    </g>
+
+    <!-- Amazon Bedrock Container -->
+    <g transform="translate(12, 332)">
+      <rect x="0" y="0" width="371" height="122" rx="8" fill="#F8FAFC" stroke="#C7D2FE" stroke-width="1.2" />
+      <rect x="8" y="8" width="154" height="20" rx="4" fill="#4338CA" />
+      <text x="85" y="22" fill="#FFFFFF" font-size="9.5" font-weight="800" text-anchor="middle">Amazon Bedrock</text>
+      <text x="170" y="22" fill="#475569" font-size="9" font-weight="600">Foundation Model Runtime</text>
+
+      <rect x="8" y="34" width="355" height="46" rx="6" fill="#FFFFFF" stroke="#E2E8F0" />
+      <text x="14" y="48" fill="#0F172A" font-size="9" font-weight="700">Foundation Model (Bedrock Inference)</text>
+      <text x="14" y="61" fill="#64748B" font-size="8">Natural-language understanding, intent decomposition &amp; tool schemas</text>
+      <text x="14" y="72" fill="#4338CA" font-size="8" font-weight="600">Claude 3.5 Sonnet / Multi-Provider • Zero direct spending privileges</text>
+
+      <text x="12" y="99" fill="#DC2626" font-size="8.5" font-weight="800">🔒 HARD BOUNDARY INVARIANT: <tspan fill="#475569" font-weight="500">LLM CANNOT call checkout or spend funds directly</tspan></text>
+    </g>
+  </g>
+
+  <!-- Observability & Telemetry Strip (Bottom of Probabilistic Zone) -->
+  <g transform="translate(418, 678)">
+    <rect x="0" y="0" width="395" height="96" rx="10" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.2" filter="url(#shadow-card)" />
+    <!-- Header -->
+    <rect x="0" y="0" width="395" height="24" rx="10" fill="#334155" />
+    <rect x="0" y="16" width="395" height="8" fill="#334155" />
+    <text x="12" y="16" fill="#FFFFFF" font-size="10" font-weight="700">OBSERVABILITY &amp; TELEMETRY</text>
+    <text x="210" y="16" fill="#CBD5E1" font-size="8.5">Strands Telemetry ➔ Amazon CloudWatch</text>
+
+    <g transform="translate(10, 32)">
+      <rect x="0" y="0" width="180" height="52" rx="6" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="8" y="16" fill="#0F172A" font-size="8.5" font-weight="700">Strands Event Hooks</text>
+      <text x="8" y="29" fill="#64748B" font-size="7.5">• BeforeToolCallEvent</text>
+      <text x="8" y="42" fill="#64748B" font-size="7.5">• AfterToolCallEvent (Latency, Output)</text>
+
+      <rect x="192" y="0" width="182" height="52" rx="6" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="200" y="16" fill="#0F172A" font-size="8.5" font-weight="700">CloudWatch / Audit</text>
+      <text x="200" y="29" fill="#64748B" font-size="7.5">• Tool metrics, execution status</text>
+      <text x="200" y="42" fill="#64748B" font-size="7.5">• Structured replay &amp; audit history</text>
+    </g>
+  </g>
+
+  <!-- Connector: Primary Agent -> AgentCore Runtime -->
+  <path d="M 813 350 L 848 350" fill="none" stroke="#FF9900" stroke-width="3" marker-end="url(#arr-orange)" />
+
+  <!-- ----------------------------------------------------------------------- -->
+  <!-- ZONE D: AGENTCORE RUNTIME, MEMORY & GATEWAY (x: 850, width: 236)        -->
+  <!-- ----------------------------------------------------------------------- -->
+  <g transform="translate(850, 198)">
+    <rect x="0" y="0" width="236" height="468" rx="12" fill="#FFFFFF" stroke="#0284C7" stroke-width="2" filter="url(#shadow-card)" />
+    
+    <!-- AWS Badge Header -->
+    <rect x="0" y="0" width="236" height="34" rx="12" fill="#0284C7" />
+    <rect x="0" y="24" width="236" height="10" fill="#0284C7" />
+    <text x="118" y="16" fill="#FFFFFF" font-size="11.5" font-weight="800" text-anchor="middle">Amazon Bedrock AgentCore</text>
+    <text x="118" y="28" fill="#E0F2FE" font-size="8" text-anchor="middle">Managed Agent Infrastructure</text>
+
+    <!-- Sub-container 1: AgentCore Runtime -->
+    <g transform="translate(10, 42)">
+      <rect x="0" y="0" width="216" height="46" rx="6" fill="#F0F9FF" stroke="#0284C7" stroke-width="1.2" />
+      <text x="10" y="18" fill="#0369A1" font-size="10.5" font-weight="800">AgentCore Runtime</text>
+      <text x="10" y="31" fill="#0C4A6E" font-size="8">Isolated Agent Execution Container</text>
+      <text x="10" y="41" fill="#64748B" font-size="7.5">Coordinates Memory &amp; Gateway Tools</text>
+    </g>
+
+    <!-- Branching lines to Memory & Gateway -->
+    <path d="M 118 94 L 118 108" fill="none" stroke="#0284C7" stroke-width="1.8" />
+    <path d="M 60 108 L 176 108" fill="none" stroke="#0284C7" stroke-width="1.8" />
+    <path d="M 60 108 L 60 120" fill="none" stroke="#0284C7" stroke-width="1.8" marker-end="url(#arr-blue)" />
+    <path d="M 176 108 L 176 120" fill="none" stroke="#0284C7" stroke-width="1.8" marker-end="url(#arr-blue)" />
+
+    <!-- Sub-container 2: AgentCore Memory -->
+    <g transform="translate(10, 124)">
+      <rect x="0" y="0" width="216" height="174" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1" />
+      <rect x="6" y="6" width="104" height="16" rx="4" fill="#0F172A" />
+      <text x="58" y="17" fill="#FFFFFF" font-size="8" font-weight="700" text-anchor="middle">AgentCore Memory</text>
+      <text x="116" y="17" fill="#64748B" font-size="8" font-weight="600">Persistent Context</text>
+
+      <text x="10" y="36" fill="#334155" font-size="8">• Household preferences</text>
+      <text x="10" y="50" fill="#334155" font-size="8">• Preferred brands (Amul, Maggi)</text>
+      <text x="10" y="64" fill="#334155" font-size="8">• Family routines &amp; habits</text>
+      <text x="10" y="78" fill="#334155" font-size="8">• Learned shopping behavior</text>
+      <text x="10" y="92" fill="#334155" font-size="8">• Useful long-term context</text>
+      <text x="10" y="106" fill="#334155" font-size="8">• Past approvals &amp; corrections</text>
+
+      <!-- Architecture Warning -->
+      <rect x="6" y="118" width="204" height="48" rx="4" fill="#FEF2F2" stroke="#EF4444" stroke-width="0.8" />
+      <text x="10" y="131" fill="#991B1B" font-size="8" font-weight="800">⚠️ CRITICAL ARCHITECTURE NOTE:</text>
+      <text x="10" y="144" fill="#7F1D1D" font-size="7.5">Real-time inventory does NOT live here.</text>
+      <text x="10" y="156" fill="#7F1D1D" font-size="7.5">Deterministic state lives in DynamoDB.</text>
+    </g>
+
+    <!-- Sub-container 3: AgentCore Gateway -->
+    <g transform="translate(10, 308)">
+      <rect x="0" y="0" width="216" height="148" rx="6" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.2" />
+      <rect x="6" y="6" width="104" height="16" rx="4" fill="#166534" />
+      <text x="58" y="17" fill="#FFFFFF" font-size="8" font-weight="700" text-anchor="middle">AgentCore Gateway</text>
+      <text x="116" y="17" fill="#15803D" font-size="8" font-weight="600">Tool Access Layer</text>
+
+      <text x="10" y="36" fill="#14532D" font-size="8.5" font-weight="700">Exposes deterministic APIs to Agent:</text>
+      <text x="10" y="50" fill="#334155" font-size="8">• Household Domain Services</text>
+      <text x="10" y="64" fill="#334155" font-size="8">• Inventory &amp; Consumption APIs</text>
+      <text x="10" y="78" fill="#334155" font-size="8">• Budget &amp; Governance Calculators</text>
+      <text x="10" y="92" fill="#334155" font-size="8">• Policy Guardrails Engine</text>
+      <text x="10" y="106" fill="#334155" font-size="8">• Commerce MCP Interface</text>
+      
+      <text x="10" y="126" fill="#047857" font-size="7.5" font-weight="700">➔ Strict schema typing &amp; validation</text>
+      <text x="10" y="139" fill="#047857" font-size="7">Deterministic execution environment</text>
+    </g>
+  </g>
+
+  <!-- Connector: Gateway -> Domain Tools -->
+  <path d="M 1086 380 L 1100 380" fill="none" stroke="#16A34A" stroke-width="2.5" marker-end="url(#arr-green)" />
+
+  <!-- ----------------------------------------------------------------------- -->
+  <!-- ZONE E: DOMAIN TOOL LAYER (x: 1102, width: 222)                         -->
+  <!-- ----------------------------------------------------------------------- -->
+  <g transform="translate(1102, 198)">
+    <rect x="0" y="0" width="222" height="468" rx="12" fill="#FFFFFF" stroke="#64748B" stroke-width="1.5" filter="url(#shadow-card)" />
+    <!-- Header -->
+    <rect x="0" y="0" width="222" height="28" rx="12" fill="#334155" />
+    <rect x="0" y="18" width="222" height="10" fill="#334155" />
+    <text x="111" y="17" fill="#FFFFFF" font-size="10.5" font-weight="800" text-anchor="middle">DOMAIN TOOL LAYER</text>
+    <text x="111" y="27" fill="#94A3B8" font-size="7.5" text-anchor="middle">Deterministic Capabilities (NOT AI Agents)</text>
+
+    <!-- 6 Domain Capability Cards -->
+    <g transform="translate(8, 34)">
+      <!-- 1. Household State -->
+      <rect x="0" y="0" width="206" height="64" rx="5" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="6" y="13" fill="#0F172A" font-size="9" font-weight="800">1. Household State</text>
+      <text x="6" y="26" fill="#475569" font-size="7.5">• Members &amp; Autonomy Profile</text>
+      <text x="6" y="38" fill="#475569" font-size="7.5">• Household Preferences</text>
+      <text x="6" y="50" fill="#475569" font-size="7.5">• Daily Routines &amp; Active Intents</text>
+
+      <!-- 2. Inventory Intelligence -->
+      <rect x="0" y="69" width="206" height="69" rx="5" fill="#F8FAFC" stroke="#0284C7" stroke-width="1.2" />
+      <text x="6" y="82" fill="#0369A1" font-size="9" font-weight="800">2. Inventory Intelligence</text>
+      <text x="6" y="95" fill="#475569" font-size="7.5">• Pantry stock &amp; remaining quantity</text>
+      <text x="6" y="107" fill="#475569" font-size="7.5">• Daily Consumption Rate (DCR)</text>
+      <text x="6" y="119" fill="#475569" font-size="7.5">• Forecast &amp; Depletion Days</text>
+      <text x="6" y="131" fill="#0369A1" font-size="7.5" font-weight="700">★ Confidence Score (0.00 – 1.00)</text>
+
+      <!-- 3. Intent & Requirements -->
+      <rect x="0" y="143" width="206" height="64" rx="5" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="6" y="156" fill="#0F172A" font-size="9" font-weight="800">3. Intent &amp; Requirements</text>
+      <text x="6" y="169" fill="#475569" font-size="7.5">• Natural language goal decomposition</text>
+      <text x="6" y="181" fill="#475569" font-size="7.5">• Recipe requirement generation</text>
+      <text x="6" y="193" fill="#475569" font-size="7.5">• Pantry reconciliation &amp; missing items</text>
+
+      <!-- 4. Budget Engine -->
+      <rect x="0" y="212" width="206" height="64" rx="5" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="6" y="225" fill="#0F172A" font-size="9" font-weight="800">4. Budget Engine</text>
+      <text x="6" y="238" fill="#475569" font-size="7.5">• Current monthly spend vs limit</text>
+      <text x="6" y="250" fill="#475569" font-size="7.5">• ₹500 Auto-buy threshold enforcement</text>
+      <text x="6" y="262" fill="#475569" font-size="7.5">• Category spend allocations</text>
+
+      <!-- 5. Policy & Governance -->
+      <rect x="0" y="281" width="206" height="64" rx="5" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="6" y="294" fill="#0F172A" font-size="9" font-weight="800">5. Policy Governance</text>
+      <text x="6" y="307" fill="#475569" font-size="7.5">• Allowed categories (Groceries, Dairy)</text>
+      <text x="6" y="319" fill="#475569" font-size="7.5">• Restricted categories (Electronics)</text>
+      <text x="6" y="331" fill="#475569" font-size="7.5">• User autonomy rules &amp; brand constraints</text>
+
+      <!-- 6. Authorization System -->
+      <rect x="0" y="350" width="206" height="69" rx="5" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="6" y="363" fill="#0F172A" font-size="9" font-weight="800">6. Authorization System</text>
+      <text x="6" y="376" fill="#475569" font-size="7.5">• Household security context</text>
+      <text x="6" y="388" fill="#475569" font-size="7.5">• Cryptographic approval tokens</text>
+      <text x="6" y="400" fill="#475569" font-size="7.5">• Human sign-off verification for ASK</text>
+      <text x="6" y="412" fill="#475569" font-size="7.5">• Token expiration &amp; revoking</text>
+    </g>
+  </g>
+
+  <!-- Connector: Domain Tools -> Safety Gate -->
+  <path d="M 1324 410 L 1338 410" fill="none" stroke="#DC2626" stroke-width="2.5" marker-end="url(#arr-red)" />
+
+  <!-- ----------------------------------------------------------------------- -->
+  <!-- ZONE F: DETERMINISTIC DECISION & SAFETY GATE (The Focal Point, x: 1340) -->
+  <!-- ----------------------------------------------------------------------- -->
+  <g transform="translate(1340, 198)">
+    <!-- Main Box Container with thick safety border -->
+    <rect x="0" y="0" width="260" height="468" rx="14" fill="#FFFFFF" stroke="#DC2626" stroke-width="3" filter="url(#shadow-gate)" />
+    
+    <!-- Top Hazard Header -->
+    <rect x="0" y="0" width="260" height="42" rx="14" fill="#0F172A" />
+    <rect x="0" y="28" width="260" height="14" fill="#0F172A" />
+    <rect x="8" y="8" width="24" height="24" rx="4" fill="#DC2626" />
+    <text x="20" y="24" fill="#FFFFFF" font-size="12" font-weight="900" text-anchor="middle">🛡️</text>
+    
+    <text x="38" y="20" fill="#FFFFFF" font-size="10.5" font-weight="900" letter-spacing="0.3">DETERMINISTIC SAFETY GATE</text>
+    <text x="38" y="32" fill="#FCA5A5" font-size="8" font-weight="600">Final authority before state-changing actions</text>
+
+    <!-- 5 Sequential Evaluation Checks -->
+    <g transform="translate(10, 48)">
+      <!-- Check 1 -->
+      <rect x="0" y="0" width="240" height="34" rx="5" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1" />
+      <circle cx="12" cy="17" r="7" fill="#0F172A" />
+      <text x="12" y="21" fill="#FFFFFF" font-size="8" font-weight="800" text-anchor="middle">1</text>
+      <text x="26" y="15" fill="#0F172A" font-size="8.5" font-weight="800">Inventory Check</text>
+      <text x="26" y="26" fill="#64748B" font-size="7.5">Is pantry stock actually depleted?</text>
+
+      <!-- Arrow -->
+      <path d="M 120 34 L 120 41" fill="none" stroke="#475569" stroke-width="1.2" marker-end="url(#arr-slate)" />
+
+      <!-- Check 2 -->
+      <rect x="0" y="42" width="240" height="34" rx="5" fill="#F8FAFC" stroke="#0284C7" stroke-width="1.2" />
+      <circle cx="12" cy="59" r="7" fill="#0284C7" />
+      <text x="12" y="63" fill="#FFFFFF" font-size="8" font-weight="800" text-anchor="middle">2</text>
+      <text x="26" y="57" fill="#0369A1" font-size="8.5" font-weight="800">Confidence Check</text>
+      <text x="26" y="68" fill="#475569" font-size="7.5">Is inventory/forecast confidence &gt; 0.85?</text>
+
+      <!-- Arrow -->
+      <path d="M 120 76 L 120 83" fill="none" stroke="#475569" stroke-width="1.2" marker-end="url(#arr-slate)" />
+
+      <!-- Check 3 -->
+      <rect x="0" y="84" width="240" height="34" rx="5" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1" />
+      <circle cx="12" cy="101" r="7" fill="#0F172A" />
+      <text x="12" y="105" fill="#FFFFFF" font-size="8" font-weight="800" text-anchor="middle">3</text>
+      <text x="26" y="99" fill="#0F172A" font-size="8.5" font-weight="800">Policy Check</text>
+      <text x="26" y="110" fill="#64748B" font-size="7.5">Is this category / product allowed?</text>
+
+      <!-- Arrow -->
+      <path d="M 120 118 L 120 125" fill="none" stroke="#475569" stroke-width="1.2" marker-end="url(#arr-slate)" />
+
+      <!-- Check 4 -->
+      <rect x="0" y="126" width="240" height="34" rx="5" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1" />
+      <circle cx="12" cy="143" r="7" fill="#0F172A" />
+      <text x="12" y="147" fill="#FFFFFF" font-size="8" font-weight="800" text-anchor="middle">4</text>
+      <text x="26" y="141" fill="#0F172A" font-size="8.5" font-weight="800">Budget Check</text>
+      <text x="26" y="152" fill="#64748B" font-size="7.5">Purchase within budget &amp; &lt; ₹500 limit?</text>
+
+      <!-- Arrow -->
+      <path d="M 120 160 L 120 167" fill="none" stroke="#475569" stroke-width="1.2" marker-end="url(#arr-slate)" />
+
+      <!-- Check 5 -->
+      <rect x="0" y="168" width="240" height="34" rx="5" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1" />
+      <circle cx="12" cy="185" r="7" fill="#0F172A" />
+      <text x="12" y="189" fill="#FFFFFF" font-size="8" font-weight="800" text-anchor="middle">5</text>
+      <text x="26" y="183" fill="#0F172A" font-size="8.5" font-weight="800">Authorization Check</text>
+      <text x="26" y="194" fill="#64748B" font-size="7.5">Is NOVA authorized to act automatically?</text>
+
+      <!-- Arrow to Decision Engine -->
+      <path d="M 120 202 L 120 212" fill="none" stroke="#DC2626" stroke-width="1.8" marker-end="url(#arr-red)" />
+    </g>
+
+    <!-- DECISION ENGINE VERDICT BOX (Exact 5 States) -->
+    <g transform="translate(8, 268)">
+      <rect x="0" y="0" width="244" height="186" rx="8" fill="#F8FAFC" stroke="#0F172A" stroke-width="1.2" />
+      <text x="122" y="16" fill="#0F172A" font-size="9.5" font-weight="800" text-anchor="middle">DECISION ENGINE VERDICT</text>
+      <text x="122" y="27" fill="#64748B" font-size="8" text-anchor="middle">Strict 5-State Closed Deterministic Enum</text>
+
+      <!-- State 1: AUTO -->
+      <rect x="8" y="34" width="228" height="24" rx="4" fill="#ECFDF5" stroke="#10B981" stroke-width="1.2" />
+      <text x="16" y="50" fill="#065F46" font-size="10" font-weight="900">AUTO</text>
+      <text x="64" y="50" fill="#047857" font-size="7.5">High confidence, all checks pass → Purchase</text>
+
+      <!-- State 2: ASK -->
+      <rect x="8" y="61" width="228" height="24" rx="4" fill="#FFFBEB" stroke="#F59E0B" stroke-width="1.2" />
+      <text x="16" y="77" fill="#92400E" font-size="10" font-weight="900">ASK</text>
+      <text x="64" y="77" fill="#B45309" font-size="7.5">Low confidence or high cost → User Approval</text>
+
+      <!-- State 3: WAIT -->
+      <rect x="8" y="88" width="228" height="24" rx="4" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.2" />
+      <text x="16" y="104" fill="#1E40AF" font-size="10" font-weight="900">WAIT</text>
+      <text x="64" y="104" fill="#2563EB" font-size="7.5">Stock borderline → Monitor next cycle</text>
+
+      <!-- State 4: DO_NOTHING -->
+      <rect x="8" y="115" width="228" height="24" rx="4" fill="#F1F5F9" stroke="#64748B" stroke-width="1.2" />
+      <text x="16" y="131" fill="#334155" font-size="9.5" font-weight="900">DO_NOTHING</text>
+      <text x="96" y="131" fill="#475569" font-size="7.5">Pantry healthy → Restraint logged</text>
+
+      <!-- State 5: BLOCKED -->
+      <rect x="8" y="142" width="228" height="24" rx="4" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.2" />
+      <text x="16" y="158" fill="#991B1B" font-size="9.5" font-weight="900">BLOCKED</text>
+      <text x="86" y="158" fill="#B91C1C" font-size="7.5">Policy or budget breach → Action halted</text>
+
+      <text x="122" y="178" fill="#DC2626" font-size="7.5" font-weight="800" text-anchor="middle">⚠️ Never default to AUTO when any check fails</text>
+    </g>
+  </g>
+
+  <!-- ----------------------------------------------------------------------- -->
+  <!-- ZONE G: AUDIT TRAIL, COMMERCE INTERFACE & STATE UPDATE (x: 1616)        -->
+  <!-- ----------------------------------------------------------------------- -->
+
+  <!-- Top Card: Audit Trail (y: 198 to 330) -->
+  <g transform="translate(1616, 198)">
+    <rect x="0" y="0" width="270" height="132" rx="10" fill="#FFFFFF" stroke="#6366F1" stroke-width="1.5" filter="url(#shadow-card)" />
+    <!-- Header -->
+    <rect x="0" y="0" width="270" height="28" rx="10" fill="#4338CA" />
+    <rect x="0" y="18" width="270" height="10" fill="#4338CA" />
+    <text x="12" y="18" fill="#FFFFFF" font-size="11" font-weight="800">Audit Trail</text>
+    <text x="144" y="18" fill="#C7D2FE" font-size="8.5">Explainable + Auditable</text>
+
+    <g transform="translate(8, 36)">
+      <text x="4" y="12" fill="#312E81" font-size="8.5" font-weight="700">Structured Immutable Records:</text>
+      <text x="4" y="27" fill="#334155" font-size="7.5">• decision: AUTO | ASK | DO_NOTHING | BLOCKED</text>
+      <text x="4" y="41" fill="#334155" font-size="7.5">• confidence: 0.94 | inventory_level: 0.2L</text>
+      <text x="4" y="55" fill="#334155" font-size="7.5">• budget_status: ₹65 / ₹500 auto-limit</text>
+      <text x="4" y="69" fill="#334155" font-size="7.5">• policy: ALLOWED | auth: PRE-AUTHORIZED</text>
+      <text x="4" y="83" fill="#334155" font-size="7.5">• reason: "Milk depleted; Dairy category allowed"</text>
+    </g>
+  </g>
+
+  <!-- Middle Card: Commerce Interface (y: 342 to 542) -->
+  <g transform="translate(1616, 342)">
+    <rect x="0" y="0" width="270" height="200" rx="10" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.5" filter="url(#shadow-card)" />
+    <!-- Header -->
+    <rect x="0" y="0" width="270" height="30" rx="10" fill="#0F172A" />
+    <rect x="0" y="20" width="270" height="10" fill="#0F172A" />
+    <text x="12" y="18" fill="#FFFFFF" font-size="11" font-weight="800">Commerce Interface</text>
+    <text x="175" y="18" fill="#94A3B8" font-size="8">Provider Abstraction</text>
+
+    <!-- Operations -->
+    <g transform="translate(8, 38)">
+      <rect x="0" y="0" width="254" height="64" rx="5" fill="#F8FAFC" stroke="#E2E8F0" />
+      <text x="6" y="13" fill="#0F172A" font-size="8" font-weight="700">• search_products() &amp; get_product()</text>
+      <text x="6" y="26" fill="#0F172A" font-size="8" font-weight="700">• check_availability() &amp; pricing</text>
+      <text x="6" y="39" fill="#0F172A" font-size="8" font-weight="700">• create_cart() &amp; get_cart()</text>
+      <text x="6" y="52" fill="#0F172A" font-size="8" font-weight="700">• checkout() &amp; track_order()</text>
+
+      <!-- Adapters -->
+      <rect x="0" y="70" width="122" height="32" rx="4" fill="#F0FDF4" stroke="#86EFAC" />
+      <text x="61" y="84" fill="#166534" font-size="8" font-weight="800" text-anchor="middle">Commerce MCP</text>
+      <text x="61" y="94" fill="#15803D" font-size="7" text-anchor="middle">Standard Client</text>
+
+      <rect x="132" y="70" width="122" height="32" rx="4" fill="#F8FAFC" stroke="#CBD5E1" />
+      <text x="193" y="84" fill="#334155" font-size="8" font-weight="800" text-anchor="middle">Mock Adapter</text>
+      <text x="193" y="94" fill="#64748B" font-size="7" text-anchor="middle">Local Test / Demo</text>
+
+      <!-- External Quick Commerce Retailer -->
+      <rect x="0" y="108" width="254" height="24" rx="4" fill="#FFEDD5" stroke="#F97316" stroke-width="1.2" />
+      <circle cx="10" cy="120" r="4" fill="#EA580C" />
+      <text x="20" y="124" fill="#9A3412" font-size="8.5" font-weight="800">Swiggy Instamart / Quick Commerce</text>
+      <text x="180" y="124" fill="#C2410C" font-size="7.5">(Provider)</text>
+    </g>
+  </g>
+
+  <!-- Bottom Card: State Update Loop (y: 554 to 666) -->
+  <g transform="translate(1616, 554)">
+    <rect x="0" y="0" width="270" height="112" rx="10" fill="#FFFFFF" stroke="#059669" stroke-width="1.5" filter="url(#shadow-card)" />
+    <!-- Header -->
+    <rect x="0" y="0" width="270" height="26" rx="10" fill="#059669" />
+    <rect x="0" y="18" width="270" height="8" fill="#059669" />
+    <text x="12" y="17" fill="#FFFFFF" font-size="10.5" font-weight="800">State Update Loop</text>
+    <text x="180" y="17" fill="#A7F3D0" font-size="8">Post-Action Sync</text>
+
+    <g transform="translate(8, 34)">
+      <text x="4" y="11" fill="#065F46" font-size="8" font-weight="700">Updates Deterministic DynamoDB:</text>
+      <text x="4" y="24" fill="#334155" font-size="7.5">• Pantry stock increments / decrements</text>
+      <text x="4" y="36" fill="#334155" font-size="7.5">• Order state transition (SUBMITTED)</text>
+      <text x="4" y="48" fill="#334155" font-size="7.5">• Deducts spend from remaining budget</text>
+      <text x="4" y="60" fill="#334155" font-size="7.5">• Broadcasts DOM event to Web Command Center</text>
+    </g>
+  </g>
+
+  <!-- Connectors into Zone G: -->
+  <!-- 1. Audit connector from Checks to Audit Trail -->
+  <path d="M 1600 240 L 1614 240" fill="none" stroke="#6366F1" stroke-width="1.8" marker-end="url(#arr-purple)" />
+  <!-- 2. Decision AUTO (y: 500) -> Commerce Interface (y: 440) -->
+  <path d="M 1600 514 L 1608 514 L 1608 440 L 1614 440" fill="none" stroke="#10B981" stroke-width="2.5" marker-end="url(#arr-green)" />
+  <rect x="1588" y="468" width="26" height="14" rx="3" fill="#10B981" />
+  <text x="1601" y="478" fill="#FFFFFF" font-size="7.5" font-weight="800" text-anchor="middle">AUTO</text>
+
+  <!-- 3. Commerce Interface (y: 542) -> State Update Loop (y: 554) -->
+  <path d="M 1751 542 L 1751 552" fill="none" stroke="#059669" stroke-width="2" marker-end="url(#arr-green)" />
+
+  <!-- 4. State Update Loop (y: 666) -> DynamoDB (y: 678) — Straight 12px Drop with ZERO overlap! -->
+  <path d="M 1751 666 L 1751 676" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#arr-green)" />
+  <rect x="1762" y="663" width="118" height="16" rx="3" fill="#ECFDF5" stroke="#10B981" stroke-width="0.8" />
+  <text x="1821" y="674" fill="#065F46" font-size="7.5" font-weight="700" text-anchor="middle">Syncs state to DynamoDB ➔</text>
+
+  <!-- ----------------------------------------------------------------------- -->
+  <!-- ZONE H: AMAZON DYNAMODB (Deterministic Structured State, x: 850)        -->
+  <!-- ----------------------------------------------------------------------- -->
+  <g transform="translate(850, 678)">
+    <rect x="0" y="0" width="1036" height="96" rx="12" fill="#FFFFFF" stroke="#0284C7" stroke-width="2" filter="url(#shadow-card)" />
+    <!-- Header -->
+    <rect x="0" y="0" width="1036" height="26" rx="12" fill="#0284C7" />
+    <rect x="0" y="18" width="1036" height="8" fill="#0284C7" />
+    <text x="16" y="17" fill="#FFFFFF" font-size="11" font-weight="800">Amazon DynamoDB</text>
+    <text x="156" y="17" fill="#E0F2FE" font-size="9" font-weight="600">Deterministic Structured Household State Storage (NOT LLM Memory)</text>
+
+    <!-- 7 Structured Tables / Domains -->
+    <g transform="translate(10, 34)">
+      <rect x="0" y="0" width="138" height="48" rx="5" fill="#F0F9FF" stroke="#BAE6FD" />
+      <text x="8" y="16" fill="#0369A1" font-size="8.5" font-weight="800">Household State</text>
+      <text x="8" y="29" fill="#475569" font-size="7.5">Users, Profiles, Tier</text>
+      <text x="8" y="40" fill="#0284C7" font-size="7">Primary Partition Key</text>
+
+      <rect x="146" y="0" width="138" height="48" rx="5" fill="#F0F9FF" stroke="#BAE6FD" />
+      <text x="154" y="16" fill="#0369A1" font-size="8.5" font-weight="800">Pantry Inventory</text>
+      <text x="154" y="29" fill="#475569" font-size="7.5">SKUs, Quantity, Expiry</text>
+      <text x="154" y="40" fill="#0284C7" font-size="7">Batch Tracking</text>
+
+      <rect x="292" y="0" width="138" height="48" rx="5" fill="#F0F9FF" stroke="#BAE6FD" />
+      <text x="300" y="16" fill="#0369A1" font-size="8.5" font-weight="800">Consumption (DCR)</text>
+      <text x="300" y="29" fill="#475569" font-size="7.5">Burn rate, Confidence</text>
+      <text x="300" y="40" fill="#0284C7" font-size="7">Forecast Velocity</text>
+
+      <rect x="438" y="0" width="138" height="48" rx="5" fill="#F0F9FF" stroke="#BAE6FD" />
+      <text x="446" y="16" fill="#0369A1" font-size="8.5" font-weight="800">Budget &amp; Spend</text>
+      <text x="446" y="29" fill="#475569" font-size="7.5">Monthly caps, ₹500 limit</text>
+      <text x="446" y="40" fill="#0284C7" font-size="7">Real-time Balance</text>
+
+      <rect x="584" y="0" width="138" height="48" rx="5" fill="#F0F9FF" stroke="#BAE6FD" />
+      <text x="592" y="16" fill="#0369A1" font-size="8.5" font-weight="800">Policy Rules</text>
+      <text x="592" y="29" fill="#475569" font-size="7.5">Category permissions</text>
+      <text x="592" y="40" fill="#0284C7" font-size="7">Brand Constraints</text>
+
+      <rect x="730" y="0" width="138" height="48" rx="5" fill="#F0F9FF" stroke="#BAE6FD" />
+      <text x="738" y="16" fill="#0369A1" font-size="8.5" font-weight="800">Orders &amp; Carts</text>
+      <text x="738" y="29" fill="#475569" font-size="7.5">Order status &amp; items</text>
+      <text x="738" y="40" fill="#0284C7" font-size="7">Checkout History</text>
+
+      <rect x="876" y="0" width="148" height="48" rx="5" fill="#F0F9FF" stroke="#BAE6FD" />
+      <text x="884" y="16" fill="#0369A1" font-size="8.5" font-weight="800">Audit Records</text>
+      <text x="884" y="29" fill="#475569" font-size="7.5">Immutable event logs</text>
+      <text x="884" y="40" fill="#0284C7" font-size="7">Verdicts &amp; Explanations</text>
+    </g>
+  </g>
+
+  <!-- ----------------------------------------------------------------------- -->
+  <!-- MIDDLE CORRIDOR: AUDIT FEEDBACK LOOP & ARCHITECTURAL INVARIANTS         -->
+  <!-- (y: 785 to y: 885 — Completely open breathing corridor)                  -->
+  <!-- ----------------------------------------------------------------------- -->
+
+  <!-- Feedback Line from Audit Trail to Web Command Center -->
+  <path d="M 1886 264 L 1894 264 L 1894 810 L 140 810 L 140 668" fill="none" stroke="#6366F1" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arr-purple)" />
+
+  <!-- Prominent Feedback Badge centered in open corridor -->
+  <g transform="translate(620, 796)">
+    <rect x="0" y="0" width="680" height="28" rx="14" fill="#EEF2FF" stroke="#818CF8" stroke-width="1.5" filter="url(#shadow-soft)" />
+    <circle cx="16" cy="14" r="5" fill="#6366F1" />
+    <text x="340" y="18" fill="#3730A3" font-size="10.5" font-weight="800" text-anchor="middle">
+      FEEDBACK LOOP: Transparent “Why did NOVA do this?” reasoning delivered to Web Command Center
+    </text>
+  </g>
+
+  <!-- Key Architecture Invariants & Badges in Corridor -->
+  <g transform="translate(36, 840)">
+    <rect x="0" y="0" width="1848" height="42" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1" />
+    
+    <g transform="translate(16, 12)">
+      <rect x="0" y="0" width="16" height="16" rx="3" fill="#DC2626" />
+      <text x="8" y="12" fill="#FFFFFF" font-size="9" font-weight="900" text-anchor="middle">🔒</text>
+      <text x="24" y="12" fill="#0F172A" font-size="9.5" font-weight="800">Hard Architectural Boundary:</text>
+      <text x="178" y="12" fill="#475569" font-size="9.5">LLM has ZERO direct execution privileges. All state transitions occur through deterministic safety-gated code.</text>
+    </g>
+
+    <g transform="translate(940, 12)">
+      <rect x="0" y="0" width="16" height="16" rx="3" fill="#0284C7" />
+      <text x="8" y="12" fill="#FFFFFF" font-size="9" font-weight="900" text-anchor="middle">📊</text>
+      <text x="24" y="12" fill="#0F172A" font-size="9.5" font-weight="800">Confidence-Gated Autonomy:</text>
+      <text x="180" y="12" fill="#475569" font-size="9.5">Low confidence (&lt;0.85) or budget overruns automatically route to ASK or WAIT. Never defaults to AUTO.</text>
+    </g>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- 4. BOTTOM SHOWCASE STRIP: 3 DEMO OUTCOMES & CORE AXIOMS (y: 974..1068)    -->
+  <!-- ========================================================================= -->
+  <rect x="20" y="974" width="1880" height="94" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" filter="url(#shadow-soft)" />
+
+  <!-- Demo 1: Predictive Purchase -->
+  <g transform="translate(34, 984)">
+    <rect x="0" y="0" width="420" height="74" rx="8" fill="#ECFDF5" stroke="#10B981" stroke-width="1.2" />
+    <rect x="8" y="8" width="172" height="18" rx="4" fill="#059669" />
+    <text x="94" y="21" fill="#FFFFFF" font-size="9" font-weight="800" text-anchor="middle">DEMO 1: PREDICTIVE PURCHASE</text>
+    <text x="188" y="21" fill="#065F46" font-size="9" font-weight="700">Autonomous Reorder</text>
+
+    <text x="10" y="42" fill="#064E3B" font-size="9.5" font-weight="800">Milk running low (0.2L)</text>
+    <text x="135" y="42" fill="#047857" font-size="9">➔ High confidence (0.94)</text>
+    <text x="250" y="42" fill="#059669" font-size="9" font-weight="800">➔ AUTO</text>
+    <text x="300" y="42" fill="#047857" font-size="9">➔ ₹65 Purchase</text>
+    <text x="10" y="59" fill="#047857" font-size="8.5">Deterministic gate verified ₹65 &lt; ₹500 limit &amp; Dairy category allowed.</text>
+  </g>
+
+  <!-- Demo 2: Intelligent Restraint -->
+  <g transform="translate(468, 984)">
+    <rect x="0" y="0" width="420" height="74" rx="8" fill="#F1F5F9" stroke="#64748B" stroke-width="1.2" />
+    <rect x="8" y="8" width="180" height="18" rx="4" fill="#475569" />
+    <text x="98" y="21" fill="#FFFFFF" font-size="9" font-weight="800" text-anchor="middle">DEMO 2: INTELLIGENT RESTRAINT</text>
+    <text x="196" y="21" fill="#334155" font-size="9" font-weight="700">Autonomous Prudence</text>
+
+    <text x="10" y="42" fill="#0F172A" font-size="9.5" font-weight="800">Cooking oil sufficient (3.2L)</text>
+    <text x="156" y="42" fill="#475569" font-size="9">➔ Pantry verified</text>
+    <text x="246" y="42" fill="#475569" font-size="9" font-weight="800">➔ DO_NOTHING</text>
+    <text x="10" y="59" fill="#475569" font-size="8.5">NOVA explicitly decides NOT to buy. Prevents wasteful duplicate inventory.</text>
+  </g>
+
+  <!-- Demo 3: Intent-to-Action Reconciliation -->
+  <g transform="translate(902, 984)">
+    <rect x="0" y="0" width="440" height="74" rx="8" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.2" />
+    <rect x="8" y="8" width="220" height="18" rx="4" fill="#2563EB" />
+    <text x="118" y="21" fill="#FFFFFF" font-size="8.5" font-weight="800" text-anchor="middle">DEMO 3: INTENT-TO-ACTION RECONCILIATION</text>
+    
+    <text x="10" y="42" fill="#1E3A8A" font-size="9.5" font-weight="800">“Make Maggi tonight”</text>
+    <text x="135" y="42" fill="#1D4ED8" font-size="9">➔ Decompose ingredients</text>
+    <text x="275" y="42" fill="#1D4ED8" font-size="9">➔ Check pantry stock</text>
+    <text x="10" y="59" fill="#1E40AF" font-size="8.5">Pantry has butter &amp; spices; missing noodles (AUTO order ₹48) ➔ Meal ready.</text>
+  </g>
+
+  <!-- Core Architectural Axiom -->
+  <g transform="translate(1356, 984)">
+    <rect x="0" y="0" width="530" height="74" rx="8" fill="#0F172A" stroke="#FF9900" stroke-width="1.2" />
+    <rect x="8" y="8" width="168" height="18" rx="4" fill="#FF9900" />
+    <text x="92" y="21" fill="#0F172A" font-size="8.5" font-weight="900" text-anchor="middle">CORE ARCHITECTURAL PRINCIPLE</text>
+    <text x="184" y="21" fill="#FDE68A" font-size="8.5" font-weight="700">“Correct Autonomy, Not Maximum Autonomy”</text>
+
+    <text x="10" y="42" fill="#FFFFFF" font-size="9" font-weight="700">
+      “NOVA does not give an LLM an open checkbook. The agent reasons about what
+    </text>
+    <text x="10" y="57" fill="#FFFFFF" font-size="9" font-weight="700">
+      should happen; <tspan fill="#34D399">deterministic systems decide</tspan> whether it is allowed to happen.”
+    </text>
+  </g>
+
+</svg>
+  </div>
+</body>
+</html>

@@ -34,30 +34,31 @@ track_order()
 ```
 The agent interacts with tools that call this interface. We use `mock_adapter.py` for development and demos, clearly separated from `swiggy_adapter.py` or other real integrations.
 
-## 17. Memory Architecture
-NOVA uses AgentCore Memory to store persistent useful context:
-- Preferred products and brands
-- Household routines and preferences
-- Implicit approvals and corrections
-Memory is queryable by the LLM for context enrichment. It does not store real-time inventory levels, which are kept in deterministic DynamoDB tables.
+## 17. Memory & State Architecture
+NOVA manages state across two complementary tiers:
+- **Local Runtime State (Active):**
+  - **Household Memory:** Persistent recurring item habits, typical reorder intervals, preferred brands, and historical purchase prices loaded via `MockAmazonHistoryProvider` (`backend/amazon/history_service.py`).
+  - **Deterministic State Ledgers:** Inventory quantities, consumption velocities, and budget spend are stored in persistent local JSON state files (`backend/data/*_state.json`) with deterministic in-memory indexing.
+  - **Session State:** Autonomy profiles (`FULL_AUTOPILOT`, `ASK_EVERYTHING`, `RESTRICTIVE`) and active UI sessions tracked via `UserSessionService`.
+- **Cloud Deployment Mapping (AgentCore Blueprint):**
+  - Designed to map to **AWS Bedrock AgentCore Memory** for semantic recall and **Amazon DynamoDB** for scalable multi-tenant household state.
 
 ## 18. Audit Architecture
 Every significant decision is logged to provide full explainability.
 Fields logged: timestamp, household_id, intent, requested_action, inventory_context, confidence, budget_context, policy_result, authorization_result, decision, commerce_result, and natural language reason.
 
-## 19. Event Workflow
-Event-driven autonomy is handled via Amazon EventBridge -> Lambda/Workflow -> NOVA Agent.
-1. Event triggers (e.g., daily check).
-2. NOVA retrieves household state.
-3. Evaluates needs.
-4. Deterministic decision engine evaluates rules.
-5. Emits outcome: AUTO / ASK / WAIT / DO_NOTHING / BLOCKED.
+## 19. Proactive Execution Workflow
+Proactivity operates at two levels:
+- **Local Environment:** Automated background sweeps and monthly planning cycles are triggered through `/api/autopilot/monthly-plan`, `/api/autopilot/run-cycle`, or interactive schedule sweeps.
+- **Production Cloud Architecture:** Designed to trigger via **Amazon EventBridge** cron rules invoking an AWS Lambda orchestration handler that wakes the NOVA Strands Agent.
 
-## 20. AWS Architecture
-- **Amazon Bedrock**: LLM hosting.
-- **Strands Agents SDK & AgentCore**: Runtime, memory, and gateway.
-- **DynamoDB**: Household state, inventory, rules, budget, audit logs.
-- **AWS Lambda & EventBridge**: Background workflows and scheduling.
+## 20. Technology Stack & AWS Mapping
+- **Agent Framework:** AWS Strands Agents SDK (`from strands import Agent`, `BeforeToolCallEvent`, `AfterToolCallEvent`).
+- **Foundation Models:** Amazon Bedrock (Claude 3.5 Sonnet v2) and Google Gemini (gemini-2.5-flash), with offline deterministic tool dispatch fallback.
+- **API Gateway:** FastAPI with asynchronous streaming SSE/NDJSON endpoints.
+- **Frontend Command Center:** Next.js 14 App Router, TypeScript, Tailwind CSS (24 static prerendered routes).
+- **Commerce Protocol:** Model Context Protocol (MCP) Streamable HTTP / JSON-RPC 2.0 with OAuth 2.1 PKCE.
+- **Cloud Reference Blueprint:** AWS Bedrock AgentCore Action Groups, Bedrock AgentCore Memory, Amazon EventBridge, and DynamoDB.
 
 ## 21. Frontend Architecture
 Next.js (React) application.
@@ -73,6 +74,12 @@ Python FastAPI application organized strictly by feature domain.
 - `backend/api/`: Main FastAPI app and dependencies.
 
 ## Architecture Diagram
+
+![NOVA Autonomous Household Decision Architecture](nova_system_architecture.png)
+
+*16:9 Presentation-Ready Architecture Diagram — Built for the AWS Agents for Humans Hackathon (Everyday Agents Track).*  
+*Formats available:* [SVG Vector](nova_system_architecture.svg) | [Interactive HTML Viewer](nova_system_architecture.html) | [High-Res PNG](nova_system_architecture.png)
+
 ```text
                          USER
                           │
