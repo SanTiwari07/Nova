@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const BACKEND_URL = (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
+
 const nextConfig = {
   images: {
     unoptimized: true,
@@ -13,11 +15,11 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://127.0.0.1:8000/api/:path*' // Proxy to Backend
+        destination: `${BACKEND_URL}/api/:path*`
       },
       {
         source: '/assets/:path*',
-        destination: 'http://127.0.0.1:8000/assets/:path*' // Proxy to Backend Assets
+        destination: `${BACKEND_URL}/assets/:path*`
       }
     ]
   },
