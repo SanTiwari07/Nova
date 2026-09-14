@@ -155,15 +155,15 @@ Next.js frontend runs at `http://localhost:3000`.
 NOVA includes a comprehensive automated test suite validating the entire autonomy pipeline:
 
 ```powershell
-# Run complete backend pytest suite (21 tests)
-cd d:\Projects\Nova
+# Run complete backend pytest suite (32 tests)
+cd Nova
 .\backend\venv\Scripts\python -m pytest backend/tests/ -v
 
 # Run frontend TypeScript type checking (0 errors)
 cd frontend
 npx tsc --noEmit
 
-# Run full Next.js production build (22/22 static pages prerendered)
+# Run full Next.js production build (24/24 static pages prerendered)
 npm run build
 ```
 
@@ -207,14 +207,15 @@ Nova/
 │   ├── policy/            # Category autonomy rules & restriction gates
 │   ├── reminders/         # Smart household reminders & price watch
 │   ├── scripts/           # Image ingestion & catalog verification scripts
-│   └── tests/             # 21-test pytest suite (agent scenarios & hardening)
+│   └── tests/             # 32-test pytest suite (agent scenarios & hardening)
 ├── docs/                  # Architecture, security, demo, & hackathon docs
 ├── frontend/
-│   ├── app/               # Next.js 14 App Router pages (22 routes)
+│   ├── app/               # Next.js 14 App Router pages (24 routes)
 │   ├── components/        # Storefront, Header, ProductCard, CommandBox
 │   └── public/            # Static assets & brand logos
 ├── .env.example           # Documented configuration template
 ├── .gitignore             # Git ignore rules for node_modules, .next, venv, secrets
+├── LICENSE                # MIT License
 └── README.md              # Project overview & documentation
 ```
 
@@ -225,4 +226,11 @@ Nova/
 - **Preservation**: 100% of preexisting functional capabilities, routes, demo workflows, and seed data are verified and preserved.
 - **Security**: No secrets or API credentials are committed. `.gitignore` strictly protects `.env`, `.env.local`, and `swiggy_session.json`.
 - **Zero Push Guarantee**: Work strictly contained to local repository branch. No remote git push performed.
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](file:///c:/Projects/Nova/LICENSE).
+
 
