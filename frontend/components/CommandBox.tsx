@@ -106,6 +106,9 @@ export default function CommandBox({
                 if (msg.type === "tool_start") {
                     setToolTrace(prev => [...prev, { tool: msg.tool, status: "running" }]);
                 } else if (msg.type === "tool_completed") {
+                    if (msg.tool === "reconcile_activity_requirements" && msg.result) {
+                        setStructuredPlan(msg.result);
+                    }
                     setToolTrace(prev => {
                         let found = false;
                         const next = prev.map(t => {
@@ -127,6 +130,10 @@ export default function CommandBox({
                     setResponse(respText);
                     setMode(data.mode || "STRANDS_AGENT");
                     if (data.provider) setProvider(data.provider);
+
+                    if (data.structured_plan) {
+                        setStructuredPlan(data.structured_plan);
+                    }
                     
                     let verdict = null;
                     if (Array.isArray(data.tool_trace)) {
@@ -176,10 +183,10 @@ export default function CommandBox({
   };
 
   const samplePrompts = [
-    "I want to make Maggi tonight",
-    "Do I need milk?",
+    "I want to make panipuri",
+    "make pasta for 4",
+    "Do I need cooking oil?",
     "What's running low?",
-    "Why did you buy oil?",
   ];
 
   return (

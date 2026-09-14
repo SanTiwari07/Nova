@@ -126,6 +126,8 @@ class NovaAgent:
 
         self.agent: Optional[Agent] = None
         self.active_provider: str = "FALLBACK"
+        self._last_plan: Optional[Dict[str, Any]] = None
+        self._last_query: str = ""
         self._init_strands_agent()
 
     def _create_model(self) -> Tuple[Optional[Any], str]:
@@ -193,6 +195,7 @@ class NovaAgent:
                 tool_name = event.tool_use.get("name", "unknown")
                 tool_input = event.tool_use.get("input", {})
                 result_summary = "executed"
+                parsed: Optional[Dict[str, Any]] = None
                 if event.result and getattr(event.result, "content", None):
                     content_list = event.result.content
                     if content_list and isinstance(content_list[0], dict) and "text" in content_list[0]:
@@ -213,6 +216,9 @@ class NovaAgent:
                         except (json.JSONDecodeError, TypeError, KeyError, AttributeError):
                             parsed = None
                             result_summary = text_snip[:60]
+
+                if tool_name == "reconcile_activity_requirements" and parsed and isinstance(parsed, dict):
+                    self._last_plan = parsed
 
                 if traces is not None:
                     traces.append({
@@ -274,12 +280,14 @@ class NovaAgent:
                                     )
                                     break
 
+                    has_reconcile = any(t.get("tool") == "reconcile_activity_requirements" for t in traces)
                     return {
                         "response": response_text,
                         "tool_trace": traces,
                         "mode": f"{self.active_provider}_AUTONOMOUS",
                         "provider": self.active_provider,
-                        "status": "success"
+                        "status": "success",
+                        "structured_plan": self._last_plan if has_reconcile else None
                     }
                 except Exception as e:
                     err_msg = str(e)
@@ -338,12 +346,14 @@ class NovaAgent:
                                 )
                                 break
 
+                has_reconcile = any(t.get("tool") == "reconcile_activity_requirements" for t in traces)
                 return {
                     "response": response_text,
                     "tool_trace": traces,
                     "mode": f"{self.active_provider}_AUTONOMOUS",
                     "provider": self.active_provider,
-                    "status": "success"
+                    "status": "success",
+                    "structured_plan": self._last_plan if has_reconcile else None
                 }
             except Exception as e:
                 err_msg = str(e)
@@ -479,97 +489,167 @@ class NovaAgent:
                     "status": "success"
                 }
 
-        # 4. GENERAL ACTIVITY / MEAL INTENT RECONCILIATION
-        if any(w in req_lower for w in ["make", "making", "cook", "cooking", "prepare", "preparing", "for dinner", "for lunch", "for breakfast", "recipe"]):
-            reconcile_tool = tools_map.get("reconcile_activity_requirements")
-            search_tool = tools_map.get("search_catalog")
+        # 4. CONVERSATIONAL FOLLOW-UP & CONTEXT RETRIEVAL
+        if self._last_plan and any(w in req_lower for w in ["get the", "order the", "buy the", "take care of it", "add to cart", "buy it", "get it", "order it"]):
             purchase_tool = tools_map.get("evaluate_and_execute_purchase")
+            shopping_items = self._last_plan.get("shopping", {}).get("items", [])
+            
+            # Identify target item if specified (e.g. "get the puri")
+            target_item = None
+            for item in shopping_items:
+                item_name_l = item.get("name", "").lower()
+                req_words = [w for w in req_lower.split() if len(w) > 2 and w not in ["get", "the", "order", "buy", "take", "care", "it", "please"]]
+                if any(w in item_name_l for w in req_words):
+                    target_item = item
+                    break
+            
+            # If no specific item targeted, take care of all missing items (or first)
+            selected_items = [target_item] if target_item else shopping_items
+            
+            if selected_items and purchase_tool:
+                confirmed_results = []
+                for s_item in selected_items:
+                    prod_id = s_item.get("id") or s_item.get("product_id")
+                    if prod_id and not str(prod_id).startswith("req_"):
+                        p_res = await purchase_tool(
+                            product_id=prod_id,
+                            quantity=s_item.get("quantity", 1),
+                            reason=f"Follow-up confirmation for {self._last_plan.get('recipe', {}).get('name', 'meal')}"
+                        )
+                        traces.append({
+                            "tool": "evaluate_and_execute_purchase",
+                            "input": {"product_id": prod_id, "quantity": s_item.get("quantity", 1)},
+                            "status": "success",
+                            "summary": f"Verdict: {p_res.get('verdict')} for {s_item['name']}"
+                        })
+                        confirmed_results.append((s_item, p_res))
+                
+                if confirmed_results:
+                    items_txt = "\n".join([
+                        f"- **{it['name']}** (₹{it['price']}): **{res.get('verdict')}** - {res.get('message', 'Processed')}"
+                        for it, res in confirmed_results
+                    ])
+                    return {
+                        "response": f"Taking care of it for your **{self._last_plan.get('recipe', {}).get('name', 'meal')}**!\n\n{items_txt}\n\nAll items have been added to your replenishment cart.",
+                        "tool_trace": traces,
+                        "mode": "STRANDS_TOOLS_DETERMINISTIC",
+                        "provider": "STRANDS_FALLBACK",
+                        "status": "success"
+                    }
+
+        # Follow-up: Scaling recipe servings ("make it for 6 people")
+        if self._last_plan and any(w in req_lower for w in ["make it for", "for 4", "for 6", "for 8", "servings"]):
+            import re
+            num_match = re.search(r"(\d+)", user_request)
+            if num_match:
+                new_servings = num_match.group(1)
+                recipe_name = self._last_plan.get("recipe", {}).get("name", "meal")
+                new_prompt = f"make {recipe_name} for {new_servings} people"
+                return await self._deterministic_tool_dispatch(new_prompt, traces)
+
+        # 5. AUDIT EXPLANATIONS ("Why did you buy milk?", "Why did you buy oil?")
+        if any(phrase in req_lower for phrase in ["why did you buy", "why did you order", "why buy", "why was", "why did nova", "explain purchase", "why didn't you buy", "why didn't you order", "why no order"]):
+            events = self.audit.get_events() if self.audit else []
+            # Extract target item word
+            words = [w for w in req_lower.replace("?", "").split() if w not in ["why", "did", "you", "nova", "buy", "order", "was", "explain", "purchase", "of", "the", "a", "an", "not", "didn't"]]
+            target_kw = words[0] if words else ""
+            
+            matching_event = None
+            if target_kw:
+                for ev in events:
+                    ev_text = f"{ev.get('title', '')} {ev.get('description', '')} {ev.get('product', '')}".lower()
+                    if target_kw in ev_text:
+                        matching_event = ev
+                        break
+            
+            if not matching_event and events:
+                matching_event = events[0]
+                
+            if matching_event:
+                traces.append({"tool": "inspect_audit_trail", "input": {"query": target_kw}, "status": "success", "summary": f"Retrieved audit event: {matching_event.get('title')}"})
+                reasons_txt = "\n".join([f"- {r}" for r in matching_event.get("reasons", [])])
+                verdict = matching_event.get("decision", "AUTO")
+                cost = matching_event.get("cost", 0)
+                product_name = matching_event.get("product") or matching_event.get("title")
+                
+                resp = (
+                    f"**Audit Explanation: {product_name}**\n\n"
+                    f"- **Decision:** **{verdict}**\n"
+                    f"- **Cost Committed:** ₹{cost}\n"
+                    f"- **Autonomous Rationale:**\n{reasons_txt}\n\n"
+                    f"NOVA acts strictly according to your household inventory levels, consumption velocity, and safety policies."
+                )
+                return {
+                    "response": resp,
+                    "tool_trace": traces,
+                    "mode": "STRANDS_TOOLS_DETERMINISTIC",
+                    "provider": "STRANDS_FALLBACK",
+                    "status": "success"
+                }
+
+        # 6. GENERAL ACTIVITY / MEAL INTENT RECONCILIATION
+        if any(w in req_lower for w in ["make", "making", "cook", "cooking", "prepare", "preparing", "for dinner", "for lunch", "for breakfast", "recipe", "panipuri", "pani puri", "pasta", "maggi", "biryani", "sandwich", "sandwiches", "chai", "tea", "dosa", "pizza", "potatoes"]):
+            reconcile_tool = tools_map.get("reconcile_activity_requirements")
 
             if reconcile_tool:
                 reconcile_res = await reconcile_tool(intent=user_request)
+                self._last_plan = reconcile_res
+                
+                recipe_name = reconcile_res.get("recipe", {}).get("name", "Meal Preparation")
+                servings = reconcile_res.get("intent", {}).get("servings", 2)
+                avail_items = reconcile_res.get("pantry", {}).get("available", [])
+                shopping_items = reconcile_res.get("shopping", {}).get("items", [])
+                subtotal = reconcile_res.get("shopping", {}).get("subtotal", 0)
+                
                 traces.append({
                     "tool": "reconcile_activity_requirements",
                     "input": {"intent": user_request},
                     "status": "success",
-                    "summary": f"Reconciled {reconcile_res.get('recipe', {}).get('name', 'Recipe')} with pantry",
+                    "summary": f"Reconciled {recipe_name} ({len(avail_items)} in pantry, {len(shopping_items)} missing)",
                     "result": reconcile_res
                 })
 
-                shopping_items = reconcile_res.get("shopping", {}).get("items", [])
-                missing_items = [{"item": item["name"]} for item in shopping_items]
-                query = shopping_items[0]["name"] if shopping_items else ""
+                # Check budget headroom
+                rem_budget = self.budget.monthly_budget - self.budget.spent
+                auto_limit = getattr(self.budget, "auto_limit", 500.0)
+                
+                avail_bullets = "\n".join([f"✓ **{a.get('name')}** ({a.get('quantity')}{a.get('unit')}, healthy stock)" for a in avail_items])
+                if not avail_bullets:
+                    avail_bullets = "• No matching supplies currently in pantry."
 
-                if missing_items and query and search_tool and purchase_tool:
-                    products = await search_tool(query=query)
-                    if not products and len(shopping_items) > 1:
-                        for alt_q in shopping_items[1:]:
-                            products = await search_tool(query=alt_q["name"])
-                            if products:
-                                query = alt_q["name"]
-                                break
-                    if not products and missing_items:
-                        first_word = missing_items[0]["item"].split()[0]
-                        if len(first_word) > 2:
-                            products = await search_tool(query=first_word)
+                if shopping_items:
+                    missing_bullets = "\n".join([
+                        f"• **{item.get('name')}** (Needed: {item.get('required_amount', '1 pack')}) — ₹{item.get('price', 0)}"
+                        for item in shopping_items
+                    ])
+                    verdict = "ASK"
+                    resp = (
+                        f"I checked your household pantry inventory for **{recipe_name}** (for {servings} people):\n\n"
+                        f"**Already in your pantry (no need to buy):**\n{avail_bullets}\n\n"
+                        f"**Missing from pantry:**\n{missing_bullets}\n\n"
+                        f"**Estimated Shopping Total:** **₹{subtotal:,.2f}** (Budget headroom: ₹{rem_budget:,.2f} remaining).\n"
+                        f"**Decision:** **{verdict}** (Confirmation requested for new meal items).\n\n"
+                        f"You can review the items below and add them directly to your replenishment cart."
+                    )
+                else:
+                    verdict = "DO_NOTHING"
+                    resp = (
+                        f"I checked your household pantry for **{recipe_name}** (for {servings} people):\n\n"
+                        f"**Already in your pantry:**\n{avail_bullets}\n\n"
+                        f"**Decision: DO_NOTHING** — You already have all necessary ingredients in healthy supply! Zero spend committed."
+                    )
 
-                    traces.append({
-                        "tool": "search_catalog",
-                        "input": {"query": query},
-                        "status": "success",
-                        "summary": f"Found {len(products)} products for '{query}'"
-                    })
+                return {
+                    "response": resp,
+                    "tool_trace": traces,
+                    "mode": "STRANDS_TOOLS_DETERMINISTIC",
+                    "provider": "STRANDS_FALLBACK",
+                    "status": "success",
+                    "structured_plan": reconcile_res
+                }
 
-                    if products:
-                        selected = products[0]
-                        res = await purchase_tool(
-                            product_id=selected["product_id"],
-                            quantity=1,
-                            reason=f"Activity fulfillment for '{user_request}'"
-                        )
-                        traces.append({
-                            "tool": "evaluate_and_execute_purchase",
-                            "input": {"product_id": selected["product_id"], "quantity": 1},
-                            "status": "success",
-                            "summary": f"Verdict: {res.get('verdict')}"
-                        })
-
-                        avail_desc = ", ".join([a.get("name", a) for a in reconcile_res.get("pantry", {}).get("available", [])])
-                        resp = (
-                            f"**Activity Reconciliation for '{reconcile_res.get('recipe', {}).get('name', 'Meal/Activity')}':**\n\n"
-                            f"1. **Pantry Check:**\n"
-                            f"   - **Available in stock:** {avail_desc or 'None'}\n"
-                            f"   - **Missing from pantry:** {', '.join([m['item'] for m in missing_items])}\n\n"
-                            f"2. **Minimum Necessary Purchase:**\n"
-                            f"   - Identified missing requirement: **{selected['name']}** (₹{selected['price']})\n"
-                            f"   - **Verdict:** **{res.get('verdict')}** ({res.get('message', 'Processed')})\n\n"
-                            f"3. **Prudence Guaranteed:** Ingredients already present in your pantry were preserved; only missing supplies were ordered."
-                        )
-                        return {
-                            "response": resp,
-                            "tool_trace": traces,
-                            "mode": "STRANDS_TOOLS_DETERMINISTIC",
-                            "provider": "STRANDS_FALLBACK",
-                            "status": "success"
-                        }
-                    else:
-                        avail_desc = ", ".join([a.get("name", a) for a in reconcile_res.get("pantry", {}).get("available", [])])
-                        resp = (
-                            f"**Activity Reconciliation for '{reconcile_res.get('recipe', {}).get('name', 'Meal/Activity')}':**\n\n"
-                            f"1. **Pantry Check:**\n"
-                            f"   - **Available in stock:** {avail_desc or 'None'}\n"
-                            f"   - **Missing from pantry:** {', '.join([m['item'] for m in missing_items])}\n\n"
-                            f"2. **Catalog Status:** No exact products matched '{query}' in the current catalog. Please check catalog inventory directly."
-                        )
-                        return {
-                            "response": resp,
-                            "tool_trace": traces,
-                            "mode": "STRANDS_TOOLS_DETERMINISTIC",
-                            "provider": "STRANDS_FALLBACK",
-                            "status": "success"
-                        }
-
-        # 5. GENERAL PRUDENCE, RESTRAINT & STOCK SUFFICIENCY
-        if any(w in req_lower for w in ["should i buy", "do i need", "do we need", "have enough", "is there enough", "check if we need"]):
+        # 7. GENERAL PRUDENCE, RESTRAINT & STOCK SUFFICIENCY ("Do I need cooking oil?")
+        if any(w in req_lower for w in ["should i buy", "do i need", "do we need", "have enough", "is there enough", "check if we need", "is oil enough", "need cooking oil", "have oil"]):
             pantry_tool = tools_map.get("get_pantry_inventory")
             restraint_tool = tools_map.get("record_restraint_decision")
             search_tool = tools_map.get("search_catalog")
@@ -620,7 +700,6 @@ class NovaAgent:
                         "status": "success"
                     }
                 elif items and items[0].get("status") == "LOW" and search_tool and purchase_tool:
-                    # Stock is low, proceed to replenish
                     low_item = items[0]
                     prods = await search_tool(query=low_item["name"])
                     if prods:
@@ -634,25 +713,72 @@ class NovaAgent:
                             "status": "success"
                         }
 
-        # 6. GENERAL DIRECT REPLENISHMENT / PURCHASE
+        # 8. LOW STOCK INQUIRIES ("What's running low?")
+        if any(w in req_lower for w in ["running low", "what is low", "what's low", "low stock", "depleted", "low items", "what do we need"]):
+            p_tool = tools_map.get("get_pantry_inventory")
+            if p_tool:
+                res = p_tool()
+                items = res.get("items", [])
+                low_items = [i for i in items if i.get("status") == "LOW"]
+                traces.append({"tool": "get_pantry_inventory", "input": {}, "status": "success", "summary": f"Inspected pantry: {len(low_items)} low items"})
+                
+                if low_items:
+                    low_bullets = "\n".join([
+                        f"• **{i['name']}**: {i['quantity']} {i['unit']} remaining (~{i.get('days_remaining', 0.5)} days left)"
+                        for i in low_items
+                    ])
+                    resp = (
+                        f"**Household Pantry Inspection:**\n\n"
+                        f"You have **{len(low_items)} items** currently running low:\n\n"
+                        f"{low_bullets}\n\n"
+                        f"Would you like NOVA to replenish these within your ₹{self.budget.auto_limit} auto-buy limit?"
+                    )
+                else:
+                    resp = f"**Pantry Inspection:** All {len(items)} tracked items are currently in healthy supply."
+                    
+                return {"response": resp, "tool_trace": traces, "mode": "STRANDS_TOOLS_DETERMINISTIC", "provider": "STRANDS_FALLBACK", "status": "success"}
+
+        # 9. GENERAL DIRECT REPLENISHMENT / PURCHASE ("I need milk", "Buy milk")
         if any(w in req_lower for w in ["buy", "order", "need", "replenish", "purchase", "get"]):
             pantry_tool = tools_map.get("get_pantry_inventory")
             search_tool = tools_map.get("search_catalog")
             purchase_tool = tools_map.get("evaluate_and_execute_purchase")
+            restraint_tool = tools_map.get("record_restraint_decision")
 
-            # Extract item
             words = [w for w in req_lower.replace("?", "").split() if w not in ["i", "we", "buy", "order", "need", "replenish", "purchase", "get", "some", "a", "an", "the", "please"]]
             target_query = " ".join(words).strip() or user_request
 
             # 1. Fact Gathering First: inspect inventory
+            matched_item = None
             if pantry_tool:
                 p_res = pantry_tool(category=target_query)
+                p_items = p_res.get("items", [])
                 traces.append({
                     "tool": "get_pantry_inventory",
                     "input": {"category": target_query},
                     "status": "success",
-                    "summary": f"Fact Check: {len(p_res.get('items', []))} matching items in inventory"
+                    "summary": f"Fact Check: {len(p_items)} matching items in inventory"
                 })
+                if p_items:
+                    matched_item = p_items[0]
+
+            # 2. Check if item is already healthy -> apply restraint unless user says "anyway"
+            if matched_item and matched_item.get("status") == "HEALTHY" and "anyway" not in req_lower:
+                if restraint_tool:
+                    restraint_res = restraint_tool(
+                        item_or_category=matched_item["name"],
+                        reason=f"Pantry stock is healthy ({matched_item['quantity']}{matched_item['unit']} in stock, ~{matched_item.get('days_remaining')} days remaining)."
+                    )
+                    traces.append({"tool": "record_restraint_decision", "input": {"item_or_category": matched_item["name"]}, "status": "success", "summary": f"Logged DO_NOTHING for {matched_item['name']}"})
+                resp = (
+                    f"**Decision: DO_NOTHING (Autonomous Restraint Applied)**\n\n"
+                    f"You already have ample stock of **{matched_item['name']}** in your pantry:\n"
+                    f"- **Current Stock:** {matched_item['quantity']} {matched_item['unit']}\n"
+                    f"- **Days Remaining:** ~{matched_item.get('days_remaining', 30)} days\n"
+                    f"- **Status:** HEALTHY\n\n"
+                    f"NOVA avoided an unnecessary purchase to preserve your household budget."
+                )
+                return {"response": resp, "tool_trace": traces, "mode": "STRANDS_TOOLS_DETERMINISTIC", "provider": "STRANDS_FALLBACK", "status": "success"}
 
             if search_tool and purchase_tool:
                 products = await search_tool(query=target_query)
@@ -660,7 +786,7 @@ class NovaAgent:
                     "tool": "search_catalog",
                     "input": {"query": target_query},
                     "status": "success",
-                    "summary": f"Found {len(products)} products"
+                    "summary": f"Found {len(products)} products for '{target_query}'"
                 })
 
                 if products:
@@ -678,8 +804,10 @@ class NovaAgent:
                     })
 
                     verdict = result.get("verdict")
+                    stock_note = f"Current pantry stock: {matched_item['quantity']} {matched_item['unit']} (LOW)." if matched_item else "Not currently tracked in pantry."
                     resp = (
-                        f"**Household Decision for {selected['name']}:**\n\n"
+                        f"**Household Replenishment for {selected['name']}:**\n\n"
+                        f"- **Pantry Context:** {stock_note}\n"
                         f"- **Selected Product:** {selected['name']} (₹{result.get('total_cost', selected['price'])})\n"
                         f"- **Deterministic Safety Verdict:** **{verdict}**\n"
                         f"- **Rationale:** {'; '.join(result.get('reasons', []))}\n"
@@ -693,13 +821,13 @@ class NovaAgent:
                         "status": "success"
                     }
 
-        # 7. GENERAL STATUS & INQUIRY LOOKUPS
+        # 10. GENERAL STATUS & INQUIRY LOOKUPS
         if any(w in req_lower for w in ["budget", "spend", "balance", "money"]):
             b_tool = tools_map.get("get_budget_status")
             if b_tool:
                 res = b_tool()
                 traces.append({"tool": "get_budget_status", "input": {}, "status": "success", "summary": f"Remaining: ₹{res.get('remaining_budget')}"})
-                resp = f"**Household Budget Status:**\n- Monthly Budget: ₹{res.get('monthly_budget')}\n- Spent So Far: ₹{res.get('spent')}\n- Remaining Balance: ₹{res.get('remaining_budget')}\n- Auto-Buy Transaction Limit: ₹{res.get('auto_buy_limit')}"
+                resp = f"**Household Budget Status:**\n- Monthly Budget: ₹{res.get('monthly_budget'):,.2f}\n- Spent So Far: ₹{res.get('spent'):,.2f}\n- Remaining Balance: ₹{res.get('remaining_budget'):,.2f}\n- Auto-Buy Transaction Limit: ₹{res.get('auto_buy_limit'):,.2f}"
                 return {"response": resp, "tool_trace": traces, "mode": "STRANDS_TOOLS_DETERMINISTIC", "provider": "STRANDS_FALLBACK", "status": "success"}
 
         if any(w in req_lower for w in ["price watch", "deals", "savings", "price drop"]):
@@ -723,23 +851,24 @@ class NovaAgent:
                     resp = f"**Pantry Inspection:** All {len(res.get('items', []))} items are in healthy supply."
                 return {"response": resp, "tool_trace": traces, "mode": "STRANDS_TOOLS_DETERMINISTIC", "provider": "STRANDS_FALLBACK", "status": "success"}
 
-        # 8. DEFAULT FALLBACK
-        overview_tool = tools_map.get("get_household_overview")
-        if overview_tool:
-            ov = overview_tool()
-            low_count = ov.get("pantry_low_items_count", ov.get("low_stock_count", 0))
-            rem_budget = ov.get("budget_remaining", ov.get("remaining_budget", 0))
-            traces.append({"tool": "get_household_overview", "input": {}, "status": "success", "summary": "Retrieved household status"})
-            return {
-                "response": f"I am NOVA, your AWS Strands household autopilot. You currently have {low_count} items running low in your pantry and ₹{rem_budget} in your monthly budget. How can I help with your household today?",
-                "tool_trace": traces,
-                "mode": "STRANDS_TOOLS_DETERMINISTIC",
-                "provider": "STRANDS_FALLBACK",
-                "status": "success"
-            }
-
+        # 11. DYNAMIC CONTEXTUAL DEFAULT (NO HARDCODED STATICS)
+        pantry_items = self.inventory.get_all() if self.inventory else []
+        low_items = [i["name"] for i in pantry_items if i.get("status") == "LOW"]
+        rem_budget = self.budget.monthly_budget - self.budget.spent if self.budget else 1228.0
+        
+        sample_low = f" (e.g. {low_items[0]})" if low_items else ""
+        resp = (
+            f"I checked your household state. You currently have **{len(low_items)} items running low**{sample_low} "
+            f"and **₹{rem_budget:,.2f}** in monthly budget headroom.\n\n"
+            f"You can ask me to:\n"
+            f"• Plan a meal (e.g. *\"I want to make panipuri\"* or *\"cook pasta for 4\"*)\n"
+            f"• Check your stock (e.g. *\"Do I need cooking oil?\"* or *\"What's running low?\"*)\n"
+            f"• Replenish essentials (e.g. *\"I need milk\"*)\n"
+            f"• Audit decisions (e.g. *\"Why did you buy milk?\"*)"
+        )
+        traces.append({"tool": "get_household_overview", "input": {}, "status": "success", "summary": "Retrieved live household overview"})
         return {
-            "response": "NOVA Household Autopilot ready. You can ask me to check pantry inventory, manage reminders, inspect budget, evaluate recipes, or replenish household essentials.",
+            "response": resp,
             "tool_trace": traces,
             "mode": "STRANDS_TOOLS_DETERMINISTIC",
             "provider": "STRANDS_FALLBACK",

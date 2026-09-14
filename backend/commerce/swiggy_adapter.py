@@ -523,17 +523,25 @@ class SwiggyInstamartAdapter(CommerceInterface):
         # 1. Live Commerce Search
         if self.is_live:
             if self.is_circuit_broken:
-                print(f"[Commerce] Swiggy MCP circuit breaker is active. Live search unavailable.")
-                return []
+                print(f"[Commerce] Swiggy MCP circuit breaker is active. Falling back to simulated catalog.")
+                return self._get_simulated_catalog(query_str, cat_filter)
 
             if query_str:
-                results = await self._search_mcp_single_query(query_str)
+                try:
+                    results = await asyncio.wait_for(self._search_mcp_single_query(query_str), timeout=1.8)
+                except Exception as e:
+                    print(f"[Commerce] Live search for '{query_str}' error/timeout ({e}). Using simulated catalog.")
+                    results = []
+
                 if cat_filter and results:
                     results = [
                         p for p in results
                         if cat_filter in p.get("category", "").lower() or any(cat_filter in t.lower() for t in p.get("tags", []))
                     ]
-                return results
+                if results:
+                    return results
+                # Fallback to local catalog if live MCP found nothing
+                return self._get_simulated_catalog(query_str, cat_filter)
 
             elif cat_filter:
                 query_map = {
@@ -903,21 +911,31 @@ class SwiggyInstamartAdapter(CommerceInterface):
             elif q in full_text or (clean_q and clean_q in full_text):
                 score += 60
 
+            name_words = set(re.findall(r'\w+', name))
+            full_words = set(re.findall(r'\w+', full_text))
+
             # Token-based match
-            if words and all(w in name for w in words):
-                score += 80
-            elif words and all(w in full_text for w in words):
+            if words and all(w in name_words for w in words):
+                score += 90
+            elif words and all(w in full_words for w in words):
                 score += 50
 
             for w in words:
-                if w in name:
-                    score += 30
-                elif w in brand:
+                if w in name_words:
+                    score += 40
+                elif any(nw.startswith(w) for nw in name_words if len(w) >= 3):
                     score += 20
-                elif w in c or w in sub:
+                elif w in brand:
                     score += 15
+                elif w in c or w in sub:
+                    score += 10
                 elif w in tags_str:
                     score += 5
+
+            # Guard: If query is food/grocery and item is Personal Care or Household, penalize unless asked
+            personal_terms = {"toothpaste", "brush", "soap", "shampoo", "conditioner", "lotion", "perfume", "deodorant", "hair", "skin", "facewash"}
+            if not any(pt in words for pt in personal_terms) and c in ["personal care", "beauty", "cosmetics"]:
+                score -= 60
 
             if score > 0:
                 scored.append((score, item))

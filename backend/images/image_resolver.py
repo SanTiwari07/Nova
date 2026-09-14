@@ -94,6 +94,14 @@ class ImageResolver:
             existing_url = self._extract_swiggy_url(product)
 
         if existing_url and isinstance(existing_url, str) and existing_url.startswith("http"):
+            # PRIORITY 1: Authentic Swiggy CDN URLs - authoritative source, trust directly without blocking network socket checks
+            if "swiggy.com" in existing_url or "media-assets.swiggy.com" in existing_url:
+                record = self._cache.set(
+                    product_key, existing_url, source="swiggy", confidence=1.0,
+                    matched_identifier="swiggy_cdn"
+                )
+                return self._to_result(record)
+
             valid, reason, _ = validate_image_url(existing_url)
             if valid:
                 print(
