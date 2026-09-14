@@ -25,7 +25,13 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col justify-center items-center font-sans p-8">
       <div className="w-full max-w-md bg-white p-12 rounded-2xl shadow-sm border border-neutral-100 text-center">
-        <h1 className="text-4xl font-bold mb-2 text-neutral-900 tracking-tight">NOVA</h1>
+        <div className="flex justify-center mb-4">
+          <img
+            src="/logo.png"
+            alt="NOVA"
+            className="h-10 sm:h-12 w-auto object-contain"
+          />
+        </div>
         <p className="text-neutral-500 mb-8">Your everyday life, a little lighter.</p>
         
         <h2 className="text-xl font-medium mb-6">Welcome back</h2>

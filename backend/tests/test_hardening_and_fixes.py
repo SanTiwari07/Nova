@@ -119,3 +119,90 @@ async def test_intent_reconciliation_serving_scale():
     
     # Since it's dynamic AI, we just verify the structure is populated and state works
     assert "state" in res["decision"]
+
+
+@pytest.mark.asyncio
+async def test_follow_up_servings_scaling_no_recursion():
+    """
+    Verifies that follow-up requests adjusting servings ('make it for 4', 'for 6 people', etc.)
+    do not trigger an infinite recursion loop in _deterministic_tool_dispatch, and that
+    requesting a new dish properly switches the meal target.
+    """
+    from budget.budget_service import BudgetService
+    from commerce.swiggy_adapter import SwiggyInstamartAdapter
+    from decision.decision_service import DecisionEngine
+    from audit.audit_service import AuditService
+    from user.session_service import UserSessionService
+    from reminders.reminder_service import ReminderEngine
+    from savings.savings_engine import SavingsEngine
+    from agent.tools import create_nova_tools
+    from agent.nova_agent import NovaAgent
+
+    inv = InventoryService()
+    budget = BudgetService()
+    policy = PolicyService()
+    audit = AuditService()
+    session = UserSessionService()
+    session.set_autonomy_profile("FULL_AUTOPILOT")
+    commerce = SwiggyInstamartAdapter()
+    decision = DecisionEngine(
+        budget_service=budget,
+        policy_service=policy,
+        inventory_service=inv,
+        session_service=session
+    )
+    intent = IntentReconciliationService(inventory_service=inv, commerce_adapter=commerce)
+    reminders = ReminderEngine()
+    savings = SavingsEngine()
+
+    tools = create_nova_tools(
+        inventory_service=inv,
+        budget_service=budget,
+        policy_service=policy,
+        commerce_adapter=commerce,
+        history_service=None,
+        decision_engine=decision,
+        audit_service=audit,
+        session_service=session,
+        intent_service=intent,
+        reminder_engine=reminders,
+        savings_engine=savings,
+    )
+
+    agent = NovaAgent(
+        ai_service=None,
+        decision_engine=decision,
+        commerce_adapter=commerce,
+        inventory_service=inv,
+        budget_service=budget,
+        audit_service=audit,
+        session_service=session,
+        intent_service=intent,
+        reminder_engine=reminders,
+        savings_engine=savings,
+    )
+
+    # 1. Initial meal request
+    res1 = await agent.invoke("make pasta for 2 people", force_fallback=True)
+    assert res1["status"] == "success"
+    assert "pasta" in res1["response"].lower()
+    assert agent._last_plan is not None
+
+    # 2. Scaling follow-up: "make it for 4"
+    res2 = await agent.invoke("make it for 4", force_fallback=True)
+    assert res2["status"] == "success"
+    assert "pasta" in res2["response"].lower()
+    assert agent._last_plan.get("intent", {}).get("servings") == 4
+
+    # 3. Scaling follow-up: "for 6 people"
+    res3 = await agent.invoke("for 6 people", force_fallback=True)
+    assert res3["status"] == "success"
+    assert "pasta" in res3["response"].lower()
+    assert agent._last_plan.get("intent", {}).get("servings") == 6
+
+    # 4. Requesting a new recipe should not be hijacked by the previous recipe
+    res4 = await agent.invoke("make biryani for 4", force_fallback=True)
+    assert res4["status"] == "success"
+    assert "biryani" in res4["response"].lower()
+    assert agent._last_plan.get("intent", {}).get("servings") == 4
+

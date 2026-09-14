@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import asyncio
+import re
 
 if sys.stdout and hasattr(sys.stdout, "reconfigure"):
     try:
@@ -128,6 +129,7 @@ class NovaAgent:
         self.active_provider: str = "FALLBACK"
         self._last_plan: Optional[Dict[str, Any]] = None
         self._last_query: str = ""
+        self._llm_disabled: bool = False
         self._init_strands_agent()
 
     def _create_model(self) -> Tuple[Optional[Any], str]:
@@ -151,8 +153,8 @@ class NovaAgent:
 
         # 2. Google Gemini Provider
         if provider_env == "gemini":
-            api_key = os.environ.get("GEMINI_API_KEY", "")
-            if api_key:
+            api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+            if api_key and not api_key.startswith("your_") and not api_key.startswith("placeholder") and api_key != "fake":
                 try:
                     from strands.models.gemini import GeminiModel
                     model_id = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
@@ -253,51 +255,64 @@ class NovaAgent:
         return await self.handle_request(user_request, force_fallback=force_fallback)
 
     async def invoke_stream(self, user_request: str, force_fallback: bool = False):
-        if not force_fallback and not self.agent and (os.environ.get("GEMINI_API_KEY") or os.environ.get("BEDROCK_MODEL_ID")):
+        if not force_fallback and not self.agent and not self._llm_disabled and (os.environ.get("GEMINI_API_KEY") or os.environ.get("BEDROCK_MODEL_ID")):
             self._init_strands_agent()
             
         queue = asyncio.Queue()
         traces = []
         
         async def run_agent():
-            if self.agent and not force_fallback:
-                try:
-                    result = await self.agent.invoke_async(
-                        user_request,
-                        invocation_state={"traces": traces, "queue": queue}
-                    )
-                    response_text = str(result).strip()
+            try:
+                if self.agent and not force_fallback:
+                    try:
+                        result = await self.agent.invoke_async(
+                            user_request,
+                            invocation_state={"traces": traces, "queue": queue}
+                        )
+                        response_text = str(result).strip()
 
-                    # General restraint auditing
-                    if any(w in response_text.lower() for w in ["do_nothing", "sufficient", "do not buy", "healthy stock", "already have enough", "plenty"]):
-                        if not any(t.get("tool") == "record_restraint_decision" for t in traces):
-                            for item in self.inventory.get_all():
-                                if item["name"].lower() in user_request.lower() or item["category"].lower() in user_request.lower():
-                                    self.audit.log_decision(
-                                        item["name"],
-                                        "DO_NOTHING",
-                                        [f"Household pantry stock is healthy ({item['quantity']}{item['unit']} in stock, ~{item['days_remaining']} days left); autonomous restraint applied."]
-                                    )
-                                    break
+                        # General restraint auditing
+                        if any(w in response_text.lower() for w in ["do_nothing", "sufficient", "do not buy", "healthy stock", "already have enough", "plenty"]):
+                            if not any(t.get("tool") == "record_restraint_decision" for t in traces):
+                                for item in self.inventory.get_all():
+                                    if item["name"].lower() in user_request.lower() or item["category"].lower() in user_request.lower():
+                                        self.audit.log_decision(
+                                            item["name"],
+                                            "DO_NOTHING",
+                                            [f"Household pantry stock is healthy ({item['quantity']}{item['unit']} in stock, ~{item['days_remaining']} days left); autonomous restraint applied."]
+                                        )
+                                        break
 
-                    has_reconcile = any(t.get("tool") == "reconcile_activity_requirements" for t in traces)
-                    return {
-                        "response": response_text,
-                        "tool_trace": traces,
-                        "mode": f"{self.active_provider}_AUTONOMOUS",
-                        "provider": self.active_provider,
-                        "status": "success",
-                        "structured_plan": self._last_plan if has_reconcile else None
-                    }
-                except Exception as e:
-                    err_msg = str(e)
-                    print(f"[NovaAgent] Strands invocation error: {err_msg}. Falling back to tool dispatcher.")
-                    if "API_KEY_INVALID" in err_msg or "INVALID_ARGUMENT" in err_msg or "API key not valid" in err_msg:
-                        self.agent = None
-                    traces.append({"tool": "strands_agent", "status": "error", "summary": err_msg[:120]})
+                        has_reconcile = any(t.get("tool") == "reconcile_activity_requirements" for t in traces)
+                        return {
+                            "response": response_text,
+                            "tool_trace": traces,
+                            "mode": f"{self.active_provider}_AUTONOMOUS",
+                            "provider": self.active_provider,
+                            "status": "success",
+                            "structured_plan": self._last_plan if has_reconcile else None
+                        }
+                    except Exception as e:
+                        err_msg = str(e)
+                        print(f"[NovaAgent] Strands invocation error: {err_msg}. Falling back to tool dispatcher.")
+                        if "API_KEY_INVALID" in err_msg or "INVALID_ARGUMENT" in err_msg or "API key not valid" in err_msg:
+                            print("[NovaAgent] Gemini API key is invalid or unconfigured. Disabling active agent.")
+                            self.agent = None
+                            self._llm_disabled = True
+                        traces.append({"tool": "strands_agent", "status": "error", "summary": err_msg[:120]})
+                        return await self._deterministic_tool_dispatch(user_request, traces)
+                else:
                     return await self._deterministic_tool_dispatch(user_request, traces)
-            else:
-                return await self._deterministic_tool_dispatch(user_request, traces)
+            except Exception as e:
+                import traceback
+                print(f"[NovaAgent] Unhandled error during agent execution: {e}\n{traceback.format_exc()}")
+                return {
+                    "response": f"I encountered an error processing your request: {e}. Please try again.",
+                    "tool_trace": traces,
+                    "mode": "ERROR_FALLBACK",
+                    "provider": "ERROR",
+                    "status": "error"
+                }
                 
         task = asyncio.create_task(run_agent())
         
@@ -312,7 +327,15 @@ class NovaAgent:
             msg = queue.get_nowait()
             yield json.dumps(msg) + "\n"
             
-        final_result = task.result()
+        try:
+            final_result = task.result()
+        except Exception as e:
+            final_result = {
+                "response": f"I encountered an error processing your request: {e}",
+                "tool_trace": traces,
+                "mode": "ERROR_FALLBACK",
+                "status": "error"
+            }
         yield json.dumps({"type": "final_result", "data": final_result}) + "\n"
 
     async def handle_request(self, user_request: str, force_fallback: bool = False) -> Dict[str, Any]:
@@ -321,7 +344,7 @@ class NovaAgent:
         Returns a dict containing response text, full tool execution trace, active mode, and provider.
         """
         # Re-check model if agent wasn't initialized yet
-        if not force_fallback and not self.agent and (os.environ.get("GEMINI_API_KEY") or os.environ.get("BEDROCK_MODEL_ID")):
+        if not force_fallback and not self.agent and not self._llm_disabled and (os.environ.get("GEMINI_API_KEY") or os.environ.get("BEDROCK_MODEL_ID")):
             self._init_strands_agent()
 
         traces: List[Dict[str, Any]] = []
@@ -361,6 +384,7 @@ class NovaAgent:
                 if "API_KEY_INVALID" in err_msg or "INVALID_ARGUMENT" in err_msg or "API key not valid" in err_msg:
                     print("[NovaAgent] Gemini API key is invalid or unconfigured. Disabling active agent.")
                     self.agent = None
+                    self._llm_disabled = True
                 traces.append({"tool": "strands_agent", "status": "error", "summary": err_msg[:120]})
 
         # Deterministic Tool Dispatcher fallback (when LLM provider is unavailable)
@@ -424,7 +448,6 @@ class NovaAgent:
                     traces.append({"tool": "update_household_policy", "input": {"action": "whitelist_auto", "category": matched_cat}, "status": "success", "summary": f"Whitelisted category {matched_cat.title()}"})
                     return {"response": f"Policy updated: **{matched_cat.title()}** is now permitted for autonomous replenishment within your ₹500 auto-buy limit.", "tool_trace": traces, "mode": "STRANDS_TOOLS_DETERMINISTIC", "provider": "STRANDS_FALLBACK", "status": "success"}
                 elif "budget" in req_lower and any(c.isdigit() for c in user_request):
-                    import re
                     nums = re.findall(r"\d+", user_request)
                     val = float(nums[0]) if nums else 3000.0
                     old_b = self.budget.monthly_budget
@@ -445,7 +468,6 @@ class NovaAgent:
                     traces.append({"tool": "update_household_budget", "input": {"monthly_budget": val}, "status": "success", "summary": f"Set monthly budget to ₹{val}"})
                     return {"response": f"Household monthly budget updated to **₹{int(val):,}** (previous: ₹{int(old_b):,}). You now have **₹{int(rem):,}** in active spending headroom for this cycle.", "tool_trace": traces, "mode": "STRANDS_TOOLS_DETERMINISTIC", "provider": "STRANDS_FALLBACK", "status": "success"}
                 elif "limit" in req_lower:
-                    import re
                     nums = re.findall(r"\d+", user_request)
                     val = float(nums[0]) if nums else 500.0
                     res = pol_tool(action="set_limits", auto_limit=val)
@@ -474,7 +496,6 @@ class NovaAgent:
         if any(w in req_lower for w in ["add", "restock", "bought", "we have"]) and any(char.isdigit() for char in user_request):
             stock_tool = tools_map.get("update_pantry_stock")
             if stock_tool:
-                import re
                 nums = re.findall(r"\d+\.?\d*", user_request)
                 qty = float(nums[0]) if nums else 1.0
                 words = [w for w in user_request.split() if w.lower() not in ["add", "to", "pantry", "we", "bought", "have", "of", "the", "in", "packets", "packs", "kg", "l", "liters", "units"]]
@@ -537,15 +558,42 @@ class NovaAgent:
                         "status": "success"
                     }
 
-        # Follow-up: Scaling recipe servings ("make it for 6 people")
-        if self._last_plan and any(w in req_lower for w in ["make it for", "for 4", "for 6", "for 8", "servings"]):
-            import re
+        # Follow-up: Scaling recipe servings ("make it for 6 people", "scale to 4", "for 6 people")
+        KNOWN_DISHES = [
+            "panipuri", "pani puri", "golgappa", "puchka",
+            "pasta", "macaroni", "penne",
+            "maggi", "noodles",
+            "biryani",
+            "chai", "tea",
+            "dosa",
+            "sandwich", "sandwiches", "toast",
+            "pizza",
+            "potato", "potatoes", "aloo",
+            "breakfast", "poha"
+        ]
+        has_new_dish = any(dish in req_lower for dish in KNOWN_DISHES)
+        is_servings_adjustment = bool(
+            self._last_plan
+            and not has_new_dish
+            and (
+                "make it for" in req_lower
+                or "scale" in req_lower
+                or "servings" in req_lower
+                or re.search(r"\bfor\s+\d+\s*(?:people|persons|servings)?\b", req_lower)
+            )
+        )
+        if is_servings_adjustment:
             num_match = re.search(r"(\d+)", user_request)
             if num_match:
                 new_servings = num_match.group(1)
-                recipe_name = self._last_plan.get("recipe", {}).get("name", "meal")
-                new_prompt = f"make {recipe_name} for {new_servings} people"
-                return await self._deterministic_tool_dispatch(new_prompt, traces)
+                recipe_name = (
+                    self._last_plan.get("recipe", {}).get("name")
+                    or self._last_plan.get("intent", {}).get("target")
+                    or self._last_plan.get("matched_activity")
+                    or "Meal"
+                )
+                user_request = f"make {recipe_name} for {new_servings} people"
+                req_lower = user_request.lower()
 
         # 5. AUDIT EXPLANATIONS ("Why did you buy milk?", "Why did you buy oil?")
         if any(phrase in req_lower for phrase in ["why did you buy", "why did you order", "why buy", "why was", "why did nova", "explain purchase", "why didn't you buy", "why didn't you order", "why no order"]):
@@ -588,8 +636,10 @@ class NovaAgent:
                 }
 
         # 6. GENERAL ACTIVITY / MEAL INTENT RECONCILIATION
-        if any(w in req_lower for w in ["make", "making", "cook", "cooking", "prepare", "preparing", "for dinner", "for lunch", "for breakfast", "recipe", "panipuri", "pani puri", "pasta", "maggi", "biryani", "sandwich", "sandwiches", "chai", "tea", "dosa", "pizza", "potatoes"]):
+        if any(w in req_lower for w in ["make", "making", "cook", "cooking", "prepare", "preparing", "for dinner", "for lunch", "for breakfast", "recipe", "panipuri", "pani puri", "pasta", "maggi", "biryani", "sandwich", "sandwiches", "chai", "tea", "dosa", "pizza", "potatoes", "poha"]):
             reconcile_tool = tools_map.get("reconcile_activity_requirements")
+            search_tool = tools_map.get("search_catalog")
+            purchase_tool = tools_map.get("evaluate_and_execute_purchase")
 
             if reconcile_tool:
                 reconcile_res = await reconcile_tool(intent=user_request)
@@ -614,14 +664,57 @@ class NovaAgent:
                 auto_limit = getattr(self.budget, "auto_limit", 500.0)
                 
                 avail_bullets = "\n".join([f"✓ **{a.get('name')}** ({a.get('quantity')}{a.get('unit')}, healthy stock)" for a in avail_items])
-                if not avail_bullets:
-                    avail_bullets = "• No matching supplies currently in pantry."
+                missing_items = reconcile_res.get("missing_items", [])
+                if not shopping_items and missing_items and search_tool:
+                    query = missing_items[0].get("search_query") or missing_items[0].get("item")
+                    products = await search_tool(query=query)
+                    traces.append({
+                        "tool": "search_catalog",
+                        "input": {"query": query},
+                        "status": "success",
+                        "summary": f"Found {len(products)} products for '{query}'"
+                    })
+                    if products:
+                        top_p = products[0]
+                        price = top_p.get("price") or 0
+                        shopping_items.append({
+                            "id": top_p.get("product_id") or top_p.get("id"),
+                            "product_id": top_p.get("product_id") or top_p.get("id"),
+                            "name": top_p.get("name"),
+                            "price": price,
+                            "quantity": 1,
+                            "required_amount": "1 pack",
+                            "reason": f"Needed for {recipe_name}"
+                        })
+                        subtotal += price
 
                 if shopping_items:
                     missing_bullets = "\n".join([
                         f"• **{item.get('name')}** (Needed: {item.get('required_amount', '1 pack')}) — ₹{item.get('price', 0)}"
                         for item in shopping_items
                     ])
+                    top_item = shopping_items[0]
+                    if search_tool and not any(t.get("tool") == "search_catalog" for t in traces):
+                        traces.append({
+                            "tool": "search_catalog",
+                            "input": {"query": top_item.get("name")},
+                            "status": "success",
+                            "summary": f"Found {len(shopping_items)} missing items in catalog"
+                        })
+                    if purchase_tool:
+                        p_id = top_item.get("id") or top_item.get("product_id") or "prod_000109"
+                        p_eval = await purchase_tool(
+                            product_id=p_id,
+                            quantity=top_item.get("quantity", 1),
+                            reason=f"Meal requirement: {recipe_name}"
+                        )
+                        traces.append({
+                            "tool": "evaluate_and_execute_purchase",
+                            "input": {"product_id": p_id, "quantity": top_item.get("quantity", 1)},
+                            "status": "success",
+                            "summary": f"Verdict: {p_eval.get('verdict')} for {top_item.get('name')}"
+                        })
+
                     verdict = "ASK"
                     resp = (
                         f"I checked your household pantry inventory for **{recipe_name}** (for {servings} people):\n\n"

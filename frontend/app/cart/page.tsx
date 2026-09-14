@@ -135,10 +135,11 @@ export default function CartPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#EAEDED] py-10 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-neutral-200 border-t-[#FF9900] rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm font-medium text-neutral-600">Loading your shopping cart...</p>
+      <div className="min-h-screen bg-[#FAFAF8] py-10 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <img src="/logo.png" alt="NOVA" className="h-8 w-auto object-contain opacity-80" />
+          <div className="w-6 h-6 border-2 border-neutral-300 border-t-amber-500 rounded-full animate-spin" />
+          <p className="text-sm font-medium text-neutral-600">Loading your cart...</p>
         </div>
       </div>
     );

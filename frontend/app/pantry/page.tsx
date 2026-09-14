@@ -151,7 +151,10 @@ export default function PantryPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center pt-20">
-        <div className="w-10 h-10 border-4 border-neutral-200 border-t-neutral-800 rounded-full animate-spin" />
+        <div className="flex flex-col items-center gap-3">
+          <img src="/logo.png" alt="NOVA" className="h-8 w-auto object-contain opacity-80" />
+          <div className="w-6 h-6 border-2 border-neutral-300 border-t-neutral-800 rounded-full animate-spin" />
+        </div>
       </div>
     );
   }

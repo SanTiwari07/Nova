@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import {
@@ -48,6 +48,7 @@ export default function CommandBox({
   const [mode, setMode] = useState<string>("");
   const [provider, setProvider] = useState<string>("");
   const [toolTrace, setToolTrace] = useState<ToolTraceItem[]>([]);
+  const activeRequestRef = useRef<string | null>(null);
   const [decisionVerdict, setDecisionVerdict] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
@@ -74,6 +75,9 @@ export default function CommandBox({
 
   const runPrompt = async (promptText: string, scenarioNum?: number) => {
     if (loading || !promptText.trim()) return;
+    const reqId = crypto.randomUUID();
+    activeRequestRef.current = reqId;
+    
     setLoading(true);
     setCommand(promptText);
     setResponse("");
@@ -172,7 +176,9 @@ export default function CommandBox({
     } catch (err) {
       setResponse("NOVA is momentarily unavailable. Please check your connection.");
     } finally {
-      setLoading(false);
+      if (activeRequestRef.current === reqId) {
+        setLoading(false);
+      }
     }
   };
 

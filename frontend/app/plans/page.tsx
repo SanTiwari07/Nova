@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import ProductImage from "@/components/ProductImage";
 import {
@@ -14,6 +14,7 @@ import {
   ChevronRight,
   ArrowRight,
   Zap,
+  AlertCircle,
 } from "lucide-react";
 
 interface PlanItem {
@@ -35,6 +36,7 @@ export default function PlansPage() {
   const [customIntent, setCustomIntent] = useState("");
   const [reconciling, setReconciling] = useState(false);
   const [customResult, setCustomResult] = useState<any>(null);
+  const activeRequestRef = useRef<string | null>(null);
   const [actionPlanId, setActionPlanId] = useState<string | null>(null);
   const [actionDoneId, setActionDoneId] = useState<string | null>(null);
 
@@ -60,10 +62,10 @@ export default function PlansPage() {
   const handleTakeCareOf = async (plan: PlanItem) => {
     setActionPlanId(plan.plan_id);
     try {
-      await fetch("/api/command", {
+      await fetch("/api/plans/take-care-of", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: `Take care of ${plan.title} - order missing ingredients` }),
+        body: JSON.stringify({ plan_id: plan.plan_id, meal: plan.meal, items: plan.need_items }),
       });
       setActionDoneId(plan.plan_id);
       window.dispatchEvent(new Event("household-updated"));
@@ -152,58 +154,94 @@ export default function PlansPage() {
           </form>
 
           {/* Custom Reconciliation Result */}
-          {customResult && (
+          {customResult && customResult.error ? (
+            <div className="mt-4 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
+              {customResult.error}
+            </div>
+          ) : customResult && customResult.intent?.action === "REQUIRE_CLARIFICATION" ? (
+             <div className="mt-4 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium">
+              I couldn't identify the meal you want to make. Please provide a clearer request.
+            </div>
+          ) : customResult && (
             <div className="mt-4 p-4 rounded-2xl bg-[#F9F9F8] border border-neutral-200 text-xs">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-bold text-sm text-neutral-900">
+              <div className="flex flex-col mb-4">
+                <span className="font-bold text-lg text-neutral-950">
                   {customResult.recipe?.name || "Reconciled Plan"}
                 </span>
-                <span className="px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800">
-                  {customResult.missing_items?.length || 0} items needed
+                <span className="text-neutral-500 font-medium">
+                  For {customResult.intent?.servings || 2} people
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+              {customResult.decision?.state === "DO_NOTHING" ? (
+                <div className="py-2">
+                   <div className="flex items-center gap-2 text-emerald-700 font-bold mb-1">
+                     <CheckCircle2 className="w-4 h-4" />
+                     <span>Everything you need is already in your pantry.</span>
+                   </div>
+                   <p className="text-neutral-500 text-xs mt-2 font-medium">All sorted · No action needed</p>
+                </div>
+              ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-2">
                 <div>
-                  <p className="font-semibold text-neutral-600 mb-1.5">Already in pantry:</p>
-                  <div className="space-y-1">
-                    {customResult.available_in_pantry?.map((item: any, i: number) => (
-                      <div key={i} className="flex items-center gap-2 text-neutral-700">
-                        <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        <span>{item.item}</span>
-                        <span className="text-neutral-400">({item.summary || "In stock"})</span>
+                  <p className="font-bold text-neutral-900 mb-2.5 uppercase tracking-wider text-[11px]">Already in pantry</p>
+                  <div className="space-y-2">
+                    {customResult.pantry?.available?.map((item: any, i: number) => (
+                      <div key={i} className="flex items-center gap-2 text-neutral-700 font-medium">
+                        <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 stroke-[3]" />
+                        <span>{item.required_name || item.name} — {item.quantity} {item.unit}</span>
                       </div>
                     ))}
+                    {customResult.pantry?.available?.length === 0 && <span className="text-neutral-400 italic">None</span>}
                   </div>
                 </div>
 
                 <div>
-                  <p className="font-semibold text-neutral-600 mb-1.5">Needed from store:</p>
+                  <p className="font-bold text-neutral-900 mb-2.5 uppercase tracking-wider text-[11px]">Needs from store</p>
                   <div className="grid grid-cols-1 gap-3">
-                    {customResult.missing_items?.map((item: any, i: number) => (
-                      <div key={i} className="flex items-start gap-3 bg-white p-2.5 rounded-xl border border-neutral-100 shadow-sm">
-                        {item.product?.image ? (
-                           <div className="w-12 h-12 rounded-lg bg-neutral-100 overflow-hidden shrink-0">
-                             <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover" />
+                    {customResult.shopping?.items?.map((item: any, i: number) => (
+                      <div key={i} className="flex items-start gap-3 bg-white p-2.5 rounded-xl border border-neutral-100 shadow-sm transition-all hover:border-neutral-200">
+                        {item.imageUrl || item.image ? (
+                           <div className="w-12 h-12 rounded-lg bg-neutral-100 overflow-hidden shrink-0 border border-neutral-200/50">
+                             <img src={item.imageUrl || item.image} alt={item.name} className="w-full h-full object-cover" />
                            </div>
                         ) : (
-                          <div className="w-12 h-12 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
+                          <div className="w-12 h-12 rounded-lg bg-amber-50 flex items-center justify-center shrink-0 border border-amber-100/50">
                             <ShoppingBag className="w-5 h-5 text-amber-500" />
                           </div>
                         )}
-                        <div>
-                          <p className="text-sm font-bold text-neutral-900 leading-tight">
-                            {item.product ? item.product.name : item.item}
+                        <div className="flex flex-col justify-center min-h-[48px]">
+                          <p className="text-sm font-bold text-neutral-900 leading-tight mb-0.5">
+                            {item.name}
                           </p>
-                          {item.product && (
-                            <p className="text-xs text-neutral-500 mt-0.5">₹{item.product.price}</p>
-                          )}
+                          <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">₹{item.price}</p>
                         </div>
                       </div>
                     ))}
                   </div>
+                  
+                  {customResult.shopping?.subtotal > 0 && (
+                     <div className="mt-4 pt-3 border-t border-neutral-200 flex justify-between items-center">
+                        <span className="text-neutral-500 font-bold uppercase tracking-wider text-[10px]">Estimated total</span>
+                        <span className="font-black text-neutral-900 text-sm">₹{customResult.shopping?.subtotal}</span>
+                     </div>
+                  )}
+
+                  {customResult.decision?.state === "ASK" && (
+                    <div className="mt-3 flex items-center justify-center gap-1.5 py-1.5 px-3 bg-amber-50 border border-amber-100 rounded-lg text-amber-800 font-bold text-xs">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      <span>Needs your input</span>
+                    </div>
+                  )}
+                  {customResult.decision?.state === "AUTO" && (
+                    <div className="mt-3 flex items-center justify-center gap-1.5 py-1.5 px-3 bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-800 font-bold text-xs">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Ready to order</span>
+                    </div>
+                  )}
                 </div>
               </div>
+              )}
             </div>
           )}
         </div>

@@ -222,9 +222,14 @@ export default function TodayPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center pt-24 pb-20">
-        <div className="text-center">
-          <div className="w-10 h-10 border-3 border-neutral-300 border-t-neutral-900 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-sm text-neutral-500 font-medium">NOVA is reviewing your household…</p>
+        <div className="text-center flex flex-col items-center">
+          <img
+            src="/logo.png"
+            alt="NOVA"
+            className="h-8 w-auto object-contain mb-6 opacity-80"
+          />
+          <div className="w-6 h-6 border-2 border-neutral-300 border-t-neutral-900 rounded-full animate-spin mb-3" />
+          <p className="text-sm text-neutral-500 font-medium">Reviewing your household…</p>
         </div>
       </div>
     );

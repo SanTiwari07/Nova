@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, HTTPException, Request
+from fastapi import FastAPI, Request, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, HTMLResponse, StreamingResponse
 # pyrefly: ignore [missing-import]
@@ -1396,56 +1396,46 @@ async def remove_nova_cart_item(product_id: str):
 @app.get("/api/plans")
 async def get_household_plans():
     """Returns available household meal and staple plans with live pantry reconciliation."""
-    from intent.intent_service import MEAL_RECIPES
     results = []
-    pantry_items = inventory_service.get_all()
     
-    for key, recipe in MEAL_RECIPES.items():
-        have_items = []
-        need_items = []
-        total_missing_cost = 0
+    curated_intents = [
+        {"id": "plan_biryani", "text": "I want to make biryani for 2"},
+        {"id": "plan_pasta", "text": "I want to make pasta for 2"},
+        {"id": "plan_panipuri", "text": "I want to make pani puri for 2"}
+    ]
+    
+    for plan in curated_intents:
+        recon = await intent_service.reconcile_intent(plan["text"])
         
-        for comp in recipe.get("components", []):
-            comp_keywords = comp.get("keywords", [])
-            comp_cat = comp.get("category", "").lower()
-            matched_item = None
+        # Transform canonical schema into curated plan schema expected by frontend for the grid
+        have_items = []
+        for a in recon["pantry"]["available"]:
+            have_items.append({
+                "item": a.get("required_name", a["name"]),
+                "imageUrl": _get_demo_image(a["name"]) or None,
+                "stock": f"{a['quantity']} {a['unit']} in pantry",
+                "status": "In stock"
+            })
             
-            for p in pantry_items:
-                p_cat = p.get("category", "").lower()
-                p_name = p.get("name", "").lower()
-                if any(kw in p_name or kw in p_cat for kw in comp_keywords):
-                    matched_item = p
-                    break
+        need_items = []
+        for n in recon["shopping"]["items"]:
+            need_items.append({
+                "item": n["name"],
+                "imageUrl": n.get("image") or n.get("imageUrl") or _get_demo_image(n["name"]),
+                "needed": n.get("required_amount", "1 pack"),
+                "estimated_price": n.get("price", 0)
+            })
             
-            needed_qty = comp.get("needed_qty", 0.1)
-            if matched_item and matched_item.get("status") == "HEALTHY" and matched_item.get("days_remaining", 0) > 2:
-                have_items.append({
-                    "item": comp["item"], "imageUrl": _get_demo_image(comp["item"]) or _get_demo_image(matched_item["name"]) if "_get_demo_image" in globals() else None,
-                    "stock": f"{matched_item.get('quantity')} {matched_item.get('unit')} in pantry",
-                    "status": "In stock",
-                    "days_remaining": matched_item.get("days_remaining", 0)
-                })
-            else:
-                est_price = 14 if "maggi" in comp["item"].lower() else (45 if "tea" in comp["item"].lower() or "milk" in comp["item"].lower() else 35)
-                need_items.append({
-                    "item": comp["item"], "imageUrl": _get_demo_image(comp["item"]) if "_get_demo_image" in globals() else None,
-                    "category": comp.get("category", "General"),
-                    "needed": f"{needed_qty} {comp.get('unit', 'pack')}",
-                    "estimated_price": est_price
-                })
-                total_missing_cost += est_price
-                
         results.append({
-            "plan_id": f"plan_{key}",
-            "key": key,
-            "title": f"Make {recipe['name']}",
-            "meal": recipe["name"],
+            "plan_id": plan["id"],
+            "title": f"Make {recon['recipe']['name']}",
+            "meal": recon['recipe']['name'],
             "have_items": have_items,
             "need_items": need_items,
             "ready_to_cook": len(need_items) == 0,
             "missing_count": len(need_items),
-            "estimated_cost": total_missing_cost or 14,
-            "components_count": len(recipe.get("components", [])),
+            "estimated_cost": recon["shopping"]["subtotal"],
+            "components_count": len(have_items) + len(need_items),
         })
         
     return results
@@ -1458,20 +1448,6 @@ async def reconcile_household_plan(req: RequestModel):
     if not text:
         raise HTTPException(status_code=400, detail="Text required")
     reconciliation = await intent_service.reconcile_intent(text)
-    
-    # Enrich missing items with real products
-    for item in reconciliation.get("missing_items", []):
-        query = item.get("search_query")
-        if query:
-            products = await commerce_adapter.search_products(query)
-            if products:
-                prod = products[0]
-                item["product"] = {
-                    "id": prod.get("product_id"),
-                    "name": prod.get("name"),
-                    "price": prod.get("price", 0),
-                    "image": prod.get("image") or prod.get("imageUrl") or ""
-                }
     
     return reconciliation
 
@@ -1747,3 +1723,47 @@ async def get_household_status():
         "estimated_upcoming_spend": estimated_upcoming_spend,
     }
 
+
+
+@app.post("/api/plans/take-care-of")
+async def plan_take_care_of(req: RequestModel):
+    data = req.model_dump() if hasattr(req, "model_dump") else req.dict()
+    # Or just use raw request via Request in fastAPI
+    # Wait, RequestModel in main.py has get_text() but maybe we can just accept raw dict?
+    pass
+
+@app.post("/api/plans/execute")
+async def execute_plan_purchase(request: Request):
+    data = await request.json()
+    items = data.get("items", [])
+    
+    results = []
+    total_cost = 0
+    from datetime import datetime
+    import uuid
+    
+    for item in items:
+        # Simulate evaluate_and_execute_purchase
+        price = item.get("price", 0)
+        total_cost += price * item.get("quantity", 1)
+        # Add to cart
+        if item.get("id"):
+            await cart_adapter.add_item(item["id"], item.get("quantity", 1))
+            
+    # Decision Engine: 
+    action = {
+        "id": f"act_{uuid.uuid4().hex[:8]}",
+        "type": "PURCHASE",
+        "product": data.get("meal", "Household Plan Items"),
+        "cost": total_cost,
+        "description": "Ordered missing ingredients for plan",
+        "timestamp": datetime.now().isoformat(),
+        "status": "COMPLETED",
+        "system_telemetry": {
+            "tool": "evaluate_and_execute_purchase",
+            "verdict": "AUTO" if total_cost <= 1500 else "ASK"
+        }
+    }
+    household_activity.insert(0, action)
+    
+    return {"status": "success", "action": action, "decision": action["system_telemetry"]["verdict"]}

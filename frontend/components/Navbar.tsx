@@ -52,9 +52,14 @@ export default function Navbar() {
           {/* Logo */}
           <Link
             href="/store"
-            className="font-black text-lg tracking-tight text-neutral-900 shrink-0 flex items-center gap-2"
+            className="shrink-0 flex items-center"
+            aria-label="NOVA"
           >
-            <span className="text-[#FF9900]">N</span>OVA
+            <img
+              src="/logo.png"
+              alt="NOVA"
+              className="h-7 sm:h-8 w-auto object-contain transition-transform hover:opacity-90"
+            />
           </Link>
 
           {/* Primary Nav */}
@@ -76,12 +81,6 @@ export default function Navbar() {
 
           {/* Right side */}
           <div className="flex items-center gap-2 shrink-0">
-            {/* Amazon connection badge */}
-            <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 border border-orange-200 rounded-lg">
-              <div className="w-1.5 h-1.5 rounded-full bg-orange-400"></div>
-              <span className="text-xs font-semibold text-orange-700">Amazon · Demo</span>
-            </div>
-
             {/* Budget indicator */}
             {budgetRemaining !== null && (
               <div className="hidden md:flex items-center gap-1 px-3 py-1.5 bg-neutral-50 border border-neutral-200 rounded-lg">

@@ -1,0 +1,2034 @@
+[
+  {
+    "id": 1,
+    "input": "I want to make biryani for 4",
+    "expected": "Biryani (4)",
+    "actual": "Biryani (4)",
+    "pass": true,
+    "reason": "All checks passed",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "Biryani",
+        "servings": 4
+      },
+      "recipe": {
+        "name": "Biryani",
+        "requiredItems": [
+          {
+            "name": "Basmati Rice",
+            "quantity": 2.0,
+            "unit": "kg",
+            "required": true,
+            "search_query": "basmati rice"
+          },
+          {
+            "name": "Biryani Masala",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "biryani masala"
+          },
+          {
+            "name": "Cooking Oil or Ghee",
+            "quantity": 0.1,
+            "unit": "L",
+            "required": true,
+            "search_query": "sunflower oil"
+          },
+          {
+            "name": "Curd",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "curd"
+          },
+          {
+            "name": "Onion",
+            "quantity": 1,
+            "unit": "kg",
+            "required": true,
+            "search_query": "onion"
+          },
+          {
+            "name": "Potatoes",
+            "quantity": 4,
+            "unit": "units",
+            "required": true,
+            "search_query": "potato"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "India Gate Basmati Rice 5kg",
+            "category": "Rice",
+            "quantity": 1.8,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 7.2,
+            "required_name": "Basmati Rice"
+          },
+          {
+            "name": "Everest Kitchen King Spices & Masala 100g",
+            "category": "Spices",
+            "quantity": 1.0,
+            "unit": "pack",
+            "status": "HEALTHY",
+            "days_remaining": 50.0,
+            "required_name": "Biryani Masala"
+          },
+          {
+            "name": "Fortune Sunflower Oil 5L",
+            "category": "Oil",
+            "quantity": 2.1,
+            "unit": "L",
+            "status": "HEALTHY",
+            "days_remaining": 30.0,
+            "required_name": "Cooking Oil or Ghee"
+          },
+          {
+            "name": "Fresh Potato (Batata) 1kg",
+            "category": "Fresh Staples",
+            "quantity": 2.0,
+            "unit": "kg",
+            "status": "HEALTHY",
+            "days_remaining": 13.3,
+            "required_name": "Potatoes"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [
+          {
+            "id": "req_0",
+            "name": "Curd",
+            "price": 0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Not in pantry; check catalog for alternatives.",
+            "imageUrl": null,
+            "image": null
+          },
+          {
+            "id": "req_1",
+            "name": "Onion",
+            "price": 0,
+            "quantity": 1,
+            "required_amount": "1 kg",
+            "reason": "Not in pantry; check catalog for alternatives.",
+            "imageUrl": null,
+            "image": null
+          }
+        ],
+        "subtotal": 0.0
+      },
+      "decision": {
+        "state": "AUTO"
+      }
+    }
+  },
+  {
+    "id": 2,
+    "input": "Can I make pasta for 4 tonight?",
+    "expected": "Pasta (4)",
+    "actual": "Pasta (4)",
+    "pass": true,
+    "reason": "All checks passed",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "Pasta",
+        "servings": 4
+      },
+      "recipe": {
+        "name": "Pasta",
+        "requiredItems": [
+          {
+            "name": "Macaroni Pasta",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "pasta"
+          },
+          {
+            "name": "Pasta & Pizza Sauce",
+            "quantity": 1,
+            "unit": "bottle",
+            "required": true,
+            "search_query": "pasta sauce"
+          },
+          {
+            "name": "Mozzarella Cheese Blend",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "cheese"
+          },
+          {
+            "name": "Cooking Oil / Butter",
+            "quantity": 0.05,
+            "unit": "L",
+            "required": true,
+            "search_query": "sunflower oil"
+          },
+          {
+            "name": "Salt",
+            "quantity": 0.02,
+            "unit": "kg",
+            "required": true,
+            "search_query": "salt"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "Fortune Sunflower Oil 5L",
+            "category": "Oil",
+            "quantity": 2.1,
+            "unit": "L",
+            "status": "HEALTHY",
+            "days_remaining": 30.0,
+            "required_name": "Cooking Oil / Butter"
+          },
+          {
+            "name": "Tata Salt 1kg",
+            "category": "Salt",
+            "quantity": 0.4,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 20.0,
+            "required_name": "Salt"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [
+          {
+            "id": "prod_000163",
+            "product_id": "prod_000163",
+            "name": "Bambino Macaroni Pasta 500g",
+            "brand": "Bambino",
+            "price": 48.0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Missing from your household pantry for Pasta.",
+            "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+            "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+            "category": "Instant Noodles"
+          },
+          {
+            "id": "prod_000164",
+            "product_id": "prod_000164",
+            "name": "Veeba Pasta & Pizza Sauce 350g",
+            "brand": "Veeba",
+            "price": 89.0,
+            "quantity": 1,
+            "required_amount": "1 bottle",
+            "reason": "Missing from your household pantry for Pasta.",
+            "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+            "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+            "category": "Instant Noodles"
+          },
+          {
+            "id": "prod_000123",
+            "product_id": "prod_000123",
+            "name": "Amul Processed Cheese Blocks 200 g",
+            "brand": "Amul",
+            "price": 145.0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Missing from your household pantry for Pasta.",
+            "imageUrl": null,
+            "image": null,
+            "category": "Milk & Dairy"
+          }
+        ],
+        "subtotal": 282.0
+      },
+      "decision": {
+        "state": "AUTO"
+      }
+    }
+  },
+  {
+    "id": 3,
+    "input": "planning dosa for 3",
+    "expected": "Dosa (3)",
+    "actual": "Custom Meal (3)",
+    "pass": false,
+    "reason": "Meal mismatch: Expected Dosa, got Custom Meal",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "Custom Meal",
+        "servings": 3
+      },
+      "recipe": {
+        "name": "Custom Meal",
+        "requiredItems": [
+          {
+            "name": "Custom Meal",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "custom meal"
+          },
+          {
+            "name": "Cooking Oil",
+            "quantity": 0.05,
+            "unit": "L",
+            "required": true,
+            "search_query": "sunflower oil"
+          },
+          {
+            "name": "Salt",
+            "quantity": 0.02,
+            "unit": "kg",
+            "required": true,
+            "search_query": "salt"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "Fortune Sunflower Oil 5L",
+            "category": "Oil",
+            "quantity": 2.1,
+            "unit": "L",
+            "status": "HEALTHY",
+            "days_remaining": 30.0,
+            "required_name": "Cooking Oil"
+          },
+          {
+            "name": "Tata Salt 1kg",
+            "category": "Salt",
+            "quantity": 0.4,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 20.0,
+            "required_name": "Salt"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [
+          {
+            "id": "req_0",
+            "name": "Custom Meal",
+            "price": 0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Not in pantry; check catalog for alternatives.",
+            "imageUrl": null,
+            "image": null
+          }
+        ],
+        "subtotal": 0.0
+      },
+      "decision": {
+        "state": "AUTO"
+      }
+    }
+  },
+  {
+    "id": 4,
+    "input": "Need chicken curry for six",
+    "expected": "Chicken Curry (6)",
+    "actual": "Custom Meal (2)",
+    "pass": false,
+    "reason": "Meal mismatch: Expected Chicken Curry, got Custom Meal",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "Custom Meal",
+        "servings": 2
+      },
+      "recipe": {
+        "name": "Custom Meal",
+        "requiredItems": [
+          {
+            "name": "Custom Meal",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "custom meal"
+          },
+          {
+            "name": "Cooking Oil",
+            "quantity": 0.05,
+            "unit": "L",
+            "required": true,
+            "search_query": "sunflower oil"
+          },
+          {
+            "name": "Salt",
+            "quantity": 0.02,
+            "unit": "kg",
+            "required": true,
+            "search_query": "salt"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "Fortune Sunflower Oil 5L",
+            "category": "Oil",
+            "quantity": 2.1,
+            "unit": "L",
+            "status": "HEALTHY",
+            "days_remaining": 30.0,
+            "required_name": "Cooking Oil"
+          },
+          {
+            "name": "Tata Salt 1kg",
+            "category": "Salt",
+            "quantity": 0.4,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 20.0,
+            "required_name": "Salt"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [
+          {
+            "id": "req_0",
+            "name": "Custom Meal",
+            "price": 0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Not in pantry; check catalog for alternatives.",
+            "imageUrl": null,
+            "image": null
+          }
+        ],
+        "subtotal": 0.0
+      },
+      "decision": {
+        "state": "AUTO"
+      }
+    }
+  },
+  {
+    "id": 5,
+    "input": "make pani puri for 5 people",
+    "expected": "Panipuri (5)",
+    "actual": "Panipuri (5)",
+    "pass": true,
+    "reason": "All checks passed",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "Panipuri",
+        "servings": 5
+      },
+      "recipe": {
+        "name": "Panipuri",
+        "requiredItems": [
+          {
+            "name": "Pani Puri Shells / Puri",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "pani puri"
+          },
+          {
+            "name": "White Chickpeas (Kabuli Chana)",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "chickpeas"
+          },
+          {
+            "name": "Potatoes",
+            "quantity": 10,
+            "unit": "units",
+            "required": true,
+            "search_query": "potato"
+          },
+          {
+            "name": "Pani Puri Masala & Spices",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "pani puri masala"
+          },
+          {
+            "name": "Cooking Oil",
+            "quantity": 0.1,
+            "unit": "L",
+            "required": true,
+            "search_query": "sunflower oil"
+          },
+          {
+            "name": "Salt",
+            "quantity": 0.05,
+            "unit": "kg",
+            "required": true,
+            "search_query": "salt"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "Fresh Potato (Batata) 1kg",
+            "category": "Fresh Staples",
+            "quantity": 2.0,
+            "unit": "kg",
+            "status": "HEALTHY",
+            "days_remaining": 13.3,
+            "required_name": "Potatoes"
+          },
+          {
+            "name": "Everest Kitchen King Spices & Masala 100g",
+            "category": "Spices",
+            "quantity": 1.0,
+            "unit": "pack",
+            "status": "HEALTHY",
+            "days_remaining": 50.0,
+            "required_name": "Pani Puri Masala & Spices"
+          },
+          {
+            "name": "Fortune Sunflower Oil 5L",
+            "category": "Oil",
+            "quantity": 2.1,
+            "unit": "L",
+            "status": "HEALTHY",
+            "days_remaining": 30.0,
+            "required_name": "Cooking Oil"
+          },
+          {
+            "name": "Tata Salt 1kg",
+            "category": "Salt",
+            "quantity": 0.4,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 20.0,
+            "required_name": "Salt"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [
+          {
+            "id": "prod_000160",
+            "product_id": "prod_000160",
+            "name": "Haldiram's Minute Khana Pani Puri Pack 240g",
+            "brand": "Haldiram's",
+            "price": 65.0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Missing from your household pantry for Panipuri.",
+            "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/8b5ecd2b-098a-4431-8a66-990cdf120314_04USQLUCHZ_MN_18122025.png",
+            "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/8b5ecd2b-098a-4431-8a66-990cdf120314_04USQLUCHZ_MN_18122025.png",
+            "category": "Snacks & Biscuits"
+          },
+          {
+            "id": "prod_000161",
+            "product_id": "prod_000161",
+            "name": "Tata Sampann White Chickpeas (Kabuli Chana) 500g",
+            "brand": "Tata Sampann",
+            "price": 88.0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Missing from your household pantry for Panipuri.",
+            "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/16/eda40bda-ba3b-4fab-97ba-ccbd28c106cf_K71D7X8L8P_MN_15122025.png",
+            "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/16/eda40bda-ba3b-4fab-97ba-ccbd28c106cf_K71D7X8L8P_MN_15122025.png",
+            "category": "Dal & Pulses"
+          }
+        ],
+        "subtotal": 153.0
+      },
+      "decision": {
+        "state": "AUTO"
+      }
+    }
+  },
+  {
+    "id": 6,
+    "input": "Can I make Maggi tonight?",
+    "expected": "Maggi Noodles (2)",
+    "actual": "Maggi Noodles (2)",
+    "pass": true,
+    "reason": "All checks passed",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "Maggi Noodles",
+        "servings": 2
+      },
+      "recipe": {
+        "name": "Maggi Noodles",
+        "requiredItems": [
+          {
+            "name": "Maggi 2-Minute Noodles",
+            "quantity": 2,
+            "unit": "packs",
+            "required": true,
+            "search_query": "maggi noodles"
+          },
+          {
+            "name": "Cooking Oil",
+            "quantity": 0.02,
+            "unit": "L",
+            "required": true,
+            "search_query": "sunflower oil"
+          },
+          {
+            "name": "Mixed Spices",
+            "quantity": 1,
+            "unit": "pinch",
+            "required": false,
+            "search_query": "spices"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "Fortune Sunflower Oil 5L",
+            "category": "Oil",
+            "quantity": 2.1,
+            "unit": "L",
+            "status": "HEALTHY",
+            "days_remaining": 30.0,
+            "required_name": "Cooking Oil"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [
+          {
+            "id": "prod_000140",
+            "product_id": "prod_000140",
+            "name": "Maggi 2-Minute Masala Noodles 70 g",
+            "brand": "Maggi",
+            "price": 14.0,
+            "quantity": 1,
+            "required_amount": "2 packs",
+            "reason": "Missing from your household pantry for Maggi Noodles.",
+            "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+            "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+            "category": "Instant Noodles"
+          }
+        ],
+        "subtotal": 14.0
+      },
+      "decision": {
+        "state": "AUTO"
+      }
+    }
+  },
+  {
+    "id": 7,
+    "input": "I want veg biryani for 4",
+    "expected": "Veg Biryani (4)",
+    "actual": "Veg Biryani (4)",
+    "pass": true,
+    "reason": "All checks passed",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "Veg Biryani",
+        "servings": 4
+      },
+      "recipe": {
+        "name": "Veg Biryani",
+        "requiredItems": [
+          {
+            "name": "Basmati Rice",
+            "quantity": 2.0,
+            "unit": "kg",
+            "required": true,
+            "search_query": "basmati rice"
+          },
+          {
+            "name": "Biryani Masala",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "biryani masala"
+          },
+          {
+            "name": "Cooking Oil or Ghee",
+            "quantity": 0.1,
+            "unit": "L",
+            "required": true,
+            "search_query": "sunflower oil"
+          },
+          {
+            "name": "Curd",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "curd"
+          },
+          {
+            "name": "Onion",
+            "quantity": 1,
+            "unit": "kg",
+            "required": true,
+            "search_query": "onion"
+          },
+          {
+            "name": "Mixed Vegetables",
+            "quantity": 2.0,
+            "unit": "kg",
+            "required": true,
+            "search_query": "mixed vegetables"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "India Gate Basmati Rice 5kg",
+            "category": "Rice",
+            "quantity": 1.8,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 7.2,
+            "required_name": "Basmati Rice"
+          },
+          {
+            "name": "Everest Kitchen King Spices & Masala 100g",
+            "category": "Spices",
+            "quantity": 1.0,
+            "unit": "pack",
+            "status": "HEALTHY",
+            "days_remaining": 50.0,
+            "required_name": "Biryani Masala"
+          },
+          {
+            "name": "Fortune Sunflower Oil 5L",
+            "category": "Oil",
+            "quantity": 2.1,
+            "unit": "L",
+            "status": "HEALTHY",
+            "days_remaining": 30.0,
+            "required_name": "Cooking Oil or Ghee"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [
+          {
+            "id": "req_0",
+            "name": "Curd",
+            "price": 0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Not in pantry; check catalog for alternatives.",
+            "imageUrl": null,
+            "image": null
+          },
+          {
+            "id": "req_1",
+            "name": "Onion",
+            "price": 0,
+            "quantity": 1,
+            "required_amount": "1 kg",
+            "reason": "Not in pantry; check catalog for alternatives.",
+            "imageUrl": null,
+            "image": null
+          },
+          {
+            "id": "prod_000087",
+            "product_id": "prod_000087",
+            "name": "Real Fruit Power Mixed Fruit Juice 1 L",
+            "brand": "Real",
+            "price": 105.0,
+            "quantity": 1,
+            "required_amount": "2.0 kg",
+            "reason": "Missing from your household pantry for Veg Biryani.",
+            "imageUrl": null,
+            "image": null,
+            "category": "Beverages"
+          }
+        ],
+        "subtotal": 105.0
+      },
+      "decision": {
+        "state": "AUTO"
+      }
+    }
+  },
+  {
+    "id": 8,
+    "input": "cook macaroni for 3",
+    "expected": "Pasta (3)",
+    "actual": "Pasta (3)",
+    "pass": true,
+    "reason": "All checks passed",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "Pasta",
+        "servings": 3
+      },
+      "recipe": {
+        "name": "Pasta",
+        "requiredItems": [
+          {
+            "name": "Macaroni Pasta",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "pasta"
+          },
+          {
+            "name": "Pasta & Pizza Sauce",
+            "quantity": 1,
+            "unit": "bottle",
+            "required": true,
+            "search_query": "pasta sauce"
+          },
+          {
+            "name": "Mozzarella Cheese Blend",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "cheese"
+          },
+          {
+            "name": "Cooking Oil / Butter",
+            "quantity": 0.05,
+            "unit": "L",
+            "required": true,
+            "search_query": "sunflower oil"
+          },
+          {
+            "name": "Salt",
+            "quantity": 0.02,
+            "unit": "kg",
+            "required": true,
+            "search_query": "salt"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "Fortune Sunflower Oil 5L",
+            "category": "Oil",
+            "quantity": 2.1,
+            "unit": "L",
+            "status": "HEALTHY",
+            "days_remaining": 30.0,
+            "required_name": "Cooking Oil / Butter"
+          },
+          {
+            "name": "Tata Salt 1kg",
+            "category": "Salt",
+            "quantity": 0.4,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 20.0,
+            "required_name": "Salt"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [
+          {
+            "id": "prod_000163",
+            "product_id": "prod_000163",
+            "name": "Bambino Macaroni Pasta 500g",
+            "brand": "Bambino",
+            "price": 48.0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Missing from your household pantry for Pasta.",
+            "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+            "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+            "category": "Instant Noodles"
+          },
+          {
+            "id": "prod_000164",
+            "product_id": "prod_000164",
+            "name": "Veeba Pasta & Pizza Sauce 350g",
+            "brand": "Veeba",
+            "price": 89.0,
+            "quantity": 1,
+            "required_amount": "1 bottle",
+            "reason": "Missing from your household pantry for Pasta.",
+            "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+            "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+            "category": "Instant Noodles"
+          },
+          {
+            "id": "prod_000123",
+            "product_id": "prod_000123",
+            "name": "Amul Processed Cheese Blocks 200 g",
+            "brand": "Amul",
+            "price": 145.0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Missing from your household pantry for Pasta.",
+            "imageUrl": null,
+            "image": null,
+            "category": "Milk & Dairy"
+          }
+        ],
+        "subtotal": 282.0
+      },
+      "decision": {
+        "state": "AUTO"
+      }
+    }
+  },
+  {
+    "id": 9,
+    "input": "make golgappa for 2",
+    "expected": "Panipuri (2)",
+    "actual": "Panipuri (2)",
+    "pass": true,
+    "reason": "All checks passed",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "Panipuri",
+        "servings": 2
+      },
+      "recipe": {
+        "name": "Panipuri",
+        "requiredItems": [
+          {
+            "name": "Pani Puri Shells / Puri",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "pani puri"
+          },
+          {
+            "name": "White Chickpeas (Kabuli Chana)",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "chickpeas"
+          },
+          {
+            "name": "Potatoes",
+            "quantity": 4,
+            "unit": "units",
+            "required": true,
+            "search_query": "potato"
+          },
+          {
+            "name": "Pani Puri Masala & Spices",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "pani puri masala"
+          },
+          {
+            "name": "Cooking Oil",
+            "quantity": 0.1,
+            "unit": "L",
+            "required": true,
+            "search_query": "sunflower oil"
+          },
+          {
+            "name": "Salt",
+            "quantity": 0.05,
+            "unit": "kg",
+            "required": true,
+            "search_query": "salt"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "Fresh Potato (Batata) 1kg",
+            "category": "Fresh Staples",
+            "quantity": 2.0,
+            "unit": "kg",
+            "status": "HEALTHY",
+            "days_remaining": 13.3,
+            "required_name": "Potatoes"
+          },
+          {
+            "name": "Everest Kitchen King Spices & Masala 100g",
+            "category": "Spices",
+            "quantity": 1.0,
+            "unit": "pack",
+            "status": "HEALTHY",
+            "days_remaining": 50.0,
+            "required_name": "Pani Puri Masala & Spices"
+          },
+          {
+            "name": "Fortune Sunflower Oil 5L",
+            "category": "Oil",
+            "quantity": 2.1,
+            "unit": "L",
+            "status": "HEALTHY",
+            "days_remaining": 30.0,
+            "required_name": "Cooking Oil"
+          },
+          {
+            "name": "Tata Salt 1kg",
+            "category": "Salt",
+            "quantity": 0.4,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 20.0,
+            "required_name": "Salt"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [
+          {
+            "id": "prod_000160",
+            "product_id": "prod_000160",
+            "name": "Haldiram's Minute Khana Pani Puri Pack 240g",
+            "brand": "Haldiram's",
+            "price": 65.0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Missing from your household pantry for Panipuri.",
+            "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/8b5ecd2b-098a-4431-8a66-990cdf120314_04USQLUCHZ_MN_18122025.png",
+            "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/18/8b5ecd2b-098a-4431-8a66-990cdf120314_04USQLUCHZ_MN_18122025.png",
+            "category": "Snacks & Biscuits"
+          },
+          {
+            "id": "prod_000161",
+            "product_id": "prod_000161",
+            "name": "Tata Sampann White Chickpeas (Kabuli Chana) 500g",
+            "brand": "Tata Sampann",
+            "price": 88.0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Missing from your household pantry for Panipuri.",
+            "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/16/eda40bda-ba3b-4fab-97ba-ccbd28c106cf_K71D7X8L8P_MN_15122025.png",
+            "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/ciw/2025/12/16/eda40bda-ba3b-4fab-97ba-ccbd28c106cf_K71D7X8L8P_MN_15122025.png",
+            "category": "Dal & Pulses"
+          }
+        ],
+        "subtotal": 153.0
+      },
+      "decision": {
+        "state": "AUTO"
+      }
+    }
+  },
+  {
+    "id": 10,
+    "input": "I want to cook aloo sabzi",
+    "expected": "Aloo Sabzi & Parathas (2)",
+    "actual": "Aloo Sabzi & Parathas (2)",
+    "pass": true,
+    "reason": "All checks passed",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "Aloo Sabzi & Parathas",
+        "servings": 2
+      },
+      "recipe": {
+        "name": "Aloo Sabzi & Parathas",
+        "requiredItems": [
+          {
+            "name": "Potatoes",
+            "quantity": 3,
+            "unit": "units",
+            "required": true,
+            "search_query": "potato"
+          },
+          {
+            "name": "Whole Wheat Atta",
+            "quantity": 0.5,
+            "unit": "kg",
+            "required": true,
+            "search_query": "atta"
+          },
+          {
+            "name": "Cooking Oil",
+            "quantity": 0.1,
+            "unit": "L",
+            "required": true,
+            "search_query": "sunflower oil"
+          },
+          {
+            "name": "Spices & Masala",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "spices"
+          },
+          {
+            "name": "Salt",
+            "quantity": 0.05,
+            "unit": "kg",
+            "required": true,
+            "search_query": "salt"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "Fresh Potato (Batata) 1kg",
+            "category": "Fresh Staples",
+            "quantity": 2.0,
+            "unit": "kg",
+            "status": "HEALTHY",
+            "days_remaining": 13.3,
+            "required_name": "Potatoes"
+          },
+          {
+            "name": "Aashirvaad Whole Wheat Atta 5kg",
+            "category": "Atta",
+            "quantity": 1.2,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 6.0,
+            "required_name": "Whole Wheat Atta"
+          },
+          {
+            "name": "Fortune Sunflower Oil 5L",
+            "category": "Oil",
+            "quantity": 2.1,
+            "unit": "L",
+            "status": "HEALTHY",
+            "days_remaining": 30.0,
+            "required_name": "Cooking Oil"
+          },
+          {
+            "name": "Everest Kitchen King Spices & Masala 100g",
+            "category": "Spices",
+            "quantity": 1.0,
+            "unit": "pack",
+            "status": "HEALTHY",
+            "days_remaining": 50.0,
+            "required_name": "Spices & Masala"
+          },
+          {
+            "name": "Tata Salt 1kg",
+            "category": "Salt",
+            "quantity": 0.4,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 20.0,
+            "required_name": "Salt"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [],
+        "subtotal": 0
+      },
+      "decision": {
+        "state": "DO_NOTHING"
+      }
+    }
+  },
+  {
+    "id": 11,
+    "input": "let's prepare sandwiches for 4",
+    "expected": "Grilled Sandwiches (4)",
+    "actual": "Grilled Sandwiches (4)",
+    "pass": true,
+    "reason": "All checks passed",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "Grilled Sandwiches",
+        "servings": 4
+      },
+      "recipe": {
+        "name": "Grilled Sandwiches",
+        "requiredItems": [
+          {
+            "name": "Bread Loaf",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "bread"
+          },
+          {
+            "name": "Butter or Cheese",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "cheese"
+          },
+          {
+            "name": "Potatoes",
+            "quantity": 2,
+            "unit": "units",
+            "required": true,
+            "search_query": "potato"
+          },
+          {
+            "name": "Salt & Spices",
+            "quantity": 1,
+            "unit": "pinch",
+            "required": true,
+            "search_query": "spices"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "Fortune Sunflower Oil 5L",
+            "category": "Oil",
+            "quantity": 2.1,
+            "unit": "L",
+            "status": "HEALTHY",
+            "days_remaining": 30.0,
+            "required_name": "Butter or Cheese"
+          },
+          {
+            "name": "Fresh Potato (Batata) 1kg",
+            "category": "Fresh Staples",
+            "quantity": 2.0,
+            "unit": "kg",
+            "status": "HEALTHY",
+            "days_remaining": 13.3,
+            "required_name": "Potatoes"
+          },
+          {
+            "name": "Tata Salt 1kg",
+            "category": "Salt",
+            "quantity": 0.4,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 20.0,
+            "required_name": "Salt & Spices"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [
+          {
+            "id": "req_0",
+            "name": "Bread Loaf",
+            "price": 0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Not in pantry; check catalog for alternatives.",
+            "imageUrl": null,
+            "image": null
+          }
+        ],
+        "subtotal": 0.0
+      },
+      "decision": {
+        "state": "AUTO"
+      }
+    }
+  },
+  {
+    "id": 12,
+    "input": "make some breakfast for 3",
+    "expected": "Household Breakfast (3)",
+    "actual": "Household Breakfast (3)",
+    "pass": true,
+    "reason": "All checks passed",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "Household Breakfast",
+        "servings": 3
+      },
+      "recipe": {
+        "name": "Household Breakfast",
+        "requiredItems": [
+          {
+            "name": "Fresh Milk",
+            "quantity": 0.5,
+            "unit": "L",
+            "required": true,
+            "search_query": "milk"
+          },
+          {
+            "name": "Tea Gold",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "tea"
+          },
+          {
+            "name": "Whole Wheat Atta",
+            "quantity": 0.5,
+            "unit": "kg",
+            "required": true,
+            "search_query": "atta"
+          },
+          {
+            "name": "Cooking Oil",
+            "quantity": 0.1,
+            "unit": "L",
+            "required": true,
+            "search_query": "sunflower oil"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "Tata Tea Gold 500g",
+            "category": "Tea",
+            "quantity": 0.15,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 6.0,
+            "required_name": "Tea Gold"
+          },
+          {
+            "name": "Aashirvaad Whole Wheat Atta 5kg",
+            "category": "Atta",
+            "quantity": 1.2,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 6.0,
+            "required_name": "Whole Wheat Atta"
+          },
+          {
+            "name": "Fortune Sunflower Oil 5L",
+            "category": "Oil",
+            "quantity": 2.1,
+            "unit": "L",
+            "status": "HEALTHY",
+            "days_remaining": 30.0,
+            "required_name": "Cooking Oil"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [],
+        "subtotal": 0
+      },
+      "decision": {
+        "state": "DO_NOTHING"
+      }
+    }
+  },
+  {
+    "id": 13,
+    "input": "what do I need for chai?",
+    "expected": "Masala Chai (2)",
+    "actual": "Masala Chai (2)",
+    "pass": true,
+    "reason": "All checks passed",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "Masala Chai",
+        "servings": 2
+      },
+      "recipe": {
+        "name": "Masala Chai",
+        "requiredItems": [
+          {
+            "name": "Tea Leaves",
+            "quantity": 0.02,
+            "unit": "kg",
+            "required": true,
+            "search_query": "tea"
+          },
+          {
+            "name": "Milk",
+            "quantity": 0.5,
+            "unit": "L",
+            "required": true,
+            "search_query": "milk"
+          },
+          {
+            "name": "Sugar",
+            "quantity": 0.05,
+            "unit": "kg",
+            "required": true,
+            "search_query": "sugar"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "Tata Tea Gold 500g",
+            "category": "Tea",
+            "quantity": 0.15,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 6.0,
+            "required_name": "Tea Leaves"
+          },
+          {
+            "name": "Madhur Pure & Hygienic Sugar 5kg",
+            "category": "Sugar",
+            "quantity": 1.8,
+            "unit": "kg",
+            "status": "HEALTHY",
+            "days_remaining": 18.0,
+            "required_name": "Sugar"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [],
+        "subtotal": 0
+      },
+      "decision": {
+        "state": "DO_NOTHING"
+      }
+    }
+  },
+  {
+    "id": 14,
+    "input": "Do I have enough cooking oil?",
+    "expected": "Unknown (2)",
+    "actual": "Custom Meal (2)",
+    "pass": true,
+    "reason": "Handled ambiguous/household request",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "Custom Meal",
+        "servings": 2
+      },
+      "recipe": {
+        "name": "Custom Meal",
+        "requiredItems": [
+          {
+            "name": "Custom Meal",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "custom meal"
+          },
+          {
+            "name": "Cooking Oil",
+            "quantity": 0.05,
+            "unit": "L",
+            "required": true,
+            "search_query": "sunflower oil"
+          },
+          {
+            "name": "Salt",
+            "quantity": 0.02,
+            "unit": "kg",
+            "required": true,
+            "search_query": "salt"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "Fortune Sunflower Oil 5L",
+            "category": "Oil",
+            "quantity": 2.1,
+            "unit": "L",
+            "status": "HEALTHY",
+            "days_remaining": 30.0,
+            "required_name": "Cooking Oil"
+          },
+          {
+            "name": "Tata Salt 1kg",
+            "category": "Salt",
+            "quantity": 0.4,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 20.0,
+            "required_name": "Salt"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [
+          {
+            "id": "req_0",
+            "name": "Custom Meal",
+            "price": 0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Not in pantry; check catalog for alternatives.",
+            "imageUrl": null,
+            "image": null
+          }
+        ],
+        "subtotal": 0.0
+      },
+      "decision": {
+        "state": "AUTO"
+      }
+    }
+  },
+  {
+    "id": 15,
+    "input": "What's running low?",
+    "expected": "Unknown (2)",
+    "actual": "Custom Meal (2)",
+    "pass": true,
+    "reason": "Handled ambiguous/household request",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "Custom Meal",
+        "servings": 2
+      },
+      "recipe": {
+        "name": "Custom Meal",
+        "requiredItems": [
+          {
+            "name": "Custom Meal",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "custom meal"
+          },
+          {
+            "name": "Cooking Oil",
+            "quantity": 0.05,
+            "unit": "L",
+            "required": true,
+            "search_query": "sunflower oil"
+          },
+          {
+            "name": "Salt",
+            "quantity": 0.02,
+            "unit": "kg",
+            "required": true,
+            "search_query": "salt"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "Fortune Sunflower Oil 5L",
+            "category": "Oil",
+            "quantity": 2.1,
+            "unit": "L",
+            "status": "HEALTHY",
+            "days_remaining": 30.0,
+            "required_name": "Cooking Oil"
+          },
+          {
+            "name": "Tata Salt 1kg",
+            "category": "Salt",
+            "quantity": 0.4,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 20.0,
+            "required_name": "Salt"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [
+          {
+            "id": "req_0",
+            "name": "Custom Meal",
+            "price": 0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Not in pantry; check catalog for alternatives.",
+            "imageUrl": null,
+            "image": null
+          }
+        ],
+        "subtotal": 0.0
+      },
+      "decision": {
+        "state": "AUTO"
+      }
+    }
+  },
+  {
+    "id": 16,
+    "input": "noodles for 10",
+    "expected": "Maggi Noodles (10)",
+    "actual": "Maggi Noodles (10)",
+    "pass": true,
+    "reason": "All checks passed",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "Maggi Noodles",
+        "servings": 10
+      },
+      "recipe": {
+        "name": "Maggi Noodles",
+        "requiredItems": [
+          {
+            "name": "Maggi 2-Minute Noodles",
+            "quantity": 10,
+            "unit": "packs",
+            "required": true,
+            "search_query": "maggi noodles"
+          },
+          {
+            "name": "Cooking Oil",
+            "quantity": 0.02,
+            "unit": "L",
+            "required": true,
+            "search_query": "sunflower oil"
+          },
+          {
+            "name": "Mixed Spices",
+            "quantity": 1,
+            "unit": "pinch",
+            "required": false,
+            "search_query": "spices"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "Fortune Sunflower Oil 5L",
+            "category": "Oil",
+            "quantity": 2.1,
+            "unit": "L",
+            "status": "HEALTHY",
+            "days_remaining": 30.0,
+            "required_name": "Cooking Oil"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [
+          {
+            "id": "prod_000140",
+            "product_id": "prod_000140",
+            "name": "Maggi 2-Minute Masala Noodles 70 g",
+            "brand": "Maggi",
+            "price": 14.0,
+            "quantity": 1,
+            "required_amount": "10 packs",
+            "reason": "Missing from your household pantry for Maggi Noodles.",
+            "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+            "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+            "category": "Instant Noodles"
+          }
+        ],
+        "subtotal": 14.0
+      },
+      "decision": {
+        "state": "AUTO"
+      }
+    }
+  },
+  {
+    "id": 17,
+    "input": "I need 5 servings of pasta",
+    "expected": "Pasta (5)",
+    "actual": "Pasta (2)",
+    "pass": false,
+    "reason": "Serving mismatch: Expected 5, got 2",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "Pasta",
+        "servings": 2
+      },
+      "recipe": {
+        "name": "Pasta",
+        "requiredItems": [
+          {
+            "name": "Macaroni Pasta",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "pasta"
+          },
+          {
+            "name": "Pasta & Pizza Sauce",
+            "quantity": 1,
+            "unit": "bottle",
+            "required": true,
+            "search_query": "pasta sauce"
+          },
+          {
+            "name": "Mozzarella Cheese Blend",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "cheese"
+          },
+          {
+            "name": "Cooking Oil / Butter",
+            "quantity": 0.05,
+            "unit": "L",
+            "required": true,
+            "search_query": "sunflower oil"
+          },
+          {
+            "name": "Salt",
+            "quantity": 0.02,
+            "unit": "kg",
+            "required": true,
+            "search_query": "salt"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "Fortune Sunflower Oil 5L",
+            "category": "Oil",
+            "quantity": 2.1,
+            "unit": "L",
+            "status": "HEALTHY",
+            "days_remaining": 30.0,
+            "required_name": "Cooking Oil / Butter"
+          },
+          {
+            "name": "Tata Salt 1kg",
+            "category": "Salt",
+            "quantity": 0.4,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 20.0,
+            "required_name": "Salt"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [
+          {
+            "id": "prod_000163",
+            "product_id": "prod_000163",
+            "name": "Bambino Macaroni Pasta 500g",
+            "brand": "Bambino",
+            "price": 48.0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Missing from your household pantry for Pasta.",
+            "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+            "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+            "category": "Instant Noodles"
+          },
+          {
+            "id": "prod_000164",
+            "product_id": "prod_000164",
+            "name": "Veeba Pasta & Pizza Sauce 350g",
+            "brand": "Veeba",
+            "price": 89.0,
+            "quantity": 1,
+            "required_amount": "1 bottle",
+            "reason": "Missing from your household pantry for Pasta.",
+            "imageUrl": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+            "image": "https://media-assets.swiggy.com/swiggy/image/upload/NI_CATALOG/IMAGES/CIW/2026/5/20/682f661f-9068-4c0e-8fa3-eac6cb9c6168_82_1.png",
+            "category": "Instant Noodles"
+          },
+          {
+            "id": "prod_000123",
+            "product_id": "prod_000123",
+            "name": "Amul Processed Cheese Blocks 200 g",
+            "brand": "Amul",
+            "price": 145.0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Missing from your household pantry for Pasta.",
+            "imageUrl": null,
+            "image": null,
+            "category": "Milk & Dairy"
+          }
+        ],
+        "subtotal": 282.0
+      },
+      "decision": {
+        "state": "AUTO"
+      }
+    }
+  },
+  {
+    "id": 18,
+    "input": "make that thing we ate yesterday",
+    "expected": "Unknown (2)",
+    "actual": "That Thing We Ate Yesterday (2)",
+    "pass": true,
+    "reason": "Handled ambiguous/household request",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "That Thing We Ate Yesterday",
+        "servings": 2
+      },
+      "recipe": {
+        "name": "That Thing We Ate Yesterday",
+        "requiredItems": [
+          {
+            "name": "That Thing We Ate Yesterday",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "that thing we ate yesterday"
+          },
+          {
+            "name": "Cooking Oil",
+            "quantity": 0.05,
+            "unit": "L",
+            "required": true,
+            "search_query": "sunflower oil"
+          },
+          {
+            "name": "Salt",
+            "quantity": 0.02,
+            "unit": "kg",
+            "required": true,
+            "search_query": "salt"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "Fortune Sunflower Oil 5L",
+            "category": "Oil",
+            "quantity": 2.1,
+            "unit": "L",
+            "status": "HEALTHY",
+            "days_remaining": 30.0,
+            "required_name": "Cooking Oil"
+          },
+          {
+            "name": "Tata Salt 1kg",
+            "category": "Salt",
+            "quantity": 0.4,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 20.0,
+            "required_name": "Salt"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [
+          {
+            "id": "prod_000148",
+            "product_id": "prod_000148",
+            "name": "Kurkure Masala Munch Crisps 80 g",
+            "brand": "Kurkure",
+            "price": 20.0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Missing from your household pantry for That Thing We Ate Yesterday.",
+            "imageUrl": null,
+            "image": null,
+            "category": "Snacks & Biscuits"
+          }
+        ],
+        "subtotal": 20.0
+      },
+      "decision": {
+        "state": "AUTO"
+      }
+    }
+  },
+  {
+    "id": 19,
+    "input": "cook some random stuff for 4",
+    "expected": "Unknown (4)",
+    "actual": "Some Random Stuff (4)",
+    "pass": true,
+    "reason": "Handled ambiguous/household request",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "Some Random Stuff",
+        "servings": 4
+      },
+      "recipe": {
+        "name": "Some Random Stuff",
+        "requiredItems": [
+          {
+            "name": "Some Random Stuff",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "some random stuff"
+          },
+          {
+            "name": "Cooking Oil",
+            "quantity": 0.05,
+            "unit": "L",
+            "required": true,
+            "search_query": "sunflower oil"
+          },
+          {
+            "name": "Salt",
+            "quantity": 0.02,
+            "unit": "kg",
+            "required": true,
+            "search_query": "salt"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "Fortune Sunflower Oil 5L",
+            "category": "Oil",
+            "quantity": 2.1,
+            "unit": "L",
+            "status": "HEALTHY",
+            "days_remaining": 30.0,
+            "required_name": "Cooking Oil"
+          },
+          {
+            "name": "Tata Salt 1kg",
+            "category": "Salt",
+            "quantity": 0.4,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 20.0,
+            "required_name": "Salt"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [
+          {
+            "id": "req_0",
+            "name": "Some Random Stuff",
+            "price": 0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Not in pantry; check catalog for alternatives.",
+            "imageUrl": null,
+            "image": null
+          }
+        ],
+        "subtotal": 0.0
+      },
+      "decision": {
+        "state": "AUTO"
+      }
+    }
+  },
+  {
+    "id": 20,
+    "input": "buy some detergent",
+    "expected": "Unknown (2)",
+    "actual": "Custom Meal (2)",
+    "pass": true,
+    "reason": "Handled ambiguous/household request",
+    "schema": true,
+    "raw": {
+      "intent": {
+        "action": "COOK",
+        "target": "Custom Meal",
+        "servings": 2
+      },
+      "recipe": {
+        "name": "Custom Meal",
+        "requiredItems": [
+          {
+            "name": "Custom Meal",
+            "quantity": 1,
+            "unit": "pack",
+            "required": true,
+            "search_query": "custom meal"
+          },
+          {
+            "name": "Cooking Oil",
+            "quantity": 0.05,
+            "unit": "L",
+            "required": true,
+            "search_query": "sunflower oil"
+          },
+          {
+            "name": "Salt",
+            "quantity": 0.02,
+            "unit": "kg",
+            "required": true,
+            "search_query": "salt"
+          }
+        ]
+      },
+      "pantry": {
+        "available": [
+          {
+            "name": "Fortune Sunflower Oil 5L",
+            "category": "Oil",
+            "quantity": 2.1,
+            "unit": "L",
+            "status": "HEALTHY",
+            "days_remaining": 30.0,
+            "required_name": "Cooking Oil"
+          },
+          {
+            "name": "Tata Salt 1kg",
+            "category": "Salt",
+            "quantity": 0.4,
+            "unit": "kg",
+            "status": "LOW",
+            "days_remaining": 20.0,
+            "required_name": "Salt"
+          }
+        ],
+        "uncertain": []
+      },
+      "shopping": {
+        "items": [
+          {
+            "id": "req_0",
+            "name": "Custom Meal",
+            "price": 0,
+            "quantity": 1,
+            "required_amount": "1 pack",
+            "reason": "Not in pantry; check catalog for alternatives.",
+            "imageUrl": null,
+            "image": null
+          }
+        ],
+        "subtotal": 0.0
+      },
+      "decision": {
+        "state": "AUTO"
+      }
+    }
+  }
+]

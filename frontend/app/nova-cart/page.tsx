@@ -74,9 +74,10 @@ export default function NovaCartPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FCFBF9] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-4 border-neutral-200 border-t-[#FF9900] rounded-full animate-spin"></div>
-          <p className="text-neutral-500 text-sm font-medium">NOVA is preparing your household cart...</p>
+        <div className="flex flex-col items-center gap-3">
+          <img src="/logo.png" alt="NOVA" className="h-8 w-auto object-contain opacity-80" />
+          <div className="w-6 h-6 border-2 border-neutral-300 border-t-amber-500 rounded-full animate-spin"></div>
+          <p className="text-neutral-500 text-sm font-medium">Preparing your household cart...</p>
         </div>
       </div>
     );

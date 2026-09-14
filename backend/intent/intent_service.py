@@ -46,7 +46,7 @@ Respond ONLY with a valid JSON object matching this schema EXACTLY:
         api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY", "")
 
         # 1. Try Gemini LLM
-        if provider_type == "gemini" and api_key:
+        if provider_type == "gemini" and api_key and not api_key.startswith("your_") and not api_key.startswith("placeholder") and api_key != "fake":
             try:
                 import google.generativeai as genai
                 genai.configure(api_key=api_key)
@@ -93,9 +93,44 @@ Respond ONLY with a valid JSON object matching this schema EXACTLY:
             except Exception as e:
                 print(f"[IntentReconciliationService] Bedrock call failed: {e}")
 
-        # 3. Dynamic Knowledge Layer (used if LLM is offline or returns empty)
+        # Extract deterministic meal info from intent_text
+        text_lower = intent_text.lower()
+        requested_meal = ""
+        if "biryani" in text_lower:
+            requested_meal = "biryani"
+        elif "pani puri" in text_lower or "panipuri" in text_lower or "golgappa" in text_lower:
+            requested_meal = "pani puri"
+        elif "pasta" in text_lower or "macaroni" in text_lower or "penne" in text_lower:
+            requested_meal = "pasta"
+        elif "maggi" in text_lower or "noodles" in text_lower:
+            requested_meal = "maggi"
+        elif "chai" in text_lower or "tea" in text_lower:
+            requested_meal = "chai"
+        elif "dosa" in text_lower:
+            requested_meal = "dosa"
+
+        # Validate Gemini's output against the requested meal
+        if parsed_ai and requested_meal:
+            llm_target = parsed_ai.get("intent", {}).get("target", "").lower()
+            llm_recipe_name = parsed_ai.get("recipe", {}).get("name", "").lower()
+            
+            # If the requested meal is NOT in the LLM's target/recipe name, reject it
+            if requested_meal not in llm_target and requested_meal not in llm_recipe_name:
+                print(f"[IntentReconciliationService] Rejecting LLM output due to mismatch. Requested: {requested_meal}, LLM: {llm_target}")
+                parsed_ai = None # Force fallback
+
+        # 3. Dynamic Knowledge Layer (used if LLM is offline or returns empty or invalid)
         if not parsed_ai or not parsed_ai.get("recipe", {}).get("requiredItems"):
             parsed_ai = self._infer_meal_recipe(intent_text)
+            
+        if not parsed_ai:
+             return {
+                 "intent": {"action": "REQUIRE_CLARIFICATION", "target": "Unknown", "servings": 2},
+                 "recipe": {"name": "Unknown", "requiredItems": []},
+                 "pantry": {"available": [], "uncertain": []},
+                 "shopping": {"items": [], "subtotal": 0},
+                 "decision": {"state": "REQUIRE_CLARIFICATION"}
+             }
 
         pantry_items = self.inventory_service.get_all() if self.inventory_service else []
         
@@ -205,10 +240,44 @@ Respond ONLY with a valid JSON object matching this schema EXACTLY:
         
         state = "DO_NOTHING"
         if shopping_items:
-            state = "ASK"
+            # check if any restricted categories
+            blocked = False
+            for item in shopping_items:
+                cat = (item.get("category") or "").upper()
+                if cat in ["ALCOHOL", "TOBACCO"]:
+                    blocked = True
+                    break
+            if blocked:
+                state = "BLOCKED"
+            elif subtotal > 1500:
+                state = "ASK" 
+            else:
+                state = "AUTO"
         elif uncertain:
             state = "ASK"
             
+        matched_act = parsed_ai.get("recipe", {}).get("name") or parsed_ai.get("intent", {}).get("target", "Meal Preparation")
+        available_in_pantry = [
+            {
+                "item": a.get("name") or a.get("required_name"),
+                "matched_product": a.get("name"),
+                "quantity": a.get("quantity"),
+                "unit": a.get("unit"),
+                "status": a.get("status"),
+                "days_remaining": a.get("days_remaining", 7)
+            }
+            for a in available
+        ]
+        missing_items = [
+            {
+                "item": it.get("name"),
+                "search_query": it.get("search_query") or it.get("name"),
+                "priority": "HIGH" if it.get("required", True) else "LOW"
+            }
+            for it in missing_candidates
+        ]
+        suggested_queries = [it.get("search_query") or it.get("name") for it in missing_candidates]
+
         return {
             "intent": parsed_ai.get("intent"),
             "recipe": parsed_ai.get("recipe"),
@@ -222,7 +291,15 @@ Respond ONLY with a valid JSON object matching this schema EXACTLY:
             },
             "decision": {
                 "state": state
-            }
+            },
+            # Compatibility properties for testing and backward compatibility
+            "activity_detected": True,
+            "matched_activity": matched_act,
+            "requirements": [it.get("name") for it in recipe_items],
+            "available_in_pantry": available_in_pantry,
+            "missing_items": missing_items,
+            "suggested_queries": suggested_queries,
+            "reconciliation_summary": f"Reconciled {matched_act}: {len(available)} available, {len(missing_candidates)} missing."
         }
 
     def _match_pantry_item(self, req_item: Dict[str, Any], pantry_items: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
@@ -346,17 +423,28 @@ Respond ONLY with a valid JSON object matching this schema EXACTLY:
             
         # 4. Biryani
         if "biryani" in text:
+            dish_name = "Biryani"
+            items = [
+                {"name": "Basmati Rice", "quantity": 0.5 * servings, "unit": "kg", "required": True, "search_query": "basmati rice"},
+                {"name": "Biryani Masala", "quantity": 1, "unit": "pack", "required": True, "search_query": "biryani masala"},
+                {"name": "Cooking Oil or Ghee", "quantity": 0.1, "unit": "L", "required": True, "search_query": "sunflower oil"},
+                {"name": "Curd", "quantity": 1, "unit": "pack", "required": True, "search_query": "curd"},
+                {"name": "Onion", "quantity": 1, "unit": "kg", "required": True, "search_query": "onion"}
+            ]
+            if "chicken" in text:
+                dish_name = "Chicken Biryani"
+                items.append({"name": "Chicken", "quantity": 0.5 * servings, "unit": "kg", "required": True, "search_query": "chicken"})
+            elif "veg" in text or "vegetable" in text:
+                dish_name = "Veg Biryani"
+                items.append({"name": "Mixed Vegetables", "quantity": 0.5 * servings, "unit": "kg", "required": True, "search_query": "mixed vegetables"})
+            else:
+                items.append({"name": "Potatoes", "quantity": 1 * servings, "unit": "units", "required": True, "search_query": "potato"})
+                
             return {
-                "intent": {"action": "COOK", "target": "Biryani", "servings": servings},
+                "intent": {"action": "COOK", "target": dish_name, "servings": servings},
                 "recipe": {
-                    "name": "Biryani",
-                    "requiredItems": [
-                        {"name": "Basmati Rice", "quantity": 0.5 * servings, "unit": "kg", "required": True, "search_query": "basmati rice"},
-                        {"name": "Shahi Biryani Masala", "quantity": 1, "unit": "pack", "required": True, "search_query": "biryani masala"},
-                        {"name": "Cooking Oil", "quantity": 0.1, "unit": "L", "required": True, "search_query": "sunflower oil"},
-                        {"name": "Potatoes", "quantity": 1 * servings, "unit": "units", "required": True, "search_query": "potato"},
-                        {"name": "Salt", "quantity": 0.05, "unit": "kg", "required": True, "search_query": "salt"}
-                    ]
+                    "name": dish_name,
+                    "requiredItems": items
                 }
             }
 
@@ -421,7 +509,7 @@ Respond ONLY with a valid JSON object matching this schema EXACTLY:
             }
 
         # Generic extraction
-        dish_match = re.search(r"(?:make|cook|prepare)\s+([a-zA-Z\s]+?)(?:\s+for|\s+tonight|\s+today|$)", text)
+        dish_match = re.search(r"(?:make|making|cook|cooking|prepare|preparing|have|having|eat|eating)\s+([a-zA-Z\s]+?)(?:\s+for|\s+tonight|\s+today|$)", text)
         dish_name = dish_match.group(1).strip().title() if dish_match else "Custom Meal"
         
         return {

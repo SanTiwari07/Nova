@@ -256,23 +256,17 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#141517] text-white border-b border-neutral-800 shadow-md">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md text-neutral-900 border-b border-neutral-200 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
           
           {/* ── Brand & Primary Navigation ───────────────────────────── */}
           <div className="flex items-center gap-6 shrink-0">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-lg bg-amber-400 text-neutral-950 font-black text-lg flex items-center justify-center tracking-tighter shadow-sm group-hover:scale-105 transition-transform">
-                N
-              </div>
-              <div className="flex flex-col">
-                <span className="font-extrabold text-white text-base tracking-tight leading-none group-hover:text-amber-400 transition-colors">
-                  NOVA
-                </span>
-                <span className="text-[10px] text-neutral-400 font-medium tracking-wide">
-                  Household Autopilot
-                </span>
-              </div>
+            <Link href="/" className="flex items-center group shrink-0" aria-label="NOVA Home">
+              <img
+                src="/logo.png"
+                alt="NOVA"
+                className="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:opacity-90"
+              />
             </Link>
 
             {/* Main Tabs */}
@@ -285,8 +279,8 @@ export default function Header() {
                     href={link.href}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                       isActive
-                        ? "bg-neutral-800 text-white shadow-xs font-bold"
-                        : "text-neutral-300 hover:text-white hover:bg-neutral-800/60"
+                        ? "bg-neutral-900 text-white shadow-xs font-bold"
+                        : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100"
                     }`}
                   >
                     {link.label}
@@ -301,8 +295,8 @@ export default function Header() {
                   onClick={() => setMoreMenuOpen(!moreMenuOpen)}
                   className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
                     moreMenuOpen || ["/rules", "/memory", "/activity", "/autopilot", "/how-it-works"].includes(pathname)
-                      ? "bg-neutral-800 text-white"
-                      : "text-neutral-300 hover:text-white hover:bg-neutral-800/60"
+                      ? "bg-neutral-900 text-white"
+                      : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100"
                   }`}
                 >
                   <span>More</span>
@@ -378,7 +372,7 @@ export default function Header() {
                 }}
                 onKeyDown={handleKeyDown}
                 placeholder="Search pantry, plans, products, budget..."
-                className="w-full bg-neutral-900/90 text-white placeholder-neutral-400 text-xs rounded-xl pl-9 pr-8 py-2 border border-neutral-700 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/50 transition-all shadow-inner"
+                className="w-full bg-neutral-100 text-neutral-900 placeholder-neutral-400 text-xs rounded-xl pl-9 pr-8 py-2 border border-neutral-200 focus:outline-none focus:border-amber-500 focus:bg-white focus:ring-1 focus:ring-amber-500/30 transition-all shadow-2xs"
               />
               <div className="absolute left-3 pointer-events-none text-neutral-400">
                 <Search className="w-3.5 h-3.5" />
@@ -391,7 +385,7 @@ export default function Header() {
                     setSuggestions(null);
                     setShowSuggestions(false);
                   }}
-                  className="absolute right-2.5 text-neutral-400 hover:text-white"
+                  className="absolute right-2.5 text-neutral-400 hover:text-neutral-700"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -557,25 +551,19 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => setBudgetModalOpen(true)}
-                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-xs font-medium transition-colors"
+                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200 text-xs font-medium transition-colors"
                 title="View and edit household budget"
               >
-                <Wallet className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-neutral-300">Budget:</span>
-                <span className="font-bold text-amber-400">₹{budgetRemaining.toLocaleString("en-IN")}</span>
+                <Wallet className="w-3.5 h-3.5 text-amber-600" />
+                <span className="text-neutral-600">Budget:</span>
+                <span className="font-bold text-neutral-900">₹{budgetRemaining.toLocaleString("en-IN")}</span>
               </button>
             )}
-
-            {/* Commerce Status Pill */}
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-[11px] font-semibold text-neutral-300">
-              <span className={`w-2 h-2 rounded-full ${swiggyStatus.authenticated ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
-              <span>{swiggyStatus.authenticated ? "Swiggy Connected" : "Demo Active"}</span>
-            </div>
 
             {/* Cart Link */}
             <Link
               href="/cart"
-              className="relative p-2 rounded-lg text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors"
+              className="relative p-2 rounded-lg text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
               aria-label="Household Cart"
             >
               <ShoppingBag className="w-5 h-5" />
@@ -591,10 +579,10 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                className="w-8 h-8 rounded-full bg-neutral-800 hover:bg-neutral-700 text-white flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 flex items-center justify-center border border-neutral-200 transition-colors"
                 aria-label="Household Settings"
               >
-                <User className="w-4 h-4 text-neutral-300" />
+                <User className="w-4 h-4 text-neutral-600" />
               </button>
 
               {profileMenuOpen && (
