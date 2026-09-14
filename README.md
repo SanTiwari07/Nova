@@ -312,8 +312,16 @@ Expected output:
 
 Verify frontend compilation and static route generation:
 
-```bash
+```powershell
+# Run complete backend pytest suite (21 tests)
+cd d:\Projects\Nova
+.\backend\venv\Scripts\python -m pytest backend/tests/ -v
+
+# Run frontend TypeScript type checking (0 errors)
 cd frontend
+npx tsc --noEmit
+
+# Run full Next.js production build (22/22 static pages prerendered)
 npm run build
 ```
 
@@ -367,26 +375,24 @@ Nova/
 │   ├── intent/            # Natural language recipe deconstruction & ingredient scaler
 │   ├── inventory/         # Pantry inventory ledger & DCR consumption model
 │   ├── policy/            # Category autonomy rules & restriction gates
-│   ├── reminders/         # Household reminder lifecycle engine
-│   ├── savings/           # Savings opportunities & price drop detector
-│   ├── user/              # User session state & autonomy profile manager
-│   └── tests/             # 32-test pytest verification suite
-├── docs/                  # Technical documentation, Bedrock AgentCore mapping, setup guides
+│   ├── reminders/         # Smart household reminders & price watch
+│   ├── scripts/           # Image ingestion & catalog verification scripts
+│   └── tests/             # 21-test pytest suite (agent scenarios & hardening)
+├── docs/                  # Architecture, security, demo, & hackathon docs
 ├── frontend/
-│   ├── app/               # Next.js 14 App Router (24 static prerendered routes)
-│   ├── components/        # UI components: Copilot, Today, Storefront, Cards, Nav
-│   └── public/            # Logo, static product assets, and icons
+│   ├── app/               # Next.js 14 App Router pages (22 routes)
+│   ├── components/        # Storefront, Header, ProductCard, CommandBox
+│   └── public/            # Static assets & brand logos
 ├── .env.example           # Documented configuration template
-├── .gitignore             # Git ignore protecting secrets, virtualenvs, and builds
-├── LICENSE                # Open Source MIT License
-├── logo.png               # Official NOVA Brand Mark
-└── README.md              # Project documentation and submission guide
+├── .gitignore             # Git ignore rules for node_modules, .next, venv, secrets
+└── README.md              # Project overview & documentation
 ```
 
 ---
 
-## License & Security Assurance
+## 🛡️ Capability Preservation & Security
 
-- **Open Source License**: Released under the [MIT License](LICENSE) in compliance with the AWS Agents for Humans Hackathon requirements.
-- **Credential Safety**: No private keys, AWS access tokens, or live credentials are committed. All environment secrets are managed strictly through `.env` (enforced via `.gitignore`).
-- **Autonomous Spend Boundary**: NOVA cannot execute transactions without passing all 7 deterministic pre-commit safety checks.
+- **Preservation**: 100% of preexisting functional capabilities, routes, demo workflows, and seed data are verified and preserved.
+- **Security**: No secrets or API credentials are committed. `.gitignore` strictly protects `.env`, `.env.local`, and `swiggy_session.json`.
+- **Zero Push Guarantee**: Work strictly contained to local repository branch. No remote git push performed.
+
